@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
 /**
     @title ERC-1155 Multi Token Standard, optional metadata URI extension
@@ -9,7 +9,7 @@ interface IERC1155MetadataURI {
     /**
         @notice A distinct Uniform Resource Identifier (URI) for a given token.
         @dev URIs are defined in RFC 3986.
-        The URI MUST point to a JSON file that conforms to the "ERC-1155 Metadata URI JSON Schema". 
+        The URI MUST point to a JSON file that conforms to the "ERC-1155 Metadata URI JSON Schema".
         The uri function SHOULD be used to retrieve values if no event was emitted.
         The uri function MUST return the same value as the latest event for an _id if it was emitted.
         The uri function MUST NOT be used to check for the existence of a token as it is possible for an implementation to return a valid string even if the token does not exist.

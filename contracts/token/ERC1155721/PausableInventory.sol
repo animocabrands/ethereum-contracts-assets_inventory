@@ -1,12 +1,13 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
-import "./../ERC1155/ERC1155PausableCollections.sol";
 import "./AssetsInventory.sol";
+import "./../ERC1155/ERC1155PausableCollections.sol";
+import "../../access/PauserRole.sol";
 
 /**
     @title PausableInventory, an inventory contract with pausable collections
  */
-contract PausableInventory is AssetsInventory, ERC1155PausableCollections
+abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollections, PauserRole
 {
 
     constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength)  {}
@@ -31,7 +32,7 @@ contract PausableInventory is AssetsInventory, ERC1155PausableCollections
         }
     }
 
-    function pauseCollections(uint256[] memory collectionIds) public onlyPauser {
+    function pauseCollections(uint256[] memory collectionIds) public override onlyPauser {
         for (uint256 i=0; i<collectionIds.length; i++) {
             uint256 collectionId = collectionIds[i];
             require(!isNFT(collectionId)); // only works on collections
@@ -40,7 +41,7 @@ contract PausableInventory is AssetsInventory, ERC1155PausableCollections
         emit CollectionsPaused(collectionIds, _msgSender());
     }
 
-    function unpauseCollections(uint256[] memory collectionIds) public onlyPauser {
+    function unpauseCollections(uint256[] memory collectionIds) public override onlyPauser {
         for (uint256 i=0; i<collectionIds.length; i++) {
             uint256 collectionId = collectionIds[i];
             require(!isNFT(collectionId)); // only works on collections
@@ -49,43 +50,51 @@ contract PausableInventory is AssetsInventory, ERC1155PausableCollections
         emit CollectionsUnpaused(collectionIds, _msgSender());
     }
 
+    function pause() public override onlyPauser {
+        _pause();
+    }
+
+    function unpause() public override onlyPauser {
+        _unpause();
+    }
+
 
 /////////////////////////////////////////// ERC721 /////////////////////////////////////////////
 
     function approve(address to, uint256 tokenId
-    ) public whenNotPaused whenIdNotPaused(tokenId) {
+    ) public override whenNotPaused whenIdNotPaused(tokenId) {
         super.approve(to, tokenId);
     }
 
     function setApprovalForAll(address to, bool approved
-    ) public whenNotPaused {
+    ) public override whenNotPaused {
         super.setApprovalForAll(to, approved);
     }
 
     function transferFrom(address from, address to, uint256 tokenId
-    ) public whenNotPaused whenIdNotPaused(tokenId) {
+    ) public override whenNotPaused whenIdNotPaused(tokenId) {
         super.transferFrom(from, to, tokenId);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId
-    ) public whenNotPaused whenIdNotPaused(tokenId) {
+    ) public override whenNotPaused whenIdNotPaused(tokenId) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data
-    ) public whenNotPaused whenIdNotPaused(tokenId) {
+    ) public override whenNotPaused whenIdNotPaused(tokenId) {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
 /////////////////////////////////////////// ERC1155 /////////////////////////////////////////////
 
     function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes memory data
-    ) public whenNotPaused whenIdNotPaused(id) {
+    ) public virtual override whenNotPaused whenIdNotPaused(id) {
         super.safeTransferFrom(from, to, id, value, data);
     }
 
     function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory values, bytes memory data
-    ) public whenNotPaused {
+    ) public virtual override whenNotPaused {
         for (uint256 i = 0; i < ids.length; ++i) {
             require(!idPaused(ids[i]));
         }

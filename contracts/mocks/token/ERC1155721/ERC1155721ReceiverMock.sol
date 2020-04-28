@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
 // import "../token/ERC721/IERC721TokenReceiver.sol";
 import "../../../token/ERC721/IERC721Receiver.sol";
@@ -21,7 +21,7 @@ contract ERC1155721ReceiverMock is IERC721Receiver, IERC1155TokenReceiver {
     }
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data
-    ) public returns(bytes4) {
+    ) public override returns(bytes4) {
         if (_accept721) {
             emit Received(operator, from, tokenId, data, gasleft());
             return ERC721_RECEIVED;
@@ -36,7 +36,7 @@ contract ERC1155721ReceiverMock is IERC721Receiver, IERC1155TokenReceiver {
         uint256 id,
         uint256 value,
         bytes calldata data
-    ) external returns(bytes4){
+    ) external override returns(bytes4){
         if (_accept1155) {
             emit ReceivedSingle(operator, from, id, value, data, gasleft());
             return ERC1155_RECEIVED;
@@ -51,7 +51,7 @@ contract ERC1155721ReceiverMock is IERC721Receiver, IERC1155TokenReceiver {
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external returns(bytes4){
+    ) external override returns(bytes4){
         if (_accept1155) {
             emit ReceivedBatch(operator, from, ids, values, data, gasleft());
             return ERC1155_BATCH_RECEIVED;

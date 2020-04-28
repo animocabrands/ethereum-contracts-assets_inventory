@@ -1,9 +1,9 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
-import "@openzeppelin/contracts/access/roles/MinterRole.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
 import "../../../token/ERC1155721/PausableInventory.sol";
+import "../../../access/MinterRole.sol";
 
 contract PausableInventoryMock is PausableInventory, Ownable, MinterRole {
 
@@ -15,7 +15,7 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole {
      * @dev Gets the token name
      * @return string representing the token name
      */
-    function name() external view returns(string memory) {
+    function name() external override view returns(string memory) {
         return "PausableInventoryMock";
     }
 
@@ -23,7 +23,7 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole {
      * @dev Gets the token symbol
      * @return string representing the token symbol
      */
-    function symbol() external view returns(string memory) {
+    function symbol() external override view returns(string memory) {
         return "PIM";
     }
 
@@ -138,11 +138,11 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole {
      * @param id uint256 ID of the tokenId / collectionId to query
      * @return string URI of given ID
      */
-    function uri(uint256 id) external view returns (string memory) {
+    function uri(uint256 id) external override view returns (string memory) {
         return _uri(id);
     }
 
-    function tokenURI(uint256 tokenId) external view returns (string memory) {
+    function tokenURI(uint256 tokenId) external override view returns (string memory) {
         require(exists(tokenId));
         return _uri(tokenId);
     }

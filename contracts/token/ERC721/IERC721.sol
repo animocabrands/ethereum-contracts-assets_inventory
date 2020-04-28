@@ -1,21 +1,21 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
  /**
     @title ERC721 Non-Fungible Token Standard, basic interface
     @dev See https://eips.ethereum.org/EIPS/eip-721
     Note: The ERC-165 identifier for this interface is 0x80ac58cd.
  */
-contract IERC721 {
+abstract contract IERC721 {
     event Transfer(
         address indexed _from,
         address indexed _to,
-        uint256 indexed _tokenId
+        uint256 _tokenId
     );
 
     event Approval(
         address indexed _owner,
         address indexed _approved,
-        uint256 indexed _tokenId
+        uint256 _tokenId
     );
 
     event ApprovalForAll(
@@ -27,16 +27,16 @@ contract IERC721 {
     /**
      * @dev Gets the balance of the specified address
      * @param owner address to query the balance of
-     * @return uint256 representing the amount owned by the passed address
+     * @return balance uint256 representing the amount owned by the passed address
      */
-    function balanceOf(address owner) external view returns (uint256 balance);
+    function balanceOf(address owner) external virtual view returns (uint256 balance);
 
     /**
      * @dev Gets the owner of the specified ID
      * @param tokenId uint256 ID to query the owner of
      * @return owner address currently marked as the owner of the given ID
      */
-    function ownerOf(uint256 tokenId) public view returns (address owner);
+    function ownerOf(uint256 tokenId) public virtual view returns (address owner);
 
     /**
      * @dev Approves another address to transfer the given token ID
@@ -46,15 +46,15 @@ contract IERC721 {
      * @param to address to be approved for the given token ID
      * @param tokenId uint256 ID of the token to be approved
      */
-    function approve(address to, uint256 tokenId) external;
+    function approve(address to, uint256 tokenId) external virtual;
 
     /**
      * @dev Gets the approved address for a token ID, or zero if no address set
      * Reverts if the token ID does not exist.
      * @param tokenId uint256 ID of the token to query the approval of
-     * @return address currently approved for the given token ID
+     * @return operator address currently approved for the given token ID
      */
-    function getApproved(uint256 tokenId) public view returns (address operator);
+    function getApproved(uint256 tokenId) public virtual view returns (address operator);
 
     /**
      * @dev Sets or unsets the approval of a given operator
@@ -62,7 +62,7 @@ contract IERC721 {
      * @param operator operator address to set the approval
      * @param approved representing the status of the approval to be set
      */
-    function setApprovalForAll(address operator, bool approved) external;
+    function setApprovalForAll(address operator, bool approved) external virtual;
 
     /**
      * @dev Tells whether an operator is approved by a given owner
@@ -70,7 +70,7 @@ contract IERC721 {
      * @param operator operator address which you want to query the approval of
      * @return bool whether the given operator is approved by the given owner
      */
-    function isApprovedForAll(address owner,address operator) external view returns (bool);
+    function isApprovedForAll(address owner,address operator) external virtual view returns (bool);
 
     /**
      * @dev Transfers the ownership of a given token ID to another address
@@ -80,7 +80,7 @@ contract IERC721 {
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
     */
-    function transferFrom(address from, address to, uint256 tokenId) external;
+    function transferFrom(address from, address to, uint256 tokenId) external virtual;
 
     /**
      * @dev Safely transfers the ownership of a given token ID to another address
@@ -94,7 +94,7 @@ contract IERC721 {
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
     */
-    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    function safeTransferFrom(address from, address to, uint256 tokenId) external virtual;
 
     /**
      * @dev Safely transfers the ownership of a given token ID to another address
@@ -109,5 +109,5 @@ contract IERC721 {
      * @param tokenId uint256 ID of the token to be transferred
      * @param data bytes data to send along with a safe transfer check
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external virtual;
 }

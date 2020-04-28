@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
 import "../../../token/ERC721/IERC721Receiver.sol";
 
@@ -42,7 +42,7 @@ contract ERC721ReceiverMock is IERC721Receiver {
     }
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
-        public returns (bytes4)
+        public override returns (bytes4)
     {
         require(!_reverts);
         emit Received(operator, from, tokenId, data, gasleft());

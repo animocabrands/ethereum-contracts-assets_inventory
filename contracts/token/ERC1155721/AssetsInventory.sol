@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -27,7 +27,7 @@ import "./../ERC1155/IERC1155TokenReceiver.sol";
     If non-fungible bitmask length == 1, there is one Non-Fungible Collection represented by the most significant bit set to 1 and other bits set to 0.
     If non-fungible bitmask length > 1, there are multiple Non-Fungible Collections.
  */
-contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections, IERC721Metadata, IERC1155MetadataURI, Context
+abstract contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections, IERC721Metadata, IERC1155MetadataURI, Context
 {
     //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
     bytes4 constant internal ERC721_RECEIVED = 0x150b7a02;
@@ -80,7 +80,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
      * @param interfaceId interface id to query
      * @return bool if support the given interface id
      */
-    function supportsInterface(bytes4 interfaceId) public view returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public override view returns (bool) {
         return (
             // ERC165 interface id
             interfaceId == 0x01ffc9a7 ||
@@ -100,19 +100,19 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
     }
 /////////////////////////////////////////// ERC721 /////////////////////////////////////////////
 
-    function balanceOf(address tokenOwner) public view returns (uint256) {
+    function balanceOf(address tokenOwner) public override view returns (uint256) {
         require(tokenOwner != address(0x0));
         return _nftBalances[tokenOwner];
     }
 
-    function ownerOf(uint256 tokenId) public view returns (address) {
+    function ownerOf(uint256 tokenId) public override(IERC1155AssetCollections, IERC721) view returns (address) {
         require(isNFT(tokenId));
         address tokenOwner = _owners[tokenId];
         require(tokenOwner != address(0x0));
         return tokenOwner;
     }
 
-    function approve(address to, uint256 tokenId) public {
+    function approve(address to, uint256 tokenId) public virtual override {
         address tokenOwner = ownerOf(tokenId);
         require(to != tokenOwner); // solium-disable-line error-reason
 
@@ -123,12 +123,12 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
         emit Approval(tokenOwner, to, tokenId);
     }
 
-    function getApproved(uint256 tokenId) public view returns (address) {
+    function getApproved(uint256 tokenId) public override view returns (address) {
         require(isNFT(tokenId) && exists(tokenId));
         return _tokenApprovals[tokenId];
     }
 
-    function setApprovalForAll(address to, bool approved) public {
+    function setApprovalForAll(address to, bool approved) public virtual override(IERC1155, IERC721) {
         address sender = _msgSender();
         require(to != sender);
         _setApprovalForAll(sender, to, approved);
@@ -139,19 +139,19 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
         emit ApprovalForAll(sender, operator, approved);
     }
 
-    function isApprovedForAll(address tokenOwner, address operator) public view returns (bool) {
+    function isApprovedForAll(address tokenOwner, address operator) public override(IERC1155, IERC721) view returns (bool) {
         return _operatorApprovals[tokenOwner][operator];
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) public {
+    function transferFrom(address from, address to, uint256 tokenId) public virtual override {
         _transferFrom(from, to, tokenId, "", false);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) public {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
         _transferFrom(from, to, tokenId, "", true);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override {
         _transferFrom(from, to, tokenId, data, true);
     }
 
@@ -165,7 +165,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public
+    ) public virtual override
     {
         address sender = _msgSender();
         bool operatable = (from == sender || _operatorApprovals[from][sender] == true);
@@ -190,7 +190,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public
+    ) public virtual override
     {
         require(ids.length == values.length);
 
@@ -216,7 +216,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
         require(_checkERC1155AndCallSafeBatchTransfer(sender, from, to, ids, values, data));
     }
 
-    function balanceOf(address tokenOwner, uint256 id) public view returns (uint256) {
+    function balanceOf(address tokenOwner, uint256 id) public override view returns (uint256) {
         require(tokenOwner != address(0x0));
 
         if (isNFT(id)) {
@@ -229,7 +229,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
     function balanceOfBatch(
         address[] memory tokenOwners,
         uint256[] memory ids
-    ) public view returns (uint256[] memory)
+    ) public override view returns (uint256[] memory)
     {
         require(tokenOwners.length == ids.length);
 
@@ -252,7 +252,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
 
 /////////////////////////////////////////// ERC1155AssetCollections /////////////////////////////////////////////
 
-    function collectionOf(uint256 id) public view returns (uint256) {
+    function collectionOf(uint256 id) public override view returns (uint256) {
         require(isNFT(id));
         return id & NF_COLLECTION_MASK;
     }
@@ -262,7 +262,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
         @param id The ID to query
         @return bool whether the given id is fungible
      */
-    function isFungible(uint256 id) public view returns (bool) {
+    function isFungible(uint256 id) public override view returns (bool) {
         return id & (NF_BIT_MASK) == 0;
     }
 
@@ -297,7 +297,7 @@ contract AssetsInventory is IERC165, IERC721, IERC1155, IERC1155AssetCollections
      * @param tokenId uint256 ID of the token to be transferred
      * @param safe bool to indicate whether the transfer is safe
     */
-    function _transferFrom(address from, address to, uint256 tokenId, bytes memory data, bool safe) internal {
+    function _transferFrom(address from, address to, uint256 tokenId, bytes memory data, bool safe) internal virtual {
         require(isNFT(tokenId));
 
         address sender = _msgSender();

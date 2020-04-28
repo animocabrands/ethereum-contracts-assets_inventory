@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity = 0.6.2;
 
 /**
     @title ERC721 Non-Fungible Token Standard, token receiver
@@ -6,7 +6,7 @@ pragma solidity = 0.5.16;
     Interface for any contract that wants to support safeTransfers from ERC721 asset contracts.
     Note: The ERC-165 identifier for this interface is 0x150b7a02.
  */
-contract IERC721Receiver {
+abstract contract IERC721Receiver {
 
     //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
     bytes4 constant internal ERC721_RECEIVED = 0x150b7a02;
@@ -26,5 +26,5 @@ contract IERC721Receiver {
         @return bytes4 `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
      */
     function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
-    public returns (bytes4);
+    public virtual returns (bytes4);
 }
