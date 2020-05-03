@@ -1,6 +1,4 @@
-pragma solidity = 0.6.2;
-
-
+pragma solidity ^0.6.6;
 
 /**
     @title ERC-1155 Multi Token Standard, optional Asset Collections extension
@@ -18,7 +16,7 @@ pragma solidity = 0.6.2;
 
     Note: The ERC-165 identifier for this interface is 0x09ce5c46.
  */
-abstract contract IERC1155AssetCollections {
+interface IERC1155AssetCollections {
 
     /**
         @dev Returns the parent collection ID of a Non-Fungible Token ID.
@@ -28,19 +26,19 @@ abstract contract IERC1155AssetCollections {
         @param id The ID to query. id must represent an existing/non-existing Non-Fungible Token, else it throws.
         @return uint256 the parent collection ID.
      */
-    function collectionOf(uint256 id) public virtual view returns (uint256);
+    function collectionOf(uint256 id) external view returns (uint256);
 
     /**
         @dev Returns whether or not an ID represents a Fungible Collection.
         @param id The ID to query.
         @return bool true if id represents a Fungible Collection, false otherwise.
     */
-    function isFungible(uint256 id) public virtual view returns (bool);
+    function isFungible(uint256 id) external view returns (bool);
 
     /**
        @dev Returns the owner of a Non-Fungible Token.
        @param tokenId The ID to query. MUST represent an existing Non-Fungible Token, else it throws.
        @return owner address currently marked as the owner of the Non-Fungible Token.
      */
-    function ownerOf(uint256 tokenId) public virtual view returns (address owner);
+    function ownerOf(uint256 tokenId) external view returns (address owner);
 }

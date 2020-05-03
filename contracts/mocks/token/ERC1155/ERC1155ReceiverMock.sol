@@ -1,4 +1,4 @@
-pragma solidity = 0.6.2;
+pragma solidity ^0.6.6;
 
 import "../../../token/ERC1155/IERC1155TokenReceiver.sol";
 

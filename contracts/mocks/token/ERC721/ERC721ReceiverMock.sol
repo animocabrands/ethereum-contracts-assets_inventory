@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-pragma solidity = 0.6.2;
+pragma solidity ^0.6.6;
 
 import "../../../token/ERC721/IERC721Receiver.sol";
 

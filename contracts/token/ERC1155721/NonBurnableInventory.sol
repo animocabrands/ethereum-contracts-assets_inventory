@@ -1,4 +1,4 @@
-pragma solidity = 0.6.2;
+pragma solidity ^0.6.6;
 
 import "./AssetsInventory.sol";
 
@@ -8,7 +8,7 @@ import "./AssetsInventory.sol";
 abstract contract NonBurnableInventory is AssetsInventory
 {
 
-    constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength)  {}
+    constructor(uint256 nfMaskLength) internal AssetsInventory(nfMaskLength)  {}
 
     modifier notZero(address addr) {
         require(addr != address(0x0));
@@ -21,7 +21,7 @@ abstract contract NonBurnableInventory is AssetsInventory
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override notZero(to) {
+    ) public virtual override notZero(to) {
         super.safeTransferFrom(from, to, id, value, data);
     }
 
@@ -31,12 +31,12 @@ abstract contract NonBurnableInventory is AssetsInventory
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override notZero(to) {
+    ) public virtual override notZero(to) {
         super.safeBatchTransferFrom(from, to, ids, values, data);
     }
 
     function _transferFrom(address from, address to, uint256 tokenId, bytes memory data, bool safe
-    ) internal override notZero(to) {
+    ) internal virtual override notZero(to) {
         super._transferFrom(from, to, tokenId, data, safe);
     }
 }

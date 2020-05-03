@@ -1,8 +1,8 @@
-pragma solidity = 0.6.2;
+pragma solidity ^0.6.6;
 
+import "@animoca/ethereum-contracts-core_library/contracts/access/PauserRole.sol";
 import "./AssetsInventory.sol";
 import "./../ERC1155/ERC1155PausableCollections.sol";
-import "../../access/PauserRole.sol";
 
 /**
     @title PausableInventory, an inventory contract with pausable collections
@@ -10,7 +10,7 @@ import "../../access/PauserRole.sol";
 abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollections, PauserRole
 {
 
-    constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength)  {}
+    constructor(uint256 nfMaskLength) internal AssetsInventory(nfMaskLength)  {}
 
 /////////////////////////////////////////// ERC1155PausableCollections /////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollectio
         _;
     }
 
-    function idPaused(uint256 id) public view returns (bool) {
+    function idPaused(uint256 id) public virtual view returns (bool) {
         if (isNFT(id)) {
             return _pausedCollections[collectionOf(id)];
         } else {
@@ -32,7 +32,7 @@ abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollectio
         }
     }
 
-    function pauseCollections(uint256[] memory collectionIds) public override onlyPauser {
+    function pauseCollections(uint256[] memory collectionIds) public virtual override onlyPauser {
         for (uint256 i=0; i<collectionIds.length; i++) {
             uint256 collectionId = collectionIds[i];
             require(!isNFT(collectionId)); // only works on collections
@@ -41,7 +41,7 @@ abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollectio
         emit CollectionsPaused(collectionIds, _msgSender());
     }
 
-    function unpauseCollections(uint256[] memory collectionIds) public override onlyPauser {
+    function unpauseCollections(uint256[] memory collectionIds) public virtual override onlyPauser {
         for (uint256 i=0; i<collectionIds.length; i++) {
             uint256 collectionId = collectionIds[i];
             require(!isNFT(collectionId)); // only works on collections
@@ -50,11 +50,11 @@ abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollectio
         emit CollectionsUnpaused(collectionIds, _msgSender());
     }
 
-    function pause() public override onlyPauser {
+    function pause() public virtual override onlyPauser {
         _pause();
     }
 
-    function unpause() public override onlyPauser {
+    function unpause() public virtual override onlyPauser {
         _unpause();
     }
 
@@ -62,27 +62,27 @@ abstract contract PausableInventory is AssetsInventory, ERC1155PausableCollectio
 /////////////////////////////////////////// ERC721 /////////////////////////////////////////////
 
     function approve(address to, uint256 tokenId
-    ) public override whenNotPaused whenIdNotPaused(tokenId) {
+    ) public virtual override whenNotPaused whenIdNotPaused(tokenId) {
         super.approve(to, tokenId);
     }
 
     function setApprovalForAll(address to, bool approved
-    ) public override whenNotPaused {
+    ) public virtual override whenNotPaused {
         super.setApprovalForAll(to, approved);
     }
 
     function transferFrom(address from, address to, uint256 tokenId
-    ) public override whenNotPaused whenIdNotPaused(tokenId) {
+    ) public virtual override whenNotPaused whenIdNotPaused(tokenId) {
         super.transferFrom(from, to, tokenId);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId
-    ) public override whenNotPaused whenIdNotPaused(tokenId) {
+    ) public virtual override whenNotPaused whenIdNotPaused(tokenId) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data
-    ) public override whenNotPaused whenIdNotPaused(tokenId) {
+    ) public virtual override whenNotPaused whenIdNotPaused(tokenId) {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 

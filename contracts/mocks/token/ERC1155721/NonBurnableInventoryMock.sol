@@ -1,9 +1,9 @@
-pragma solidity = 0.6.2;
+pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
+import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 import "../../../token/ERC1155721/NonBurnableInventory.sol";
-import "../../../access/MinterRole.sol";
 
 contract NonBurnableInventoryMock is NonBurnableInventory, Ownable, MinterRole {
 

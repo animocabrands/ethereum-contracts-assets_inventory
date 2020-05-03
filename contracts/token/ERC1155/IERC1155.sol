@@ -1,11 +1,11 @@
-pragma solidity = 0.6.2;
+pragma solidity ^0.6.6;
 
 /**
     @title ERC-1155 Multi Token Standard, basic interface
     @dev See https://eips.ethereum.org/EIPS/eip-1155
     Note: The ERC-165 identifier for this interface is 0xd9b67a26.
  */
-abstract contract IERC1155 {
+interface IERC1155 {
 
     event TransferSingle(
         address indexed _operator,
@@ -53,8 +53,8 @@ abstract contract IERC1155 {
         address to,
         uint256 id,
         uint256 value,
-        bytes memory data
-    ) public virtual;
+        bytes calldata data
+    ) external;
 
     /**
         @notice Transfers `values` amount(s) of `ids` from the `from` address to the `to` address specified (with safety call).
@@ -75,10 +75,10 @@ abstract contract IERC1155 {
     function safeBatchTransferFrom(
         address from,
         address to,
-        uint256[] memory ids,
-        uint256[] memory values,
-        bytes memory data
-    ) public virtual;
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external;
 
     /**
         @notice Get the balance of an account's tokens.
@@ -86,7 +86,7 @@ abstract contract IERC1155 {
         @param id     ID of the token
         @return        The _owner's balance of the token type requested
      */
-    function balanceOf(address owner, uint256 id) public virtual view returns (uint256);
+    function balanceOf(address owner, uint256 id) external view returns (uint256);
 
     /**
         @notice Get the balance of multiple account/token pairs
@@ -95,9 +95,9 @@ abstract contract IERC1155 {
         @return        The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
      */
     function balanceOfBatch(
-        address[] memory owners,
-        uint256[] memory ids
-    ) public virtual view returns (uint256[] memory);
+        address[] calldata owners,
+        uint256[] calldata ids
+    ) external view returns (uint256[] memory);
 
     /**
         @notice Enable or disable approval for a third party ("operator") to manage all of the caller's tokens.
@@ -105,7 +105,7 @@ abstract contract IERC1155 {
         @param operator  Address to add to the set of authorized operators
         @param approved  True if the operator is approved, false to revoke approval
     */
-    function setApprovalForAll(address operator, bool approved) public virtual;
+    function setApprovalForAll(address operator, bool approved) external;
 
     /**
         @notice Queries the approval status of an operator for a given owner.
@@ -113,5 +113,5 @@ abstract contract IERC1155 {
         @param operator  Address of authorized operator
         @return           True if the operator is approved, false if not
     */
-    function isApprovedForAll(address owner, address operator) public virtual view returns (bool);
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
 }
