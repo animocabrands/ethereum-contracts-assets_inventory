@@ -1,41 +1,25 @@
 pragma solidity ^0.6.6;
 
-// import "@openzeppelin/contracts/access/Ownable.sol";
-import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 import "@animoca/ethereum-contracts-erc20_base/contracts/metatx/ERC20Fees.sol";
 import "../../../token/ERC1155721/AssetsInventory.sol";
+import "./URI.sol";
 
-contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole {
+contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole, URI {
 
-    using RichUInt256 for uint256;
+    string public override name = "MetaInventoryMock";
+    string public override symbol = "MIM";
 
     constructor(uint256 nfMaskLength, address gasToken, address payoutWallet
     ) public AssetsInventory(nfMaskLength) ERC20Fees(gasToken, payoutWallet) {}
 
     /**
-     * @dev Gets the token name
-     * @return string representing the token name
-     */
-    function name() external override view returns(string memory) {
-        return "MetaInventoryMock";
-    }
-
-    /**
-     * @dev Gets the token symbol
-     * @return string representing the token symbol
-     */
-    function symbol() external override view returns(string memory) {
-        return "MIM";
-    }
-
-    /**
      * @dev This function creates the collection id.
      * @param collectionId collection identifier
      */
-    function createCollection(uint256 collectionId) external onlyOwner {
+    function createCollection(uint256 collectionId) onlyOwner external {
         require(!isNFT(collectionId));
-        emit URI(_fullUriFromId(collectionId), collectionId);
+        emit URI(_uri(collectionId), collectionId);
     }
 
     /**
@@ -52,9 +36,9 @@ contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole {
 
         for (uint i = 0; i < ids.length; i++) {
             if (isNFT(ids[i]) && values[i] == 1) {
-                _mintNonFungible(to[i], ids[i]);
+                _mintNonFungible(to[i], ids[i], true);
             } else if (isFungible(ids[i])) {
-                _mintFungible(to[i], ids[i], values[i]);
+                _mintFungible(to[i], ids[i], values[i], true);
             } else {
                 revert("Incorrect id");
             }
@@ -67,35 +51,8 @@ contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole {
      * @param to address recipient that will own the minted tokens
      * @param tokenId uint256 ID of the token to be minted
      */
-    function mintNonFungible(address to, uint256 tokenId) external onlyMinter {
-        require(isNFT(tokenId));
-        _mintNonFungible(to, tokenId);
-    }
-
-    /**
-     * @dev Internal function to mint one non fungible token
-     * Reverts if the given token ID already exist
-     * @param to address recipient that will own the minted tokens
-     * @param id uint256 ID of the token to be minted
-     */
-    function _mintNonFungible(address to, uint256 id) internal {
-        require(!exists(id));
-        require(to != address(0x0));
-
-        uint256 collection = id & NF_COLLECTION_MASK;
-
-        _owners[id] = to;
-        _nftBalances[to] = SafeMath.add(_nftBalances[to], 1);
-        _balances[collection][to] = SafeMath.add(_balances[collection][to], 1);
-
-        emit Transfer(address(0x0), to, id);
-        emit TransferSingle(_msgSender(), address(0x0), to, id, 1);
-
-        emit URI(_fullUriFromId(id), id);
-
-        require(
-            _checkERC1155AndCallSafeTransfer(_msgSender(), address(0x0), to, id, 1, "", false, false), "failCheck"
-        );
+    function mintNonFungible(address to, uint256 tokenId) onlyMinter external {
+        _mintNonFungible(to, tokenId, false);
     }
 
     /**
@@ -105,61 +62,12 @@ contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole {
      * @param collection uint256 ID of the fungible collection to be minted
      * @param value uint256 amount to mint
      */
-    function mintFungible(address to, uint256 collection, uint256 value) external onlyMinter {
-        require(isFungible(collection));
-        _mintFungible(to, collection, value);
+    function mintFungible(address to, uint256 collection, uint256 value) onlyMinter external {
+        _mintFungible(to, collection, value, false);
     }
 
-    /**
-     * @dev Internal function to mint fungible token
-     * Reverts if the given ID is not exsit
-     * @param to address recipient that will own the minted tokens
-     * @param collection uint256 ID of the fungible collection to be minted
-     * @param value uint256 amount to mint
-     */
-    function _mintFungible(address to, uint256 collection, uint256 value) internal {
-        require(to != address(0x0));
-        require(value > 0);
-
-        // Grant the items to the caller
-        _balances[collection][to] = SafeMath.add(_balances[collection][to], value);
-
-        // Emit the Transfer/Mint event.
-        // the 0x0 source address implies a mint
-        // It will also provide the circulating supply info.
-        emit TransferSingle(_msgSender(), address(0x0), to, collection, value);
-
-        require(
-            _checkERC1155AndCallSafeTransfer(_msgSender(), address(0x0), to, collection, value, "", false, false), "failCheck"
-        );
-    }
-
-    /**
-     * @dev Returns an URI for a given ID
-     * Throws if the ID does not exist. May return an empty string.
-     * @param id uint256 ID of the tokenId / collectionId to query
-     * @return string URI of given ID
-     */
-    function uri(uint256 id) external override view returns (string memory) {
-        return _uri(id);
-    }
-
-    function tokenURI(uint256 tokenId) external override view returns (string memory) {
-        require(exists(tokenId));
-        return _uri(tokenId);
-    }
-
-    function _uri(uint256 id) internal pure returns (string memory) {
+    function _uri(uint256 id) internal override pure returns (string memory) {
         return _fullUriFromId(id);
-    }
-
-    /**
-     * @dev Internal function to convert id to full uri string
-     * @param id uint256 ID to convert
-     * @return string URI convert from given ID
-     */
-    function _fullUriFromId(uint256 id) internal pure returns (string memory) {
-        return string(abi.encodePacked("https://prefix/json/", id.toString()));
     }
 
     /**
@@ -182,3 +90,4 @@ contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole {
         return super._msgData();
     }
 }
+

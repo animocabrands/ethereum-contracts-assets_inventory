@@ -75,6 +75,8 @@ abstract contract AssetsInventory is IERC165, IERC721, IERC721Metadata, IERC1155
         NF_COLLECTION_MASK = mask;
     }
 
+    function _uri(uint256 id) internal virtual pure returns(string memory);
+
 /////////////////////////////////////////// ERC165 /////////////////////////////////////////////
 
     /**
@@ -157,7 +159,10 @@ abstract contract AssetsInventory is IERC165, IERC721, IERC721Metadata, IERC1155
         _transferFrom(from, to, tokenId, data, true);
     }
 
-
+    function tokenURI(uint256 tokenId) external virtual override view returns (string memory) {
+        require(exists(tokenId));
+        return _uri(tokenId);
+    }
 
 /////////////////////////////////////////// ERC1155 /////////////////////////////////////////////
 
@@ -250,6 +255,16 @@ abstract contract AssetsInventory is IERC165, IERC721, IERC721Metadata, IERC1155
         }
 
         return balances;
+    }
+
+    /**
+     * @dev Returns an URI for a given ID
+     * Throws if the ID does not exist. May return an empty string.
+     * @param id uint256 ID of the tokenId / collectionId to query
+     * @return string URI of given ID
+     */
+    function uri(uint256 id) external virtual override view returns (string memory) {
+        return _uri(id);
     }
 
 /////////////////////////////////////////// ERC1155AssetCollections /////////////////////////////////////////////
@@ -357,6 +372,59 @@ abstract contract AssetsInventory is IERC165, IERC721, IERC721Metadata, IERC1155
         if (to != address(0x0)) {
             _balances[collectionId][to] = SafeMath.add(_balances[collectionId][to], value);
         }
+    }
+
+/////////////////////////////////////////// Minting ///////////////////////////////////////
+
+    /**
+     * @dev Internal function to mint one non fungible token
+     * Reverts if the given nft id already exists
+     * @param to address recipient that will own the minted tokens
+     * @param id uint256 ID of the token to be minted
+     */
+    function _mintNonFungible(address to, uint256 id, bool typeChecked) internal virtual {
+        require(to != address(0x0));
+        if (!typeChecked) {
+            require(isNFT(id));
+        }
+        require(!exists(id));
+
+        uint256 collection = id & NF_COLLECTION_MASK;
+
+        _owners[id] = to;
+        _nftBalances[to] = SafeMath.add(_nftBalances[to], 1);
+        _balances[collection][to] = SafeMath.add(_balances[collection][to], 1);
+
+        emit Transfer(address(0x0), to, id);
+        emit TransferSingle(_msgSender(), address(0x0), to, id, 1);
+
+        emit URI(_uri(id), id);
+
+        require(
+            _checkERC1155AndCallSafeTransfer(_msgSender(), address(0x0), to, id, 1, "", false, false), "failCheck"
+        );
+    }
+
+    /**
+     * @dev Internal function to mint fungible token
+     * @param to address recipient that will own the minted tokens
+     * @param collection uint256 fungible collection id
+     * @param value uint256 amount to mint
+     */
+    function _mintFungible(address to, uint256 collection, uint256 value, bool typeChecked) internal virtual {
+        require(to != address(0x0));
+        if (!typeChecked) {
+            require(isFungible(collection));
+        }
+        require(value > 0);
+
+        _balances[collection][to] = SafeMath.add(_balances[collection][to], value);
+
+        emit TransferSingle(_msgSender(), address(0x0), to, collection, value);
+
+        require(
+            _checkERC1155AndCallSafeTransfer(_msgSender(), address(0x0), to, collection, value, "", false, false), "failCheck"
+        );
     }
 
 /////////////////////////////////////////// Receiver Internal Functions ///////////////////////////////////////
