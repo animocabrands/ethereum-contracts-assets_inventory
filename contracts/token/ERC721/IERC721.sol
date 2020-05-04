@@ -1,11 +1,11 @@
-pragma solidity = 0.5.16;
+pragma solidity ^0.6.6;
 
  /**
     @title ERC721 Non-Fungible Token Standard, basic interface
     @dev See https://eips.ethereum.org/EIPS/eip-721
     Note: The ERC-165 identifier for this interface is 0x80ac58cd.
  */
-contract IERC721 {
+interface IERC721 {
     event Transfer(
         address indexed _from,
         address indexed _to,
@@ -27,7 +27,7 @@ contract IERC721 {
     /**
      * @dev Gets the balance of the specified address
      * @param owner address to query the balance of
-     * @return uint256 representing the amount owned by the passed address
+     * @return balance uint256 representing the amount owned by the passed address
      */
     function balanceOf(address owner) external view returns (uint256 balance);
 
@@ -36,7 +36,7 @@ contract IERC721 {
      * @param tokenId uint256 ID to query the owner of
      * @return owner address currently marked as the owner of the given ID
      */
-    function ownerOf(uint256 tokenId) public view returns (address owner);
+    function ownerOf(uint256 tokenId) external view returns (address owner);
 
     /**
      * @dev Approves another address to transfer the given token ID
@@ -52,9 +52,9 @@ contract IERC721 {
      * @dev Gets the approved address for a token ID, or zero if no address set
      * Reverts if the token ID does not exist.
      * @param tokenId uint256 ID of the token to query the approval of
-     * @return address currently approved for the given token ID
+     * @return operator address currently approved for the given token ID
      */
-    function getApproved(uint256 tokenId) public view returns (address operator);
+    function getApproved(uint256 tokenId) external view returns (address operator);
 
     /**
      * @dev Sets or unsets the approval of a given operator
