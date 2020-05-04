@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity ^0.6.6;
 
  /**
     @title ERC721 Non-Fungible Token Standard, optional metadata extension

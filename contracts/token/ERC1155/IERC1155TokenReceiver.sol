@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity ^0.6.6;
 
 /**
     @title ERC-1155 Multi Token Standard, token receiver
@@ -6,7 +6,7 @@ pragma solidity = 0.5.16;
     Interface for any contract that wants to support transfers from ERC1155 asset contracts.
     Note: The ERC-165 identifier for this interface is 0x4e2312e0.
  */
-contract IERC1155TokenReceiver {
+abstract contract IERC1155TokenReceiver {
 
     // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
     bytes4 constant internal ERC1155_RECEIVED = 0xf23a6e61;
@@ -33,7 +33,7 @@ contract IERC1155TokenReceiver {
         uint256 id,
         uint256 value,
         bytes calldata data
-    ) external returns (bytes4);
+    ) external virtual returns (bytes4);
 
     /**
         @notice Handle the receipt of multiple ERC1155 token types.
@@ -54,5 +54,5 @@ contract IERC1155TokenReceiver {
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external returns (bytes4);
+    ) external virtual returns (bytes4);
 }

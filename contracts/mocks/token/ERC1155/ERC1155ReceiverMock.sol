@@ -1,4 +1,4 @@
-pragma solidity = 0.5.16;
+pragma solidity ^0.6.6;
 
 import "../../../token/ERC1155/IERC1155TokenReceiver.sol";
 
@@ -14,8 +14,6 @@ contract ERC1155ReceiverMock is IERC1155TokenReceiver {
     mapping(uint256 => bool) private tokens;
 
     bytes4 constant private ERC1155_REJECTED = 0xafed434d;
-    bytes4 constant private ERC1155_RECEIVED = 0xf23a6e61;
-    bytes4 constant private ERC1155_BATCH_RECEIVED = 0xbc197c81;
 
     event Received(address operator, address from, uint256 tokenId, uint256 supply, bytes data, uint256 gas);
     event ReceivedBatch(address operator, address from, uint256[] tokenIds, uint256[] supplies, bytes data, uint256 gas);
@@ -47,7 +45,7 @@ contract ERC1155ReceiverMock is IERC1155TokenReceiver {
         uint256 _id,
         uint256 _value,
         bytes calldata _data
-    ) external returns(bytes4){
+    ) external override returns(bytes4){
         require(address(tokenContract) == msg.sender, "only accept tokenContract as sender");
         if (!allowTokensReceived) {
             return ERC1155_REJECTED;
@@ -68,7 +66,7 @@ contract ERC1155ReceiverMock is IERC1155TokenReceiver {
         uint256[] calldata _ids,
         uint256[] calldata _values,
         bytes calldata _data
-    ) external returns(bytes4){
+    ) external override returns(bytes4){
         require(address(tokenContract) == msg.sender, "only accept tokenContract as sender");
         if (!allowBatchTokensReceived) {
             return ERC1155_REJECTED;
