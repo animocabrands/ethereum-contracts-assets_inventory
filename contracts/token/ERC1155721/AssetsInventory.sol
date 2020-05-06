@@ -75,7 +75,7 @@ abstract contract AssetsInventory is IERC165, IERC721, IERC721Metadata, IERC1155
         NF_COLLECTION_MASK = mask;
     }
 
-    function _uri(uint256 id) internal virtual pure returns(string memory);
+    function _uri(uint256 id) internal virtual view returns(string memory);
 
 /////////////////////////////////////////// ERC165 /////////////////////////////////////////////
 
