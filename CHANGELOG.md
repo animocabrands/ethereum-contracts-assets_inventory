@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.1 (04/05/2020)
+
+### Bugfixes
+ * Changed `_uri(uint256)` from `pure` to `view`.
+
+### Improvements
+ * Added `constant` attribute to mocks' constant state variables.
+
 ## 2.0.0 (03/05/2020)
 
 ### Breaking changes

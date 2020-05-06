@@ -7,8 +7,8 @@ import "./URI.sol";
 
 contract PausableInventoryMock is PausableInventory, Ownable, MinterRole, URI {
 
-    string public override name = "PausableInventoryMock";
-    string public override symbol = "PIM";
+    string public override constant name = "PausableInventoryMock";
+    string public override constant symbol = "PIM";
 
     constructor(uint256 nfMaskLength) public PausableInventory(nfMaskLength) {}
 
@@ -65,7 +65,7 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole, URI {
         _mintFungible(to, collection, value, false);
     }
 
-    function _uri(uint256 id) internal override pure returns (string memory) {
+    function _uri(uint256 id) internal override view returns (string memory) {
         return _fullUriFromId(id);
     }
 }
