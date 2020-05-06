@@ -7,8 +7,8 @@ import "./URI.sol";
 
 contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole, URI {
 
-    string public override name = "MetaInventoryMock";
-    string public override symbol = "MIM";
+    string public override constant name = "MetaInventoryMock";
+    string public override constant symbol = "MIM";
 
     constructor(uint256 nfMaskLength, address gasToken, address payoutWallet
     ) public AssetsInventory(nfMaskLength) ERC20Fees(gasToken, payoutWallet) {}
@@ -66,7 +66,7 @@ contract Meta20InventoryMock is AssetsInventory, ERC20Fees, MinterRole, URI {
         _mintFungible(to, collection, value, false);
     }
 
-    function _uri(uint256 id) internal override pure returns (string memory) {
+    function _uri(uint256 id) internal override view returns (string memory) {
         return _fullUriFromId(id);
     }
 

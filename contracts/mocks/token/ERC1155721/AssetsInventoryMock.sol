@@ -7,8 +7,8 @@ import "./URI.sol";
 
 contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole, URI {
 
-    string public override name = "AssetsInventoryMock";
-    string public override symbol = "AIM";
+    string public override constant name = "AssetsInventoryMock";
+    string public override constant symbol = "AIM";
 
     constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength) {}
 
@@ -65,7 +65,7 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole, URI {
         _mintFungible(to, collection, value, false);
     }
 
-    function _uri(uint256 id) internal override pure returns (string memory) {
+    function _uri(uint256 id) internal override view returns (string memory) {
         return _fullUriFromId(id);
     }
 }

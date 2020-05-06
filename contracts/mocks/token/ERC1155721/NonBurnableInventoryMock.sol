@@ -7,8 +7,8 @@ import "./URI.sol";
 
 contract NonBurnableInventoryMock is NonBurnableInventory, Ownable, MinterRole, URI {
 
-    string public override name = "NonBurnableInventoryMock";
-    string public override symbol = "NBIM";
+    string public override constant name = "NonBurnableInventoryMock";
+    string public override constant symbol = "NBIM";
 
     constructor(uint256 nfMaskLength) public NonBurnableInventory(nfMaskLength) {}
 
@@ -65,7 +65,7 @@ contract NonBurnableInventoryMock is NonBurnableInventory, Ownable, MinterRole, 
         _mintFungible(to, collection, value, false);
     }
 
-    function _uri(uint256 id) internal override pure returns (string memory) {
+    function _uri(uint256 id) internal override view returns (string memory) {
         return _fullUriFromId(id);
     }
 }
