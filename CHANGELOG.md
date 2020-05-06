@@ -7,6 +7,7 @@
 
 ### Improvements
  * Added `constant` attribute to mocks' constant state variables.
+ * Updated dependency on `@animoca/ethereum-contracts-core_library` to `1.1.0`.
 
 ## 2.0.0 (03/05/2020)
 
