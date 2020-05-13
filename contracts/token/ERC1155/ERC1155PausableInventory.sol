@@ -3,15 +3,15 @@ pragma solidity ^0.6.6;
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/PauserRole.sol";
 import "../../utils/PausableCollections.sol";
-import "./AssetsInventory.sol";
+import "./ERC1155AssetsInventory.sol";
 
 /**
- * @title PausableInventory, an inventory contract with pausable collections
+ * @title ERC1155PausableInventory, an inventory contract with pausable collections
  */
-abstract contract PausableInventory is AssetsInventory, PausableCollections, Pausable, PauserRole
+abstract contract ERC1155PausableInventory is ERC1155AssetsInventory, PausableCollections, Pausable, PauserRole
 {
 
-    constructor(uint256 nfMaskLength) internal AssetsInventory(nfMaskLength)  {}
+    constructor(uint256 nfMaskLength) internal ERC1155AssetsInventory(nfMaskLength)  {}
 
 /////////////////////////////////////////// Pausable ///////////////////////////////////////
 
@@ -61,13 +61,22 @@ abstract contract PausableInventory is AssetsInventory, PausableCollections, Pau
 
 /////////////////////////////////////////// ERC1155 /////////////////////////////////////////////
 
+    function setApprovalForAll(
+        address to,
+        bool approved
+    ) public virtual override whenNotPaused
+    {
+        super.setApprovalForAll(to, approved);
+    }
+
     function safeTransferFrom(
         address from,
         address to,
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public virtual override whenNotPaused whenIdNotPaused(id) {
+    ) public virtual override whenNotPaused whenIdNotPaused(id)
+    {
         super.safeTransferFrom(from, to, id, value, data);
     }
 
@@ -77,32 +86,11 @@ abstract contract PausableInventory is AssetsInventory, PausableCollections, Pau
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public virtual override whenNotPaused {
+    ) public virtual override whenNotPaused
+    {
         for (uint256 i = 0; i < ids.length; ++i) {
             require(!_idPaused(ids[i]), "ERC1155PausableInventory: id is paused");
         }
         super.safeBatchTransferFrom(from, to, ids, values, data);
-    }
-
-/////////////////////////////////////////// ERC721 /////////////////////////////////////////////
-
-    function approve(address to, uint256 tokenId
-    ) public virtual override whenNotPaused whenIdNotPaused(tokenId) {
-        super.approve(to, tokenId);
-    }
-
-    function setApprovalForAll(address to, bool approved
-    ) public virtual override whenNotPaused {
-        super.setApprovalForAll(to, approved);
-    }
-
-    function _transferFrom(
-        address from,
-        address to,
-        uint256 nftId,
-        bytes memory data,
-        bool safe
-    ) internal virtual override whenNotPaused whenIdNotPaused(nftId) {
-        super._transferFrom(from, to, nftId, data, safe);
     }
 }

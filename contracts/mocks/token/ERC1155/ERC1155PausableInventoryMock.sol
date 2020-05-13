@@ -3,16 +3,13 @@ pragma solidity ^0.6.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
-import "../../../token/ERC1155721/AssetsInventory.sol";
+import "../../../token/ERC1155/ERC1155PausableInventory.sol";
 
-contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
+contract ERC1155PausableInventoryMock is ERC1155PausableInventory, Ownable, MinterRole  {
 
     using RichUInt256 for uint256;
 
-    string public override constant name = "AssetsInventoryMock";
-    string public override constant symbol = "AIM";
-
-    constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength) {}
+    constructor(uint256 nfMaskLength) public ERC1155PausableInventory(nfMaskLength) {}
 
     /**
      * @dev This function creates the collection id.
@@ -23,12 +20,6 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
         emit URI(_uri(collectionId), collectionId);
     }
 
-    /**
-     * @dev Public function to non-safely mint a batch of new tokens
-     * @param to address address that will own the minted tokens
-     * @param ids uint256[] identifiers of the tokens to be minted
-     * @param values uint256[] amounts to be minted
-     */
     function batchMint(
         address to,
         uint256[] calldata ids,
@@ -39,12 +30,6 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
         _batchMint(to, ids, values, data, safe);
     }
 
-    /**
-     * @dev Public function to safely mint a batch of new tokens
-     * @param to address address that will own the minted tokens
-     * @param ids uint256[] identifiers of the tokens to be minted
-     * @param values uint256[] amounts to be minted
-     */
     function safeBatchMint(
         address to,
         uint256[] calldata ids,
@@ -55,11 +40,6 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
         _batchMint(to, ids, values, data, safe);
     }
 
-     /**
-     * @dev Public function to mint one NFT
-     * @param to address recipient that will own the minted NFT
-     * @param nftId uint256 identifier of the token to be minted
-     */
     function mintNonFungible(address to, uint256 nftId) external onlyMinter {
         bytes memory data = "";
         bool batch = false;
@@ -67,17 +47,20 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
         _mintNonFungible(to, nftId, data, batch, safe);
     }
 
-    /**
-     * @dev Public function to mint fungible tokens
-     * @param to address recipient that will own the minted tokens
-     * @param collectionId uint256 identifier of the fungible collection to be minted
-     * @param value uint256 amount to mint
-     */
     function mintFungible(address to, uint256 collectionId, uint256 value) external onlyMinter {
         bytes memory data = "";
         bool batch = false;
         bool safe = false;
         _mintFungible(to, collectionId, value, data, batch, safe);
+    }
+
+    function burnFrom(
+        address from,
+        uint256 id,
+        uint256 value
+    ) external virtual whenNotPaused whenIdNotPaused(id)
+    {
+        _burnFrom(from, id, value);
     }
 
     function _uri(uint256 id) internal override view returns (string memory) {

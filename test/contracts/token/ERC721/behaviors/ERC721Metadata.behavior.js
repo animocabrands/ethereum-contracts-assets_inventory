@@ -2,7 +2,7 @@ const { expectRevert } = require('@openzeppelin/test-helpers');
 const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const { shouldSupportInterfaces } = require('@animoca/ethereum-contracts-core_library');
-const interfaces = require('../../../../src/interfaces/ERC165/ERC721');
+const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
 
 function shouldBehaveLikeERC721Metadata(
     nfMaskLength,

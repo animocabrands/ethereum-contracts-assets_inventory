@@ -1,16 +1,14 @@
 const { contract } = require('@openzeppelin/test-environment');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { shouldSupportInterfaces, constants } = require('@animoca/ethereum-contracts-core_library');
+const { constants } = require('@animoca/ethereum-contracts-core_library');
 const { ZeroAddress } = constants;
-const interfaces = require('../../../../src/interfaces/ERC165/ERC721');
 
-const { ERC721Received_MagicValue } = require('../../../../src/constants');
-const { makeFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
+const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
-const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
+const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
 
-function shouldBehaveLikeERC1155721(
+function shouldBehaveLikeAssetsInventory(
   nfMaskLength,
   creator,
   [owner, approved, operator, other]
@@ -29,11 +27,13 @@ function shouldBehaveLikeERC1155721(
     supply: 12
   };
 
+  const nfCollection = makeNonFungibleCollectionId(1, nfMaskLength);
+
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(1, 2, nfMaskLength);
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
-  describe('like an ERC1155721', function () {
+  describe('like an AssetsInventory', function () {
     beforeEach(async function () {
       await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
       await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
@@ -95,43 +95,43 @@ function shouldBehaveLikeERC1155721(
       });
     });
 
-    describe('not response to ERC721 compatible functions', function () {
+    describe('721 functions on non-NFT ids', function () {
       beforeEach(async function () {
         await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
         await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
         this.toWhom = other; // default to anyone for toWhom in context-dependent tests
       });
 
-      describe('balanceOf', function () {
-        context('when the given address owns some fungible tokens', function () {
-          it('returns 3', async function () {
-            (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
-          });
-        });
+      // describe('balanceOf', function () {
+      //   context('when the given address owns some fungible tokens', function () {
+      //     it('returns 3', async function () {
+      //       (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
+      //     });
+      //   });
 
-        context('when the given address does not own any tokens', function () {
-          it('returns 0', async function () {
-            (await this.token.balanceOf(other)).should.be.bignumber.equal('0');
-          });
-        });
+      //   context('when the given address does not own any tokens', function () {
+      //     it('returns 0', async function () {
+      //       (await this.token.balanceOf(other)).should.be.bignumber.equal('0');
+      //     });
+      //   });
 
-        context('when querying the zero address', function () {
-          it('throws', async function () {
-            await expectRevert.unspecified(this.token.balanceOf(ZeroAddress));
-          });
-        });
-      });
+      //   context('when querying the zero address', function () {
+      //     it('throws', async function () {
+      //       await expectRevert.unspecified(this.token.balanceOf(ZeroAddress));
+      //     });
+      //   });
+      // });
 
       describe('ownerOf', function () {
-        context('when the given collection ID was tracked by this token', function () {
+        context('applied on a fungible collection id', function () {
           it('reverts', async function () {
             await expectRevert.unspecified(this.token.ownerOf(fCollection1.id));
           });
         });
 
-        context('when the given token ID was not tracked by this token', function () {
+        context('applied on a non-fungible collection id', function () {
           it('reverts', async function () {
-            await expectRevert.unspecified(this.token.ownerOf(fCollection3.id));
+            await expectRevert.unspecified(this.token.ownerOf(nfCollection));
           });
         });
       });
@@ -214,7 +214,7 @@ function shouldBehaveLikeERC1155721(
 
             describe('to a valid receiver contract', function () {
               beforeEach(async function () {
-                this.receiver = await ERC721ReceiverMock.new(ERC721Received_MagicValue, false);
+                this.receiver = await ReceiverMock.new(true, true);
                 this.toWhom = this.receiver.address;
               });
 
@@ -246,16 +246,7 @@ function shouldBehaveLikeERC1155721(
 
           describe('to a receiver contract returning unexpected value', function () {
             it('reverts', async function () {
-              const invalidReceiver = await ERC721ReceiverMock.new('0x42', false);
-              await expectRevert.unspecified(
-                this.token.contract.methods.safeTransferFrom(owner, invalidReceiver.address, fCollection1.id.toString(10)).send({ from: owner, gas: 4000000 })
-              );
-            });
-          });
-
-          describe('to a receiver contract that throws', function () {
-            it('reverts', async function () {
-              const invalidReceiver = await ERC721ReceiverMock.new(ERC721Received_MagicValue, true);
+              const invalidReceiver = await ReceiverMock.new(false, false);
               await expectRevert.unspecified(
                 this.token.contract.methods.safeTransferFrom(owner, invalidReceiver.address, fCollection1.id.toString(10)).send({ from: owner, gas: 4000000 })
               );
@@ -313,12 +304,9 @@ function shouldBehaveLikeERC1155721(
 
     // TODO add receiver checks
 
-    shouldSupportInterfaces([
-      interfaces.ERC721Exists_Experimental,
-    ]);
   });
 }
 
 module.exports = {
-  shouldBehaveLikeERC1155721,
+  shouldBehaveLikeAssetsInventory,
 };

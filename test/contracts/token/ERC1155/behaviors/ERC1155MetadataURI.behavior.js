@@ -1,11 +1,9 @@
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const { shouldSupportInterfaces } = require('@animoca/ethereum-contracts-core_library');
-const interfaces = require('../../../../src/interfaces/ERC165/ERC1155');
+const interfaces = require('../../../../../src/interfaces/ERC165/ERC1155');
 
 function shouldBehaveLikeERC1155MetadataURI(
-    nfMaskLength,
-    creator,
-    [owner]
+    nfMaskLength
 ) {
 
     const fCollection = makeFungibleCollectionId(1);

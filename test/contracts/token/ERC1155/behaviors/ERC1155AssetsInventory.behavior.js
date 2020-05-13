@@ -1,18 +1,18 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { contract } = require('@openzeppelin/test-environment');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { shouldSupportInterfaces, constants } = require('@animoca/ethereum-contracts-core_library');
+const { shouldSupportInterfaces, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
 const { ZeroAddress } = constants;
-const interfaces = require('../../../../src/interfaces/ERC165/ERC1155');
+const interfaces1155 = require('../../../../../src/interfaces/ERC165/ERC1155');
 
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
-const ERC1155ReceiverMock = contract.fromArtifact('ERC1155ReceiverMock');
+const ERC1155TokenReceiverMock = contract.fromArtifact('ERC1155TokenReceiverMock');
 
-function shouldBehaveLikeERC1155AssetCollections(
+function shouldBehaveLikeERC1155AssetsInventory(
   nfMaskLength,
   creator,
-  [owner, approved, operator, other]
+  [owner, operator, other]
 ) {
   const fCollection1 = {
     id: makeFungibleCollectionId(1),
@@ -38,7 +38,7 @@ function shouldBehaveLikeERC1155AssetCollections(
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
   const unknownNft = makeNonFungibleTokenId(99, 99, nfMaskLength);
 
-  describe('like an ERC1155AssetCollections', function () {
+  describe('like an ERC1155AssetsInventory', function () {
     beforeEach(async function () {
       await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
       await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
@@ -244,7 +244,7 @@ function shouldBehaveLikeERC1155AssetCollections(
         const data = '0x42';
 
         beforeEach(async function () {
-          await this.token.approve(approved, nft1, { from: owner });
+          // await this.token.approve(approved, nft1, { from: owner });
           await this.token.setApprovalForAll(operator, true, { from: owner });
         });
 
@@ -253,9 +253,9 @@ function shouldBehaveLikeERC1155AssetCollections(
             (await this.token.ownerOf(tokenId)).should.be.equal(this.toWhom);
           });
 
-          it('clears the approval for the token ID', async function () {
-            (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
-          });
+          // it('clears the approval for the token ID', async function () {
+          //   (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
+          // });
 
           it('emits a TransferSingle event', async function () {
             if (approvedAccount) {
@@ -277,14 +277,6 @@ function shouldBehaveLikeERC1155AssetCollections(
             }
           });
 
-          it('adjusts owners nft balances', async function () {
-            (await this.token.balanceOf(owner)).should.be.bignumber.equal('2');
-          });
-
-          it('adjusts recipient nft balances', async function () {
-            (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal('1');
-          });
-
           it('adjusts owners nft collectionId balances', async function () {
             (await this.token.balanceOf(owner, collectionId)).should.be.bignumber.equal('0');
           });
@@ -302,12 +294,12 @@ function shouldBehaveLikeERC1155AssetCollections(
             transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: null });
           });
 
-          context('when called by the approved individual', function () {
-            beforeEach(async function () {
-              receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: approved });
-            });
-            transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: approved });
-          });
+          // context('when called by the approved individual', function () {
+          //   beforeEach(async function () {
+          //     receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: approved });
+          //   });
+          //   transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: approved });
+          // });
 
           context('when called by the operator', function () {
             beforeEach(async function () {
@@ -316,13 +308,13 @@ function shouldBehaveLikeERC1155AssetCollections(
             transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: operator });
           });
 
-          context('when called by the owner without an approved user', function () {
-            beforeEach(async function () {
-              await this.token.approve(ZeroAddress, tokenId, { from: owner });
-              receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: operator });
-            });
-            transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: operator });
-          });
+          // context('when called by the owner without an approved user', function () {
+          //   beforeEach(async function () {
+          //     // await this.token.approve(ZeroAddress, tokenId, { from: owner });
+          //     receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: operator });
+          //   });
+          //   transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: operator });
+          // });
 
           context('when sent to the owner', function () {
             beforeEach(async function () {
@@ -333,9 +325,9 @@ function shouldBehaveLikeERC1155AssetCollections(
               (await this.token.ownerOf(tokenId)).should.be.equal(owner);
             });
 
-            it('clears the approval for the token ID', async function () {
-              (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
-            });
+            // it('clears the approval for the token ID', async function () {
+            //   (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
+            // });
 
             it('emits a transferSingle event', async function () {
               expectEvent(receipt, 'TransferSingle', {
@@ -347,9 +339,9 @@ function shouldBehaveLikeERC1155AssetCollections(
               });
             });
 
-            it('keeps the owner balance', async function () {
-              (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
-            });
+            // it('keeps the owner balance', async function () {
+            //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
+            // });
 
             it('keeps the owner collectionId balance', async function () {
               (await this.token.balanceOf(owner, collectionId)).should.be.bignumber.equal('1');
@@ -417,7 +409,7 @@ function shouldBehaveLikeERC1155AssetCollections(
 
             describe('to a valid receiver contract', function () {
               beforeEach(async function () {
-                this.receiver = await ERC1155ReceiverMock.new(this.token.address, true, true, false, false, { from: creator });
+                this.receiver = await ERC1155TokenReceiverMock.new(true, { from: creator });
                 this.toWhom = this.receiver.address;
               });
 
@@ -426,7 +418,7 @@ function shouldBehaveLikeERC1155AssetCollections(
               it('should call onERC1155Received', async function () {
                 const receipt = await transferFun.call(this, owner, this.toWhom, tokenId, supply, data, { from: owner });
 
-                await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'Received', {
+                await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                   operator: owner,
                   from: owner,
                   tokenId: tokenId,
@@ -435,17 +427,17 @@ function shouldBehaveLikeERC1155AssetCollections(
                 });
               });
 
-              it('should call onERC1155Received from approved', async function () {
-                const receipt = await transferFun.call(this, owner, this.toWhom, tokenId, supply, data, { from: approved });
+              // it('should call onERC1155Received from approved', async function () {
+              //   const receipt = await transferFun.call(this, owner, this.toWhom, tokenId, supply, data, { from: approved });
 
-                await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'Received', {
-                  operator: approved,
-                  from: owner,
-                  tokenId: tokenId,
-                  supply: supply,
-                  data: data,
-                });
-              });
+              //   await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'Received', {
+              //     operator: approved,
+              //     from: owner,
+              //     tokenId: tokenId,
+              //     supply: supply,
+              //     data: data,
+              //   });
+              // });
 
               describe('with an invalid token id', function () {
                 it('reverts', async function () {
@@ -463,16 +455,7 @@ function shouldBehaveLikeERC1155AssetCollections(
 
           describe('to a receiver contract returning unexpected value', function () {
             it('reverts', async function () {
-              const invalidReceiver = await ERC1155ReceiverMock.new(this.token.address, true, false, false, false, { from: creator });
-              await expectRevert.unspecified(
-                this.token.contract.methods.safeTransferFrom(owner, invalidReceiver.address, nft1.toString(10), 1, data).send({ from: owner, gas: 4000000 })
-              );
-            });
-          });
-
-          describe('to a receiver contract that throws', function () {
-            it('reverts', async function () {
-              const invalidReceiver = await ERC1155ReceiverMock.new(this.token.address, false, true, false, false, { from: creator });
+              const invalidReceiver = await ERC1155TokenReceiverMock.new(false, { from: creator });
               await expectRevert.unspecified(
                 this.token.contract.methods.safeTransferFrom(owner, invalidReceiver.address, nft1.toString(10), 1, data).send({ from: owner, gas: 4000000 })
               );
@@ -504,9 +487,9 @@ function shouldBehaveLikeERC1155AssetCollections(
             await expectRevert.unspecified(this.token.ownerOf(collectionId));
           });
 
-          it('not effects ft collection id approval', async function () {
-            await expectRevert.unspecified(this.token.getApproved(collectionId));
-          });
+          // it('not effects ft collection id approval', async function () {
+          //   await expectRevert.unspecified(this.token.getApproved(collectionId));
+          // });
 
           it('emits a TransferSingle event', async function () {
             if (operatorAccount) {
@@ -528,13 +511,13 @@ function shouldBehaveLikeERC1155AssetCollections(
             }
           });
 
-          it('not effets owner nft balance', async function () {
-            (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
-          });
+          // it('not effets owner nft balance', async function () {
+          //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
+          // });
 
-          it('not effetc recipient nft balance', async function () {
-            (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal('0');
-          });
+          // it('not effetc recipient nft balance', async function () {
+          //   (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal('0');
+          // });
 
           it('adjusts owner ft collectionId balances', async function () {
             (await this.token.balanceOf(owner, collectionId)).toNumber().should.be.equal(fCollection1.supply - transferValue.toNumber());
@@ -569,9 +552,9 @@ function shouldBehaveLikeERC1155AssetCollections(
               await expectRevert.unspecified(this.token.ownerOf(collectionId));
             });
 
-            it('not effects approval for the ft collection id', async function () {
-              await expectRevert.unspecified(this.token.getApproved(collectionId));
-            });
+            // it('not effects approval for the ft collection id', async function () {
+            //   await expectRevert.unspecified(this.token.getApproved(collectionId));
+            // });
 
             it('emits a transferSingle event', async function () {
               expectEvent(receipt, 'TransferSingle', {
@@ -583,9 +566,9 @@ function shouldBehaveLikeERC1155AssetCollections(
               });
             });
 
-            it('keeps the owner nft balance', async function () {
-              (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
-            });
+            // it('keeps the owner nft balance', async function () {
+            //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
+            // });
 
             it('keeps the owner ft collectionId balance', async function () {
               (await this.token.balanceOf(owner, collectionId)).toNumber().should.be.equal(fCollection1.supply);
@@ -648,7 +631,7 @@ function shouldBehaveLikeERC1155AssetCollections(
 
             describe('to a valid receiver contract', function () {
               beforeEach(async function () {
-                this.receiver = await ERC1155ReceiverMock.new(this.token.address, true, true, false, false, { from: creator });
+                this.receiver = await ERC1155TokenReceiverMock.new(true, { from: creator });
                 this.toWhom = this.receiver.address;
               });
 
@@ -657,7 +640,7 @@ function shouldBehaveLikeERC1155AssetCollections(
               it('should call onERC1155Received', async function () {
                 const receipt = await transferFun.call(this, owner, this.receiver.address, collectionId, supply, data, { from: owner });
 
-                await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'Received', {
+                await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                   operator: owner,
                   from: owner,
                   tokenId: collectionId,
@@ -669,7 +652,7 @@ function shouldBehaveLikeERC1155AssetCollections(
               it('should call onERC1155Received from operator', async function () {
                 const receipt = await transferFun.call(this, owner, this.receiver.address, collectionId, supply, data, { from: operator });
 
-                await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'Received', {
+                await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                   operator: operator,
                   from: owner,
                   tokenId: collectionId,
@@ -694,16 +677,7 @@ function shouldBehaveLikeERC1155AssetCollections(
 
           describe('to a receiver contract returning unexpected value', function () {
             it('reverts', async function () {
-              const invalidReceiver = await ERC1155ReceiverMock.new(this.token.address, true, false, false, false, { from: creator });
-              await expectRevert.unspecified(
-                this.token.contract.methods.safeTransferFrom(owner, invalidReceiver.address, fCollection1.id.toString(10), 1, data).send({ from: owner, gas: 4000000 })
-              );
-            });
-          });
-
-          describe('to a receiver contract that throws', function () {
-            it('reverts', async function () {
-              const invalidReceiver = await ERC1155ReceiverMock.new(this.token.address, false, true, false, false, { from: creator });
+              const invalidReceiver = await ERC1155TokenReceiverMock.new(false, { from: creator });
               await expectRevert.unspecified(
                 this.token.contract.methods.safeTransferFrom(owner, invalidReceiver.address, fCollection1.id.toString(10), 1, data).send({ from: owner, gas: 4000000 })
               );
@@ -727,9 +701,9 @@ function shouldBehaveLikeERC1155AssetCollections(
       const data = '0x42';
 
       beforeEach(async function () {
-        await this.token.approve(approved, nft1, { from: owner });
-        await this.token.approve(approved, nft2, { from: owner });
-        await this.token.approve(approved, nft3, { from: owner });
+        // await this.token.approve(approved, nft1, { from: owner });
+        // await this.token.approve(approved, nft2, { from: owner });
+        // await this.token.approve(approved, nft3, { from: owner });
         await this.token.setApprovalForAll(operator, true, { from: owner });
       });
 
@@ -744,15 +718,15 @@ function shouldBehaveLikeERC1155AssetCollections(
           }
         });
 
-        it('clears the approval for the nft ID, not effects ft items', async function () {
-          for (let id of ids) {
-            try {
-              (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
-            } catch (err) {
-              await expectRevert.unspecified(this.token.getApproved(id));
-            }
-          }
-        });
+        // it('clears the approval for the nft ID, not effects ft items', async function () {
+        //   for (let id of ids) {
+        //     try {
+        //       (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
+        //     } catch (err) {
+        //       await expectRevert.unspecified(this.token.getApproved(id));
+        //     }
+        //   }
+        // });
 
         it('emits a TransferBatch event', async function () {
           if (operatorAccount) {
@@ -782,16 +756,6 @@ function shouldBehaveLikeERC1155AssetCollections(
           }
         });
 
-        // TODO move to 1155721.behavior.js
-        it('adjusts owners nft balances', async function () {
-          (await this.token.balanceOf(owner)).should.be.bignumber.equal('0');
-        });
-
-        it('adjusts recipient nft balances', async function () {
-          (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal('3');
-        });
-
-        // TODO move to 1155721.behavior.js
         it('adjusts owners collectionId balances', async function () {
           for (let collectionId of collectionIds)
             (await this.token.balanceOf(owner, collectionId)).should.be.bignumber.equal('0');
@@ -822,9 +786,9 @@ function shouldBehaveLikeERC1155AssetCollections(
 
         context('when called by the owner without an approved user', function () {
           beforeEach(async function () {
-            await this.token.approve(ZeroAddress, nft1, { from: owner });
-            await this.token.approve(ZeroAddress, nft1, { from: owner });
-            await this.token.approve(ZeroAddress, nft1, { from: owner });
+            // await this.token.approve(ZeroAddress, nft1, { from: owner });
+            // await this.token.approve(ZeroAddress, nft1, { from: owner });
+            // await this.token.approve(ZeroAddress, nft1, { from: owner });
             receipt = await transferFunction.call(this, owner, this.toWhom, ids, supplies, data, { from: operator });
           });
           transferWasSuccessful({ owner, ids, collectionIds, supplies, operatorAccount: operator });
@@ -846,16 +810,16 @@ function shouldBehaveLikeERC1155AssetCollections(
             }
           });
 
-          it('clears the approval for the nft ID', async function () {
-            for (let id of ids) {
-              try {
-                const collectionId = await this.token.ownerOf(id); //throws if not NFT id
-                (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
-              } catch (err) {
-                await expectRevert.unspecified(this.token.ownerOf(id));
-              }
-            }
-          });
+          // it('clears the approval for the nft ID', async function () {
+          //   for (let id of ids) {
+          //     try {
+          //       const collectionId = await this.token.ownerOf(id); //throws if not NFT id
+          //       (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
+          //     } catch (err) {
+          //       await expectRevert.unspecified(this.token.ownerOf(id));
+          //     }
+          //   }
+          // });
 
           it('emits a TransferBatch event', async function () {
             expectEvent(receipt, 'TransferBatch', {
@@ -875,9 +839,9 @@ function shouldBehaveLikeERC1155AssetCollections(
             }
           });
 
-          it('keeps the owner balance', async function () {
-            (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
-          });
+          // it('keeps the owner balance', async function () {
+          //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
+          // });
 
           it('keeps the owner collectionId balance', async function () {
             (await this.token.balanceOf(owner, fCollection1.id)).should.be.bignumber.equal('10');
@@ -901,12 +865,12 @@ function shouldBehaveLikeERC1155AssetCollections(
           });
         });
 
-        context('when the sender is only authorized for the nft, not for ft', function () {
-          it('reverts', async function () {
-            await expectRevert.unspecified(transferFunction.call(this, owner, other, ids, supplies, data, { from: approved })
-            );
-          });
-        });
+        // context('when the sender is only authorized for the nft, not for ft', function () {
+        //   it('reverts', async function () {
+        //     await expectRevert.unspecified(transferFunction.call(this, owner, other, ids, supplies, data, { from: approved })
+        //     );
+        //   });
+        // });
 
         context('when the given token ID does not exist', function () {
           it('reverts', async function () {
@@ -978,7 +942,7 @@ function shouldBehaveLikeERC1155AssetCollections(
 
           describe('to a valid receiver contract', function () {
             beforeEach(async function () {
-              this.receiver = await ERC1155ReceiverMock.new(this.token.address, false, false, true, true, { from: creator });
+              this.receiver = await ERC1155TokenReceiverMock.new(true, { from: creator });
               this.toWhom = this.receiver.address;
             });
 
@@ -987,7 +951,7 @@ function shouldBehaveLikeERC1155AssetCollections(
             it('should call onERC1155Received', async function () {
               const receipt = await transferFun.call(this, owner, this.receiver.address, ids, supplies, data, { from: owner });
 
-              await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'ReceivedBatch', {
+              await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedBatch', {
                 operator: owner,
                 from: owner,
                 // tokenIds: ids,
@@ -1007,7 +971,7 @@ function shouldBehaveLikeERC1155AssetCollections(
             it('should call onERC1155Received from operator', async function () {
               const receipt = await transferFun.call(this, owner, this.receiver.address, ids, supplies, data, { from: operator });
 
-              await expectEvent.inTransaction(receipt.tx, ERC1155ReceiverMock, 'ReceivedBatch', {
+              await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedBatch', {
                 operator: operator,
                 from: owner,
                 // tokenIds: ids,
@@ -1044,16 +1008,7 @@ function shouldBehaveLikeERC1155AssetCollections(
 
         describe('to a receiver contract returning unexpected value', function () {
           it('reverts', async function () {
-            const invalidReceiver = await ERC1155ReceiverMock.new(this.token.address, false, false, true, false, { from: creator });
-            await expectRevert.unspecified(
-              this.token.safeBatchTransferFrom(owner, invalidReceiver.address, [fCollection1.id], [new BN(1)], data, { from: owner })
-            );
-          });
-        });
-
-        describe('to a receiver contract that throws', function () {
-          it('reverts', async function () {
-            const invalidReceiver = await ERC1155ReceiverMock.new(this.token.address, false, false, false, true, { from: creator });
+            const invalidReceiver = await ERC1155TokenReceiverMock.new(false, { from: creator });
             await expectRevert.unspecified(
               this.token.safeBatchTransferFrom(owner, invalidReceiver.address, [fCollection1.id], [new BN(1)], data, { from: owner })
             );
@@ -1072,12 +1027,13 @@ function shouldBehaveLikeERC1155AssetCollections(
     });
 
     shouldSupportInterfaces([
-      interfaces.ERC1155,
-      interfaces.ERC1155AssetCollections_Experimental
+      interfaces.ERC165,
+      interfaces1155.ERC1155,
+      interfaces1155.ERC1155Collections_Experimental
     ]);
   });
 }
 
 module.exports = {
-  shouldBehaveLikeERC1155AssetCollections,
+  shouldBehaveLikeERC1155AssetsInventory,
 };

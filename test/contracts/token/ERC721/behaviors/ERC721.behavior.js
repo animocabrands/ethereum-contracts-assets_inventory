@@ -1,12 +1,11 @@
 const { contract } = require('@openzeppelin/test-environment');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { shouldSupportInterfaces, constants } = require('@animoca/ethereum-contracts-core_library');
-const { ZeroAddress } = constants;
-const interfaces = require('../../../../src/interfaces/ERC165/ERC721');
+const { shouldSupportInterfaces, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const { ZeroAddress, } = constants;
+const interfaces721 = require('../../../../../src/interfaces/ERC165/ERC721');
 
-
-const { ERC721Received_MagicValue } = require('../../../../src/constants');
+const { ERC721Received_MagicValue } = require('../../../../../src/constants');
 const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
@@ -243,7 +242,7 @@ function shouldBehaveLikeERC721(
 
           describe('to a valid receiver contract', function () {
             beforeEach(async function () {
-              this.receiver = await ERC721ReceiverMock.new(ERC721Received_MagicValue, false);
+              this.receiver = await ERC721ReceiverMock.new(true);
               this.toWhom = this.receiver.address;
             });
 
@@ -297,16 +296,7 @@ function shouldBehaveLikeERC721(
 
         describe('to a receiver contract returning unexpected value', function () {
           it('reverts', async function () {
-            const invalidReceiver = await ERC721ReceiverMock.new('0x42', false);
-            await expectRevert.unspecified(
-              this.token.methods['safeTransferFrom(address,address,uint256)'](owner, invalidReceiver.address, tokenId, { from: owner })
-            );
-          });
-        });
-
-        describe('to a receiver contract that throws', function () {
-          it('reverts', async function () {
-            const invalidReceiver = await ERC721ReceiverMock.new(ERC721Received_MagicValue, true);
+            const invalidReceiver = await ERC721ReceiverMock.new(false);
             await expectRevert.unspecified(
               this.token.methods['safeTransferFrom(address,address,uint256)'](owner, invalidReceiver.address, tokenId, { from: owner })
             );
@@ -520,7 +510,9 @@ function shouldBehaveLikeERC721(
     });
 
     shouldSupportInterfaces([
-      interfaces.ERC721,
+      interfaces.ERC165,
+      interfaces721.ERC721,
+      interfaces721.ERC721Exists_Experimental,
     ]);
   });
 }

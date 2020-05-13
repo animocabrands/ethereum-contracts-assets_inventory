@@ -3,16 +3,13 @@ pragma solidity ^0.6.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
-import "../../../token/ERC1155721/AssetsInventory.sol";
+import "../../../token/ERC1155/ERC1155AssetsInventory.sol";
 
-contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
+contract ERC1155AssetsInventoryMock is ERC1155AssetsInventory, Ownable, MinterRole {
 
     using RichUInt256 for uint256;
 
-    string public override constant name = "AssetsInventoryMock";
-    string public override constant symbol = "AIM";
-
-    constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength) {}
+    constructor(uint256 nfMaskLength) public ERC1155AssetsInventory(nfMaskLength) {}
 
     /**
      * @dev This function creates the collection id.

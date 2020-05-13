@@ -6,10 +6,7 @@ pragma solidity ^0.6.6;
     Interface for any contract that wants to support safeTransfers from ERC721 asset contracts.
     Note: The ERC-165 identifier for this interface is 0x150b7a02.
  */
-abstract contract IERC721Receiver {
-
-    //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
-    bytes4 constant internal ERC721_RECEIVED = 0x150b7a02;
+interface IERC721Receiver {
 
     /**
         @notice Handle the receipt of an NFT
@@ -26,5 +23,5 @@ abstract contract IERC721Receiver {
         @return bytes4 `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
      */
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data
-    ) external virtual returns (bytes4);
+    ) external returns (bytes4);
 }

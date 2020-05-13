@@ -1,32 +1,30 @@
 const { contract, accounts } = require('@openzeppelin/test-environment');
 
-const { shouldBehaveLikeAssetsInventory } = require('./AssetsInventory.behavior');
-const { shouldBehaveLikeAssetsInventoryPaused } = require('./AssetsInventoryPaused.behavior');
-const { shouldBehaveLikeERC1155PausableCollections } = require('../ERC1155/ERC1155PausableCollections.behavior');
+const { shouldBehaveLikeERC721 } = require('../ERC721/behaviors/ERC721.behavior');
+const { shouldBehaveLikeERC721Metadata } = require('../ERC721/behaviors/ERC721Metadata.behavior');
+const { shouldBehaveLikeERC721Pausable } = require('../ERC721/behaviors/ERC721Pausable.behavior');
+const { shouldBehaveLikeERC1155AssetsInventory } = require('../ERC1155/behaviors/ERC1155AssetsInventory.behavior');
+const { shouldBehaveLikeERC1155MetadataURI } = require('../ERC1155/behaviors/ERC1155MetadataURI.behavior');
+const { shouldBehaveLikeERC1155PausableInventory } = require('../ERC1155/behaviors/ERC1155PausableInventory.behavior');
+const { shouldBehaveLikeAssetsInventory } = require('./behaviors/AssetsInventory.behavior');
+const { shouldBehaveLikeBurnableInventory } = require('./behaviors/BurnableInventory.behavior');
 
-const NonBurnablePausableInventoryMock = contract.fromArtifact('NonBurnablePausableInventoryMock');
+const PausableInventoryMock = contract.fromArtifact('PausableInventoryMock');
 
 describe('PausableInventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 
   beforeEach(async function () {
-    this.token = await NonBurnablePausableInventoryMock.new(nfMaskLength, { from: creator });
+    this.token = await PausableInventoryMock.new(nfMaskLength, { from: creator });
   });
 
-  describe('Pausable', function () {
-
-    context("when not paused", async function () {
-      shouldBehaveLikeAssetsInventory(nfMaskLength, creator, otherAccounts, "NonBurnablePausableInventoryMock", "NBPIM");
-    });
-
-    context("when paused", async function () {
-      beforeEach(async function () {
-        await this.token.pause({ from: creator });
-      });
-      shouldBehaveLikeAssetsInventoryPaused(nfMaskLength, creator, otherAccounts , "NonBurnablePausableInventoryMock", "NBPIM");
-    });
-  });
-
-  shouldBehaveLikeERC1155PausableCollections(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC721(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC721Metadata(nfMaskLength, "PausableInventoryMock", "PIM", creator, otherAccounts);
+  shouldBehaveLikeERC721Pausable(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155AssetsInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155MetadataURI(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155PausableInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeAssetsInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeBurnableInventory(nfMaskLength, creator, otherAccounts);
 });
