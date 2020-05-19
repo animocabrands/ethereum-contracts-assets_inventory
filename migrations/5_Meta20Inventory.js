@@ -1,5 +1,5 @@
 
-const GasToken = artifacts.require('ERC20FullMock');
+const GasToken = artifacts.require('ERC20WithOperatorsMock');
 const Meta20InventoryMock = artifacts.require('Meta20InventoryMock');
 
 module.exports = async (deployer, network, accounts) => {
@@ -9,5 +9,6 @@ module.exports = async (deployer, network, accounts) => {
     await deployer.deploy(GasToken, gasTokenBalance);
     const gasToken = await GasToken.deployed();
 
-    await deployer.deploy(Meta20InventoryMock, 8, gasToken.address, payoutWallet);
+    const meta20Inventory = await deployer.deploy(Meta20InventoryMock, 8, gasToken.address, payoutWallet);
+    gastToken.whitelistOperator(meta20Inventory.address, true);
 }

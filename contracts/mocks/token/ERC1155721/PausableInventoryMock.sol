@@ -2,12 +2,12 @@ pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
-import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
+import "@animoca/ethereum-contracts-core_library/contracts/utils/types/UInt256ToDecimalString.sol";
 import "../../../token/ERC1155721/PausableInventory.sol";
 
 contract PausableInventoryMock is PausableInventory, Ownable, MinterRole  {
 
-    using RichUInt256 for uint256;
+    using UInt256ToDecimalString for uint256;
 
     string public override constant name = "PausableInventoryMock";
     string public override constant symbol = "PIM";
@@ -19,8 +19,7 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole  {
      * @param collectionId collection identifier
      */
     function createCollection(uint256 collectionId) external onlyOwner {
-        require(!isNFT(collectionId), "ERC1155: creating collection with incorrect collection id");
-        emit URI(_uri(collectionId), collectionId);
+        _createCollection(collectionId);
     }
 
     function batchMint(
@@ -67,6 +66,6 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole  {
     }
 
     function _uri(uint256 id) internal override view returns (string memory) {
-        return string(abi.encodePacked("https://prefix/json/", id.toString()));
+        return string(abi.encodePacked("https://prefix/json/", id.toDecimalString()));
     }
 }

@@ -244,15 +244,6 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
 /////////////////////////////////////////// ERC1155Collections /////////////////////////////////////////////
 
-    /**
-     * @dev Internal function to check whether an identifier represents an NFT
-     * @param id The identifier to query
-     * @return bool true if the identifier represents an NFT
-     */
-    function isNFT(uint256 id) internal virtual view returns (bool) {
-        return (id & (NF_BIT) != 0) && (id & (~NF_COLLECTION_MASK) != 0);
-    }
-    
     function collectionOf(uint256 nftId) public virtual override view returns (uint256) {
         require(isNFT(nftId), "ERC1155: collection of incorrect NFT id");
         return nftId & NF_COLLECTION_MASK;
@@ -267,6 +258,24 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         address tokenOwner = _owners[nftId];
         require(tokenOwner != address(0), "ERC1155: owner of non-existing NFT");
         return tokenOwner;
+    }
+
+    /**
+     * @dev This function creates the collection id.
+     * @param collectionId collection identifier
+     */
+    function _createCollection(uint256 collectionId) internal virtual {
+        require(!isNFT(collectionId), "ERC1155: create collection with wrong id");
+        emit URI(_uri(collectionId), collectionId);
+    }
+
+    /**
+     * @dev Internal function to check whether an identifier represents an NFT
+     * @param id The identifier to query
+     * @return bool true if the identifier represents an NFT
+     */
+    function isNFT(uint256 id) internal virtual view returns (bool) {
+        return (id & (NF_BIT) != 0) && (id & (~NF_COLLECTION_MASK) != 0);
     }
 
 /////////////////////////////////////////// Transfer Internal Functions ///////////////////////////////////////

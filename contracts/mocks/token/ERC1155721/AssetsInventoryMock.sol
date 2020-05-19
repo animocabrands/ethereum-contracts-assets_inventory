@@ -2,12 +2,12 @@ pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
-import "@animoca/ethereum-contracts-core_library/contracts/utils/RichUInt256.sol";
+import "@animoca/ethereum-contracts-core_library/contracts/utils/types/UInt256ToDecimalString.sol";
 import "../../../token/ERC1155721/AssetsInventory.sol";
 
 contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
 
-    using RichUInt256 for uint256;
+    using UInt256ToDecimalString for uint256;
 
     string public override constant name = "AssetsInventoryMock";
     string public override constant symbol = "AIM";
@@ -19,8 +19,7 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
      * @param collectionId collection identifier
      */
     function createCollection(uint256 collectionId) external onlyOwner {
-        require(!isNFT(collectionId), "ERC1155: creating collection with incorrect collection id");
-        emit URI(_uri(collectionId), collectionId);
+        _createCollection(collectionId);
     }
 
     /**
@@ -81,6 +80,6 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
     }
 
     function _uri(uint256 id) internal override view returns (string memory) {
-        return string(abi.encodePacked("https://prefix/json/", id.toString()));
+        return string(abi.encodePacked("https://prefix/json/", id.toDecimalString()));
     }
 }
