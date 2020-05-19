@@ -27,13 +27,13 @@ abstract contract PausableCollections {
 
     function _pauseCollection(uint256 collectionId) internal virtual {
         require(!_idPaused(collectionId), "PausableCollections: pause a paused collection");
-        require(_isCollectionId(collectionId), "ERC1155PausableInventory: id is not a collection");
+        require(_isCollectionId(collectionId), "PausableCollections: id is not a collection");
         _pausedCollections[collectionId] = true;
     }
 
     function _unpauseCollection(uint256 collectionId) internal virtual {
         require(_idPaused(collectionId), "PausableCollections: unpause a collection not paused");
-        require(_isCollectionId(collectionId), "ERC1155PausableInventory: id is not a collection");
+        require(_isCollectionId(collectionId), "PausableCollections: id is not a collection");
         _pausedCollections[collectionId] = false;
     }
 }
