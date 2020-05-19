@@ -48,7 +48,7 @@ abstract contract PausableInventory is AssetsInventory, PausableCollections, Pau
     }
 
     function _idPaused(uint256 id) internal virtual override view returns(bool) {
-        if (isNFT(id)) {
+        if (_isNFT(id)) {
             return _pausedCollections[collectionOf(id)];
         } else {
             return _pausedCollections[id];
@@ -56,7 +56,7 @@ abstract contract PausableInventory is AssetsInventory, PausableCollections, Pau
     }
 
     function _isCollectionId(uint256 id) internal virtual override view returns(bool) {
-        return !isNFT(id);
+        return !_isNFT(id);
     }
 
 /////////////////////////////////////////// ERC1155 /////////////////////////////////////////////

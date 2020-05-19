@@ -15,11 +15,15 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
     constructor(uint256 nfMaskLength) public AssetsInventory(nfMaskLength) {}
 
     /**
-     * @dev This function creates the collection id.
+     * @dev This function creates a collection.
      * @param collectionId collection identifier
      */
     function createCollection(uint256 collectionId) external onlyOwner {
         _createCollection(collectionId);
+    }
+
+    function isNFT(uint256 id) external view returns(bool) {
+        return _isNFT(id);
     }
 
     /**
@@ -32,7 +36,8 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
         address to,
         uint256[] calldata ids,
         uint256[] calldata values
-    ) external onlyMinter {
+    ) external onlyMinter
+    {
         bytes memory data = "";
         bool safe = false;
         _batchMint(to, ids, values, data, safe);
@@ -48,7 +53,8 @@ contract AssetsInventoryMock is AssetsInventory, Ownable, MinterRole  {
         address to,
         uint256[] calldata ids,
         uint256[] calldata values
-    ) external onlyMinter {
+    ) external onlyMinter
+    {
         bytes memory data = "";
         bool safe = true;
         _batchMint(to, ids, values, data, safe);

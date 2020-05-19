@@ -7,14 +7,14 @@ const { shouldBehaveLikeERC1155MetadataURI } = require('../ERC1155/behaviors/ERC
 const { shouldBehaveLikeAssetsInventory } = require('./behaviors/AssetsInventory.behavior');
 const { shouldBehaveLikeBurnableInventory } = require('./behaviors/BurnableInventory.behavior');
 
-const BurnableInventoryMock = contract.fromArtifact('BurnableInventoryMock');
+const BurnableInventory = contract.fromArtifact('BurnableInventoryMock');
 
 describe('BurnableInventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 
   beforeEach(async function () {
-    this.token = await BurnableInventoryMock.new(nfMaskLength, { from: creator });
+    this.token = await BurnableInventory.new(nfMaskLength, { from: creator });
   });
 
   shouldBehaveLikeERC721(nfMaskLength, creator, otherAccounts);

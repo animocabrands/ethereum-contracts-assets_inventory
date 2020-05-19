@@ -9,14 +9,14 @@ const { shouldBehaveLikeERC1155PausableInventory } = require('../ERC1155/behavio
 const { shouldBehaveLikeAssetsInventory } = require('./behaviors/AssetsInventory.behavior');
 const { shouldBehaveLikeBurnableInventory } = require('./behaviors/BurnableInventory.behavior');
 
-const PausableInventoryMock = contract.fromArtifact('PausableInventoryMock');
+const PausableInventory = contract.fromArtifact('PausableInventoryMock');
 
 describe('PausableInventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 
   beforeEach(async function () {
-    this.token = await PausableInventoryMock.new(nfMaskLength, { from: creator });
+    this.token = await PausableInventory.new(nfMaskLength, { from: creator });
   });
 
   shouldBehaveLikeERC721(nfMaskLength, creator, otherAccounts);

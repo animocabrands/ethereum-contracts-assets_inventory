@@ -50,6 +50,46 @@ function shouldBehaveLikeERC1155AssetsInventory(
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 
+    describe('createCollection()', function () {
+
+      const collections = {
+        fCollection1: makeFungibleCollectionId(1, nfMaskLength),
+        fCollection2: makeFungibleCollectionId(2, nfMaskLength),
+        fCollection3: makeFungibleCollectionId(3, nfMaskLength),
+        nfCollection1: makeNonFungibleCollectionId(1, nfMaskLength),
+        nfCollection2: makeNonFungibleCollectionId(2, nfMaskLength),
+        nfCollection3: makeNonFungibleCollectionId(3, nfMaskLength)
+      };
+
+      beforeEach(async function () {
+        this.createCollectionReceipt = {};
+
+        for (const collection of Object.values(collections)) {
+          // const isNFT = await this.token.callIsNFT(collection);
+          const isNFT = await this.token.isNFT(collection);
+          isNFT.should.be.false;
+
+          this.createCollectionReceipt[collection] =
+            await this.token.createCollection(collection, { from: creator });
+        }
+
+        this.contract = this.token;
+      });
+
+      it('should emit a URI event', async function () {
+        for (const collection of Object.values(collections)) {
+          expectEvent(
+            this.createCollectionReceipt[collection],
+            'URI',
+            {
+              _value: await this.token.uri(collection),
+              _id: collection
+            });
+        }
+      });
+    });
+
+
     describe('isFungible()', function () {
       context("when id is a Fungible Collection", function () {
         it("returns true", async function () {

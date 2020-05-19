@@ -86,7 +86,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
 
     function getApproved(uint256 nftId) public virtual override view returns (address) {
         require(
-            isNFT(nftId) && _exists(nftId),
+            _isNFT(nftId) && _exists(nftId),
             "AssetsInventory: getting approval of an incorrect or non-existing NFT"
         );
         return _nftApprovals[nftId];

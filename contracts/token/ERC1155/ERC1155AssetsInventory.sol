@@ -148,7 +148,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         if (isFungible(id) && value > 0) {
             require(operatable, "ERC1155: transfer by a non-approved sender");
             _transferFungible(from, to, id, value, false);
-        } else if (isNFT(id) && value == 1) {
+        } else if (_isNFT(id) && value == 1) {
             _transferNonFungible(from, to, id, operatable, false);
         } else {
             revert("ERC1155: incorrect transfer parameters");
@@ -181,7 +181,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
             if (isFungible(id) && value > 0) {
                 require(operatable, "AssetsInventory: transfer by a non-approved sender");
                 _transferFungible(from, to, id, value, false);
-            } else if (isNFT(id) && value == 1) {
+            } else if (_isNFT(id) && value == 1) {
                 _transferNonFungible(from, to, id, operatable, false);
             } else {
                 revert("ERC1155: incorrect transfer parameters");
@@ -196,7 +196,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
     function balanceOf(address tokenOwner, uint256 id) public virtual override view returns (uint256) {
         require(tokenOwner != address(0), "ERC1155: balance of the zero address");
 
-        if (isNFT(id)) {
+        if (_isNFT(id)) {
             return _owners[id] == tokenOwner ? 1 : 0;
         }
 
@@ -217,7 +217,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
             uint256 id = ids[i];
 
-            if (isNFT(id)) {
+            if (_isNFT(id)) {
                 balances[i] = _owners[id] == tokenOwners[i] ? 1 : 0;
             } else {
                 balances[i] = _balances[id][tokenOwners[i]];
@@ -245,7 +245,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 /////////////////////////////////////////// ERC1155Collections /////////////////////////////////////////////
 
     function collectionOf(uint256 nftId) public virtual override view returns (uint256) {
-        require(isNFT(nftId), "ERC1155: collection of incorrect NFT id");
+        require(_isNFT(nftId), "ERC1155: collection of incorrect NFT id");
         return nftId & NF_COLLECTION_MASK;
     }
 
@@ -254,7 +254,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
     }
 
     function ownerOf(uint256 nftId) public virtual override view returns (address) {
-        require(isNFT(nftId), "ERC1155: owner of incorrect NFT id");
+        require(_isNFT(nftId), "ERC1155: owner of incorrect NFT id");
         address tokenOwner = _owners[nftId];
         require(tokenOwner != address(0), "ERC1155: owner of non-existing NFT");
         return tokenOwner;
@@ -265,7 +265,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
      * @param collectionId collection identifier
      */
     function _createCollection(uint256 collectionId) internal virtual {
-        require(!isNFT(collectionId), "ERC1155: create collection with wrong id");
+        require(!_isNFT(collectionId), "ERC1155: create collection with wrong id");
         emit URI(_uri(collectionId), collectionId);
     }
 
@@ -274,7 +274,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
      * @param id The identifier to query
      * @return bool true if the identifier represents an NFT
      */
-    function isNFT(uint256 id) internal virtual view returns (bool) {
+    function _isNFT(uint256 id) internal virtual view returns (bool) {
         return (id & (NF_BIT) != 0) && (id & (~NF_COLLECTION_MASK) != 0);
     }
 
@@ -376,7 +376,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
         if (!batch) {
             require(to != address(0), "ERC1155: minting to the zero address");
-            require(isNFT(nftId), "ERC1155: minting an incorrect NFT id");
+            require(_isNFT(nftId), "ERC1155: minting an incorrect NFT id");
             _beforeSingleTransfer(address(0), to, nftId, 1, data);
         }
 
@@ -455,7 +455,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         bool batch = true;
 
         for (uint256 i = 0; i < ids.length; i++) {
-            if (isNFT(ids[i]) && values[i] == 1) {
+            if (_isNFT(ids[i]) && values[i] == 1) {
                 _mintNonFungible(to, ids[i], data, safe, batch);
             } else if (isFungible(ids[i]) && values[i] > 0) {
                 _mintFungible(to, ids[i], values[i], data, safe, batch);
@@ -494,7 +494,7 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         if (isFungible(id) && value > 0) {
             require(operatable, "ERC1155: transfer by a non-approved sender");
             _transferFungible(from, to, id, value, true);
-        } else if (isNFT(id) && value == 1) {
+        } else if (_isNFT(id) && value == 1) {
             _transferNonFungible(from, to, id, operatable, true);
         } else {
             revert("ERC1155: transfer of a non-fungible collection");

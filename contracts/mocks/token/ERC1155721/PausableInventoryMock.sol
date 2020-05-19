@@ -14,12 +14,12 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole  {
 
     constructor(uint256 nfMaskLength) public PausableInventory(nfMaskLength) {}
 
-    /**
-     * @dev This function creates the collection id.
-     * @param collectionId collection identifier
-     */
     function createCollection(uint256 collectionId) external onlyOwner {
         _createCollection(collectionId);
+    }
+
+    function isNFT(uint256 id) external view returns(bool) {
+        return _isNFT(id);
     }
 
     function batchMint(
