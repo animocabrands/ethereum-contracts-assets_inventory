@@ -1,13 +1,13 @@
-pragma solidity ^0.6.6;
+// SPDX-License-Identifier: MIT
 
-import "./IERC721.sol";
+pragma solidity ^0.6.8;
 
 /**
  * @title ERC721 Non-Fungible Token Standard, optional metadata extension
  * @dev See https://eips.ethereum.org/EIPS/eip-721
  * Note: The ERC-165 identifier for this interface is 0x5b5e139f.
  */
-interface IERC721Metadata is IERC721 {
+interface IERC721Metadata {
 
     /**
      * @dev Gets the token name

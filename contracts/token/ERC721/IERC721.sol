@@ -1,13 +1,13 @@
-pragma solidity ^0.6.6;
+// SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts/introspection/IERC165.sol";
+pragma solidity ^0.6.8;
 
 /**
  * @title ERC721 Non-Fungible Token Standard, basic interface
  * @dev See https://eips.ethereum.org/EIPS/eip-721
  * Note: The ERC-165 identifier for this interface is 0x80ac58cd.
  */
-interface IERC721 is IERC165 {
+interface IERC721 {
     event Transfer(
         address indexed _from,
         address indexed _to,

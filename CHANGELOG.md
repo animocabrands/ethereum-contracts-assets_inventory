@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.0 (20/05/2020)
+
+### Breaking changes
+ * Added non-ERC721 `ERC1155*` versions of AssetsInventory.
+ * Major refactor of contracts and tests, increased tests coverage.
+ * Updated the `@animoca/ethereum-contracts-core_library` module dependency to ^2.0.0.
+ * Updated the `@animoca/ethereum-contracts-erc20_base` module dependency to ^2.0.0.
+ * Migrated compiler to `solc:0.6.8`.
+
+### New features
+ * Core Metadata contracts.
+
 ## 2.0.1 (04/05/2020)
 
 ### Bugfixes

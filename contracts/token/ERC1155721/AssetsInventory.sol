@@ -1,5 +1,8 @@
-pragma solidity ^0.6.6;
+// SPDX-License-Identifier: MIT
 
+pragma solidity ^0.6.8;
+
+import "./../ERC721/IERC721.sol";
 import "./../ERC721/IERC721Metadata.sol";
 import "./../ERC721/IERC721Receiver.sol";
 import "./../ERC1155/ERC1155AssetsInventory.sol";
@@ -49,7 +52,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public virtual override(ERC1155AssetsInventory, IERC165) view returns (bool)
+    ) public virtual override view returns (bool)
     {
         return (
             super.supportsInterface(interfaceId) ||

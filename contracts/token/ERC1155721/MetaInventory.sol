@@ -1,4 +1,6 @@
-pragma solidity ^0.6.6;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.8;
 
 import "@animoca/ethereum-contracts-erc20_base/contracts/metatx/ERC20Fees.sol";
 import "./AssetsInventory.sol";
