@@ -2,9 +2,9 @@
 
 pragma solidity ^0.6.8;
 
-import "../../../token/ERC721/IERC721Receiver.sol";
+import "../../../token/ERC721/ERC721Receiver.sol";
 
-contract ERC721ReceiverMock is IERC721Receiver {
+contract ERC721ReceiverMock is ERC721Receiver {
 
     event Received(
         address operator,
@@ -14,29 +14,24 @@ contract ERC721ReceiverMock is IERC721Receiver {
         uint256 gas
     );
 
-    //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
-    bytes4 constant internal ERC721_RECEIVED = 0x150b7a02;
+    bool internal _accept721;
 
-    bytes4 constant internal ERC721_REJECTED = 0xffffffff;
-
-    bool internal _useCorrect721Retval;
-
-    constructor(bool useCorrectRetval) public {
-        _useCorrect721Retval = useCorrectRetval;
+    constructor(bool accept721) public ERC721Receiver() {
+        _accept721 = accept721;
     }
 
-    function onERC721Received(
+    function _onERC721Received(
         address operator,
         address from,
         uint256 tokenId,
         bytes memory data
-    ) public override returns(bytes4)
+    ) internal virtual override returns(bool)
     {
-        if (_useCorrect721Retval) {
+        if (_accept721) {
             emit Received(operator, from, tokenId, data, gasleft());
-            return ERC721_RECEIVED;
+            return true;
         } else {
-            return ERC721_REJECTED;
+            return false;
         }
     }
 }

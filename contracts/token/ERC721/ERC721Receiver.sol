@@ -2,41 +2,42 @@
 
 pragma solidity ^0.6.8;
 
+import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "./IERC721Receiver.sol";
 
-// contract ERC721ReceiverMock is IERC721Receiver {
+abstract contract ERC721Receiver is IERC721Receiver, ERC165 {
 
-//     event Received(
-//         address operator,
-//         address from,
-//         uint256 tokenId,
-//         bytes data,
-//         uint256 gas
-//     );
+    bytes4 constant private _INTERFACE_ID_ERC721Receiver = type(IERC721Receiver).interfaceId;
+    bytes4 constant internal _ERC721_RECEIVED = _INTERFACE_ID_ERC721Receiver;
+    bytes4 constant internal _ERC721_REJECTED = 0xffffffff;
 
-//     //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
-//     bytes4 constant internal ERC721_RECEIVED = 0x150b7a02;
+    constructor() internal {
+        _registerInterface(_INTERFACE_ID_ERC721Receiver);
+    }
 
-//     bytes4 constant internal ERC721_REJECTED = 0xffffffff;
+    /**
+     * @dev Internal function which implements the logic of the receiver
+     * @ param operator address the operator for the transfer function
+     * @ param from address the previous owner of the token
+     * @ param tokenId uint256 the identifier of the token
+     * @ param data bytes optional data
+     * @return bool whether the reception is accepted
+     */
+    function _onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes memory data
+    ) internal virtual returns(bool);
 
-//     bool internal _useCorrect721Retval;
-
-//     constructor(bool useCorrectRetval) public {
-//         _useCorrect721Retval = useCorrectRetval;
-//     }
-
-//     function onERC721Received(
-//         address operator,
-//         address from,
-//         uint256 tokenId,
-//         bytes memory data
-//     ) public override returns(bytes4)
-//     {
-//         if (_useCorrect721Retval) {
-//             emit Received(operator, from, tokenId, data, gasleft());
-//             return ERC721_RECEIVED;
-//         } else {
-//             return ERC721_REJECTED;
-//         }
-//     }
-// }
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes memory data
+    ) public override returns(bytes4)
+    {
+        bool accept = _onERC721Received(operator, from, tokenId, data);
+        return accept? _ERC721_RECEIVED: _ERC721_REJECTED;
+    }
+}

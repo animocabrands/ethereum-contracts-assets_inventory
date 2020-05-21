@@ -24,6 +24,10 @@ interface IERC721Receiver {
         @param data Additional data with no specified format
         @return bytes4 `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
      */
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
     ) external returns (bytes4);
 }
