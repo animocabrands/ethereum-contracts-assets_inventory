@@ -3,9 +3,11 @@
 pragma solidity ^0.6.8;
 
 import "./../ERC721/IERC721.sol";
+import "./../ERC721/IERC721Exists.sol";
 import "./../ERC721/IERC721Metadata.sol";
 import "./../ERC721/IERC721Receiver.sol";
 import "./../ERC1155/ERC1155AssetsInventory.sol";
+import "./../ERC1155/IERC1155TokenReceiver.sol";
 
 /**
     @title AssetsInventory, a contract which manages up to multiple collections of fungible and non-fungible tokens
@@ -22,19 +24,13 @@ import "./../ERC1155/ERC1155AssetsInventory.sol";
     If non-fungible bitmask length == 1, there is one Non-Fungible Collection represented by the most significant bit set to 1 and other bits set to 0.
     If non-fungible bitmask length > 1, there are multiple Non-Fungible Collections.
  */
-abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInventory
+abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ERC1155AssetsInventory
 {
     using SafeMath for uint256;
     using Address for address;
 
-    // ERC165 Interface Ids
-    bytes4 constant internal ERC721_InterfaceId = 0x80ac58cd;
-    bytes4 constant internal ERC721Metadata_InterfaceId = 0x5b5e139f;
-    bytes4 constant internal ERC721Exists_InterfaceId = 0x4f558e79;
-    bytes4 constant internal ERC1155TokenReceiver_InterfaceId = 0x4e2312e0;
-
     //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
-    bytes4 constant internal ERC721_RECEIVED = 0x150b7a02;
+    bytes4 constant internal _ERC721_RECEIVED = 0x150b7a02;
 
     // id (nft) => operator
     mapping(uint256 => address) internal _nftApprovals;
@@ -46,21 +42,13 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
      * @dev Constructor function
      * @param nfMaskLength number of bits in the Non-Fungible Collection mask
      */
-    constructor(uint256 nfMaskLength) internal ERC1155AssetsInventory(nfMaskLength) {}
-
-/////////////////////////////////////////// ERC165 /////////////////////////////////////////////
-
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public virtual override view returns (bool)
-    {
-        return (
-            super.supportsInterface(interfaceId) ||
-            interfaceId == ERC721_InterfaceId ||
-            interfaceId == ERC721Metadata_InterfaceId ||
-            interfaceId == ERC721Exists_InterfaceId
-        );
+    constructor(uint256 nfMaskLength) internal ERC1155AssetsInventory(nfMaskLength) {
+        _registerInterface(type(IERC721).interfaceId);
+        _registerInterface(type(IERC721Exists).interfaceId);
+        _registerInterface(type(IERC721Metadata).interfaceId);
+        _registerInterface(type(IERC1155Collections).interfaceId);
     }
+
 /////////////////////////////////////////// ERC721 /////////////////////////////////////////////
 
     function balanceOf(address tokenOwner) public virtual override view returns (uint256) {
@@ -126,6 +114,10 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
     function tokenURI(uint256 nftId) external virtual override view returns (string memory) {
         require(_exists(nftId), "AssetsInventory: token URI of non-existing NFT");
         return _uri(nftId);
+    }
+
+    function exists(uint256 nftId) public virtual override view returns (bool) {
+        return _exists(nftId);
     }
 
 /////////////////////////////////////////// Transfer Internal Functions ///////////////////////////////////////
@@ -211,6 +203,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
     /**
      * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
      * The call is not executed if the target address is not a contract.
+     * First, 
      *
      * @param from address representing the previous owner of the given token ID
      * @param to target address that will receive the tokens
@@ -230,50 +223,16 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
             return;
         }
 
-        if (_isERC1155TokenReceiver(to)) {
-            _callOnERC1155Received(from, to, nftId, 1, data);
-        } else {
+        if (!_callOnERC1155Received(from, to, nftId, 1, data, false)) {
             if (safe) {
-                (bool success, bytes memory returndata) = to.call(abi.encodeWithSelector(
-                    IERC721Receiver(to).onERC721Received.selector,
+                bytes4 retval = IERC721Receiver(to).onERC721Received(
                     _msgSender(),
                     from,
                     nftId,
                     data
-                ));
-
-                _checkReceiverCallReturnValues(success, returndata, ERC721_RECEIVED);
+                );
+                require(retval == _ERC721_RECEIVED, "AssetsInventory: wrong ERC721Receiver return value");
             }
         }
-    }
-
-    /**
-     * @dev internal function to tell whether a contract implements ERC1155TokenReceiver interface
-     * @param _contract address query contract address
-     * @return whether the given contract is an ERC1155 Receiver contract
-     */
-    function _isERC1155TokenReceiver(address _contract) internal view returns(bool) {
-        bool success;
-        uint256 result;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            let x:= mload(0x40)                                     // Find empty storage location using "free memory pointer"
-            mstore(x, ERC165_InterfaceId)                           // Place signature at beginning of empty storage
-            mstore(add(x, 0x04), ERC1155TokenReceiver_InterfaceId)  // Place first argument directly next to signature
-
-            success:= staticcall(
-                10000,         // 10k gas
-                _contract,     // To addr
-                x,             // Inputs are stored at location x
-                0x24,          // Inputs are 36 bytes long
-                x,             // Store output over input (saves space)
-                0x20)          // Outputs are 32 bytes long
-
-            result:= mload(x)                 // Load the result
-        }
-        // (10000 / 63) "not enough for supportsInterface(...)"
-        // consume all gas, so caller can potentially know that there was not enough gas
-        assert(gasleft() > 158);
-        return success && result == 1;
     }
 }

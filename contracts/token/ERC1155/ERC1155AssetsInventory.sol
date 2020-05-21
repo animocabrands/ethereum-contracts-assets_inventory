@@ -5,7 +5,7 @@ pragma solidity ^0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
-import "@openzeppelin/contracts/introspection/IERC165.sol";
+import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "./../ERC1155/IERC1155.sol";
 import "./../ERC1155/IERC1155MetadataURI.sol";
 import "./../ERC1155/IERC1155Collections.sol";
@@ -26,25 +26,19 @@ import "./../ERC1155/IERC1155TokenReceiver.sol";
     If non-fungible bitmask length == 1, there is one Non-Fungible Collection represented by the most significant bit set to 1 and other bits set to 0.
     If non-fungible bitmask length > 1, there are multiple Non-Fungible Collections.
  */
-abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataURI, IERC1155Collections, Context
+abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1155Collections, ERC165, Context
 {
     using Address for address;
     using SafeMath for uint256;
 
-    // ERC165 Interface Ids
-    bytes4 constant internal ERC165_InterfaceId = 0x01ffc9a7;
-    bytes4 constant internal ERC1155_InterfaceId = 0xd9b67a26;
-    bytes4 constant internal ERC1155MetadataURI_InterfaceId = 0x0e89341c;
-    bytes4 constant internal ERC1155Collections_InterfaceId = 0x09ce5c46;
-
     // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
-    bytes4 constant internal ERC1155_RECEIVED = 0xf23a6e61;
+    bytes4 internal constant _ERC1155_RECEIVED = 0xf23a6e61;
 
     // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
-    bytes4 constant internal ERC1155_BATCH_RECEIVED = 0xbc197c81;
+    bytes4 internal constant _ERC1155_BATCH_RECEIVED = 0xbc197c81;
 
     // Non-fungible bit
-    uint256 constant internal NF_BIT = 1 << 255;
+    uint256 internal constant NF_BIT = 1 << 255;
 
     // Mask for non-fungible collection (including the nf bit)
     uint256 internal NF_COLLECTION_MASK;
@@ -52,11 +46,11 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
     // id (collection) => owner => balance
     mapping(uint256 => mapping(address => uint256)) internal _balances;
 
-    // owner => operator => approved
-    mapping(address => mapping(address => bool)) internal _operatorApprovals;
-
     // id (collection or nft) => owner
     mapping(uint256 => address) internal _owners;
+
+    // owner => operator => approved
+    mapping(address => mapping(address => bool)) internal _operatorApprovals;
 
     /**
      * @dev Constructor function
@@ -70,14 +64,11 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         uint256 mask = (1 << nfMaskLength) - 1;
         mask = mask << (256 - nfMaskLength);
         NF_COLLECTION_MASK = mask;
-    }
 
-    /**
-     * @dev (abstract) Internal function which returns an URI for a given identifier
-     * @param id uint256 identifier to query
-     * @return string the metadata URI
-     */
-    function _uri(uint256 id) internal virtual view returns(string memory);
+        _registerInterface(type(IERC1155).interfaceId);
+        _registerInterface(type(IERC1155MetadataURI).interfaceId);
+        _registerInterface(type(IERC1155Collections).interfaceId);
+    }
 
     /**
      * @dev Hook that is called before a single token transfer. This includes minting
@@ -121,17 +112,6 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         bytes memory data
     ) internal virtual { }
 
-/////////////////////////////////////////// ERC165 /////////////////////////////////////////////
-
-    function supportsInterface(bytes4 interfaceId) public virtual override view returns (bool) {
-        return (
-            interfaceId == ERC165_InterfaceId ||
-            interfaceId == ERC1155_InterfaceId ||
-            interfaceId == ERC1155MetadataURI_InterfaceId ||
-            interfaceId == ERC1155Collections_InterfaceId
-        );
-    }
-
 /////////////////////////////////////////// ERC1155 /////////////////////////////////////////////
 
     function safeTransferFrom(
@@ -158,7 +138,12 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
         emit TransferSingle(sender, from, to, id, value);
 
-        _callOnERC1155Received(from, to, id, value, data);
+        if (to.isContract()) {
+            require(
+                _callOnERC1155Received(from, to, id, value, data, true),
+                "ERC1155: unknown receiver failure"
+            );
+        }
     }
 
     function safeBatchTransferFrom(
@@ -192,7 +177,12 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
         emit TransferBatch(sender, from, to, ids, values);
 
-        _callOnERC1155BatchReceived(from, to, ids, values, data);
+        if (to.isContract()) {
+            require(
+                _callOnERC1155BatchReceived(from, to, ids, values, data, true),
+                "ERC1155: unknown receiver failure"
+            );
+        }
     }
 
     function balanceOf(address tokenOwner, uint256 id) public virtual override view returns (uint256) {
@@ -240,9 +230,18 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         return _operatorApprovals[tokenOwner][operator];
     }
 
+/////////////////////////////////////////// ERC1155MetadataURI /////////////////////////////////////////////
+
     function uri(uint256 id) external virtual override view returns (string memory) {
         return _uri(id);
     }
+
+    /**
+     * @dev (abstract) Internal function which returns an URI for a given identifier
+     * @param id uint256 identifier to query
+     * @return string the metadata URI
+     */
+    function _uri(uint256 id) internal virtual view returns(string memory);
 
 /////////////////////////////////////////// ERC1155Collections /////////////////////////////////////////////
 
@@ -278,6 +277,16 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
      */
     function _isNFT(uint256 id) internal virtual view returns (bool) {
         return (id & (NF_BIT) != 0) && (id & (~NF_COLLECTION_MASK) != 0);
+    }
+
+    /**
+     * @dev Internal function to check existence of an NFT
+     * @param nftId uint256 identifier of the NFT
+     * @return bool whether the NFT belongs to someone
+     */
+    function _exists(uint256 nftId) internal virtual view returns (bool) {
+        address tokenOwner = _owners[nftId];
+        return tokenOwner != address(0);
     }
 
 /////////////////////////////////////////// Transfer Internal Functions ///////////////////////////////////////
@@ -349,16 +358,6 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 /////////////////////////////////////////// Minting ///////////////////////////////////////
 
     /**
-     * @dev Internal function to check existence of an NFT
-     * @param nftId uint256 identifier of the NFT
-     * @return bool whether the NFT belongs to someone
-     */
-    function _exists(uint256 nftId) internal virtual view returns (bool) {
-        address tokenOwner = _owners[nftId];
-        return tokenOwner != address(0);
-    }
-
-    /**
      * @dev Internal function to mint one NFT
      * @param to address recipient that will own the minted token
      * @param nftId uint256 identifier of the NFT to be minted
@@ -393,8 +392,11 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
         emit URI(_uri(nftId), nftId);
 
-        if (safe && !batch) {
-            _callOnERC1155Received(address(0), to, nftId, 1, data);
+        if (safe && !batch && to.isContract()) {
+            require(
+                _callOnERC1155Received(address(0), to, nftId, 1, data, true),
+                "ERC1155: unknown receiver failure"
+            );
         }
     }
 
@@ -430,8 +432,11 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
             emit TransferSingle(_msgSender(), address(0), to, collectionId, value);
         }
 
-        if (safe && !batch) {
-            _callOnERC1155Received(address(0), to, collectionId, value, data);
+        if (safe && !batch && to.isContract()) {
+            require(
+                _callOnERC1155Received(address(0), to, collectionId, value, data, true),
+                "ERC1155: unknown receiver failure"
+            );
         }
     }
 
@@ -468,8 +473,11 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
 
         emit TransferBatch(_msgSender(), address(0), to, ids, values);
 
-        if (safe) {
-            _callOnERC1155BatchReceived(address(0), to, ids, values, data);
+        if (safe && to.isContract()) {
+            require(
+                _callOnERC1155BatchReceived(address(0), to, ids, values, data, true),
+                "ERC1155: unknown receiver failure"
+            );
         }
     }
 
@@ -522,24 +530,41 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         address to,
         uint256 id,
         uint256 value,
-        bytes memory data
-    ) internal
+        bytes memory data,
+        bool reverts
+    ) internal returns(bool)
     {
-        if (!to.isContract()) {
-            return;
-        }
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = to.call(abi.encodeWithSelector(
-            IERC1155TokenReceiver(to).onERC1155Received.selector,
+        try IERC1155TokenReceiver(to).onERC1155Received(
             _msgSender(),
             from,
             id,
             value,
             data
-        ));
+        ) returns (bytes4 retval) {
+            if (retval == _ERC1155_RECEIVED) {
+                return true;
+            } else if (reverts) {
+                revert("ERC1155: wrong value returned by receiver implementer");
+            }
+        } catch Error(string memory reason) {
+            if (reverts) {
+                revert(reason);
+            }
+        } catch (bytes memory returnData) {
+            if (reverts) {
+                if (returnData.length > 0) {
+                    // solhint-disable-next-line no-inline-assembly
+                    assembly {
+                        let returnData_size := mload(returnData)
+                        revert(add(32, returnData), returnData_size)
+                    }
+                } else {
+                    revert("ERC1155: transfer to non-receiver contract");
+                }
+            }
+        }
 
-        _checkReceiverCallReturnValues(success, returndata, ERC1155_RECEIVED);
+        return false;
     }
 
     /**
@@ -557,53 +582,40 @@ abstract contract ERC1155AssetsInventory is IERC165, IERC1155, IERC1155MetadataU
         address to,
         uint256[] memory ids,
         uint256[] memory values,
-        bytes memory data
-    ) internal
+        bytes memory data,
+        bool reverts
+    ) internal returns(bool)
     {
-        if (!to.isContract()) {
-            return;
-        }
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = to.call(abi.encodeWithSelector(
-            IERC1155TokenReceiver(to).onERC1155BatchReceived.selector,
+        try IERC1155TokenReceiver(to).onERC1155BatchReceived(
             _msgSender(),
             from,
             ids,
             values,
             data
-        ));
-
-        _checkReceiverCallReturnValues(success, returndata, ERC1155_BATCH_RECEIVED);
-    }
-
-    /**
-     * @dev Internal function which ensure that the result of a receiver function call
-     * ran successfully and returned the expected bytes4 value.
-     *
-     * @param success bool whether the call was a success
-     * @param returndata bytes the data returned by the call
-     * @param expectedRetval bytes4 the expected return value
-     */
-    function _checkReceiverCallReturnValues(
-        bool success,
-        bytes memory returndata,
-        bytes4 expectedRetval
-    ) internal pure
-    {
-        if (success) {
-            bytes4 retval = abi.decode(returndata, (bytes4));
-            require(retval == expectedRetval, "ERC1155: wrong value returned by receiver implementer");
-        } else {
-            if (returndata.length > 0) {
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    let returndata_size := mload(returndata)
-                    revert(add(32, returndata), returndata_size)
+        ) returns (bytes4 retval) {
+            if (retval == _ERC1155_BATCH_RECEIVED) {
+                return true;
+            } else if (reverts) {
+                revert("ERC1155: wrong value returned by receiver implementer");
+            }
+        } catch Error(string memory reason) {
+            if (reverts) {
+                revert(reason);
+            }
+        } catch (bytes memory returnData) {
+            if (reverts) {
+                if (returnData.length > 0) {
+                    // solhint-disable-next-line no-inline-assembly
+                    assembly {
+                        let returnData_size := mload(returnData)
+                        revert(add(32, returnData), returnData_size)
+                    }
+                } else {
+                    revert("ERC1155: transfer to non-receiver contract");
                 }
-            } else {
-                revert("ERC1155: transfer to non-receiver contract");
             }
         }
+
+        return false;
     }
 }

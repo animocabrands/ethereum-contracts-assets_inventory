@@ -11,6 +11,12 @@
 
 ### New features
  * Core Metadata contracts.
+ * Added `IERC721Exists` interface.
+ * Added abstract receiver contracts.
+
+### Improvements
+ * Refactored migrations.
+ * Simplified receiver calls logic with try/catch.
 
 ## 2.0.1 (04/05/2020)
 
