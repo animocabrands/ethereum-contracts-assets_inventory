@@ -23,7 +23,7 @@ interface ICoreMetadata {
     function getAttribute(
         uint256 integer,
         bytes32 name
-    ) external view returns(uint256 value);
+    ) external view returns (uint256 value);
 
     /**
      * @dev Retrieve the whole core metadata for an integer
@@ -31,7 +31,7 @@ interface ICoreMetadata {
      * @return names bytes32[] the names of the metadata attributes
      * @return values uint256[] the values of the metadata attributes
      */
-    function getAttributes(uint256 integer) external view returns(
+    function getAttributes(uint256 integer) external view returns (
         bytes32[] memory names,
         uint256[] memory values
     );

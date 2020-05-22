@@ -7,12 +7,11 @@ import "./IERC721Receiver.sol";
 
 abstract contract ERC721Receiver is IERC721Receiver, ERC165 {
 
-    bytes4 constant private _INTERFACE_ID_ERC721Receiver = type(IERC721Receiver).interfaceId;
-    bytes4 constant internal _ERC721_RECEIVED = _INTERFACE_ID_ERC721Receiver;
-    bytes4 constant internal _ERC721_REJECTED = 0xffffffff;
+    bytes4 internal constant _ERC721_RECEIVED = type(IERC721Receiver).interfaceId;
+    bytes4 internal constant _ERC721_REJECTED = 0xffffffff;
 
     constructor() internal {
-        _registerInterface(_INTERFACE_ID_ERC721Receiver);
+        _registerInterface(type(IERC721Receiver).interfaceId);
     }
 
     /**
@@ -28,14 +27,14 @@ abstract contract ERC721Receiver is IERC721Receiver, ERC165 {
         address from,
         uint256 tokenId,
         bytes memory data
-    ) internal virtual returns(bool);
+    ) internal virtual returns (bool);
 
     function onERC721Received(
         address operator,
         address from,
         uint256 tokenId,
         bytes memory data
-    ) public override returns(bytes4)
+    ) public override returns (bytes4)
     {
         bool accept = _onERC721Received(operator, from, tokenId, data);
         return accept? _ERC721_RECEIVED: _ERC721_REJECTED;

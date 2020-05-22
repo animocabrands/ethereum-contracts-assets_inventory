@@ -38,7 +38,7 @@ function shouldBehaveLikeERC721Pausable(
             await this.token.mintNonFungible(owner, nft2, { from: creator });
             await this.token.mintNonFungible(owner, nft3, { from: creator });
         });
-        
+
         describe('Pausable', function () {
             context('when not paued', function () {
                 it('allows approve', async function () {
@@ -55,7 +55,7 @@ function shouldBehaveLikeERC721Pausable(
             context('when paused', function () {
 
                 beforeEach(async function () {
-                    await this.token.pause({from: creator});
+                    await this.token.pause({ from: creator });
                 });
 
                 it('blocks approve', async function () {

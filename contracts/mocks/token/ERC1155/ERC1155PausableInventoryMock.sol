@@ -17,7 +17,7 @@ contract ERC1155PausableInventoryMock is ERC1155PausableInventory, Ownable, Mint
         return _createCollection(collectionId);
     }
 
-    function isNFT(uint256 id) external view returns(bool) {
+    function isNFT(uint256 id) external view returns (bool) {
         return _isNFT(id);
     }
 
@@ -75,7 +75,7 @@ contract ERC1155PausableInventoryMock is ERC1155PausableInventory, Ownable, Mint
         _burnFrom(from, id, value);
     }
 
-    function _uri(uint256 id) internal override view returns(string memory) {
+    function _uri(uint256 id) internal override view returns (string memory) {
         return string(abi.encodePacked("https://prefix/json/", id.toDecimalString()));
     }
 }

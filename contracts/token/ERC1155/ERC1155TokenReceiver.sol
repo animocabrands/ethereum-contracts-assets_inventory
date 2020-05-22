@@ -7,18 +7,16 @@ import "./IERC1155TokenReceiver.sol";
 
 abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, ERC165 {
 
-    bytes4 constant internal _INTERFACE_ID_ERC1155TokenReceiver = type(IERC1155TokenReceiver).interfaceId;
-
     // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
-    bytes4 constant private _ERC1155_RECEIVED = 0xf23a6e61;
+    bytes4 internal constant _ERC1155_RECEIVED = 0xf23a6e61;
 
     // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
-    bytes4 constant private _ERC1155_BATCH_RECEIVED = 0xbc197c81;
+    bytes4 internal constant _ERC1155_BATCH_RECEIVED = 0xbc197c81;
 
-    bytes4 constant private _ERC1155_REJECTED = 0xffffffff;
+    bytes4 internal constant _ERC1155_REJECTED = 0xffffffff;
 
     constructor() internal {
-        _registerInterface(_INTERFACE_ID_ERC1155TokenReceiver);
+        _registerInterface(type(IERC1155TokenReceiver).interfaceId);
     }
 
     function onERC1155Received(
@@ -27,7 +25,7 @@ abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, ERC165 {
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override returns(bytes4)
+    ) public override returns (bytes4)
     {
         bool accept = _onERC1155Received(operator, from, id, value, data);
         return accept? _ERC1155_RECEIVED: _ERC1155_REJECTED;
@@ -39,7 +37,7 @@ abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, ERC165 {
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override returns(bytes4)
+    ) public override returns (bytes4)
     {
         bool accept = _onERC1155BatchReceived(operator, from, ids, values, data);
         return accept? _ERC1155_BATCH_RECEIVED: _ERC1155_REJECTED;
@@ -51,7 +49,7 @@ abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, ERC165 {
         uint256 id,
         uint256 value,
         bytes memory data
-    ) internal virtual returns(bool);
+    ) internal virtual returns (bool);
 
 
     function _onERC1155BatchReceived(
@@ -60,5 +58,5 @@ abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, ERC165 {
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) internal virtual returns(bool);
+    ) internal virtual returns (bool);
 }

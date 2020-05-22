@@ -36,7 +36,7 @@ contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
         uint256 id,
         uint256 value,
         bytes memory data
-    ) internal virtual override returns(bool)
+    ) internal virtual override returns (bool)
     {
         if (_accept1155) {
             emit ReceivedSingle(operator, from, id, value, data, gasleft());
@@ -52,7 +52,7 @@ contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) internal virtual override returns(bool) {
+    ) internal virtual override returns (bool) {
         if (_accept1155) {
             emit ReceivedBatch(operator, from, ids, values, data, gasleft());
             return true;

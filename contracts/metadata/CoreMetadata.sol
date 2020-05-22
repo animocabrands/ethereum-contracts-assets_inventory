@@ -29,7 +29,7 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
     function getAttribute(
         uint256 integer,
         bytes32 name
-    ) virtual override public view returns(uint256 value)
+    ) virtual override public view returns (uint256 value)
     {
         uint256 position = uint256(_bitsLayout.get(name));
         value = integer.extract(
@@ -38,7 +38,7 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
         );
     }
 
-    function getAttributes(uint256 integer) virtual override public view returns(
+    function getAttributes(uint256 integer) virtual override public view returns (
         bytes32[] memory names,
         uint256[] memory values
     ) {
@@ -56,7 +56,7 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
         }
     }
 
-    function _getLayout() internal virtual view returns(
+    function _getLayout() internal virtual view returns (
         bytes32[] memory names,
         uint256[] memory lengths,
         uint256[] memory indices

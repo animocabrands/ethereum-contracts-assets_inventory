@@ -18,16 +18,16 @@ abstract contract ERC1155PausableInventory is ERC1155AssetsInventory, PausableCo
 /////////////////////////////////////////// Pausable ///////////////////////////////////////
 
     /**
-     * @dev Called by an admin to perform a global-scope level pause of all collections.
-     * @dev Does not affect the paused state at the collection-scope level.
+     * @dev Called by an admin to perform a global-scope level pause.
+     * Does not affect the paused state at the collection-scope level.
      */
     function pause() public virtual onlyPauser {
         _pause();
     }
 
     /**
-     * @dev Called by an admin to perform a global-scope level unpause of all collections.
-     * @dev Does not affect the paused state at the collection-scope level.
+     * @dev Called by an admin to perform a global-scope level unpause.
+     * Does not affect the paused state at the collection-scope level.
      */
     function unpause() public virtual onlyPauser {
         _unpause();
@@ -49,7 +49,7 @@ abstract contract ERC1155PausableInventory is ERC1155AssetsInventory, PausableCo
         emit CollectionsUnpaused(collectionIds, _msgSender());
     }
 
-    function _idPaused(uint256 id) internal virtual override view returns(bool) {
+    function _idPaused(uint256 id) internal virtual override view returns (bool) {
         if (_isNFT(id)) {
             return _pausedCollections[collectionOf(id)];
         } else {
@@ -57,7 +57,7 @@ abstract contract ERC1155PausableInventory is ERC1155AssetsInventory, PausableCo
         }
     }
 
-    function _isCollectionId(uint256 id) internal virtual override view returns(bool) {
+    function _isCollectionId(uint256 id) internal virtual override view returns (bool) {
         return !_isNFT(id);
     }
 

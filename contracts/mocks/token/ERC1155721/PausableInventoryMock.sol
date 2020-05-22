@@ -20,7 +20,7 @@ contract PausableInventoryMock is PausableInventory, Ownable, MinterRole  {
         _createCollection(collectionId);
     }
 
-    function isNFT(uint256 id) external view returns(bool) {
+    function isNFT(uint256 id) external view returns (bool) {
         return _isNFT(id);
     }
 

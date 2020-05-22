@@ -21,9 +21,9 @@ abstract contract PausableCollections {
 
 /////////////////////////////////////////// Internal Functions ///////////////////////////////////////
 
-    function _idPaused(uint256 id) internal virtual view returns(bool);
+    function _idPaused(uint256 id) internal virtual view returns (bool);
 
-    function _isCollectionId(uint256 id) internal virtual view returns(bool);
+    function _isCollectionId(uint256 id) internal virtual view returns (bool);
 
     function _pauseCollection(uint256 collectionId) internal virtual {
         require(!_idPaused(collectionId), "PausableCollections: pause a paused collection");

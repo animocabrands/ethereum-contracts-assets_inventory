@@ -32,16 +32,9 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
     //bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
     bytes4 constant internal _ERC721_RECEIVED = 0x150b7a02;
 
-    // id (nft) => operator
     mapping(uint256 => address) internal _nftApprovals;
-
-    // owner => nb nfts owned
     mapping(address => uint256) internal _nftBalances;
 
-    /**
-     * @dev Constructor function
-     * @param nfMaskLength number of bits in the Non-Fungible Collection mask
-     */
     constructor(uint256 nfMaskLength) internal ERC1155AssetsInventory(nfMaskLength) {
         _registerInterface(type(IERC721).interfaceId);
         _registerInterface(type(IERC721Exists).interfaceId);
@@ -49,7 +42,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
         _registerInterface(type(IERC1155Collections).interfaceId);
     }
 
-/////////////////////////////////////////// ERC721 /////////////////////////////////////////////
+//////////////////////////////////////// ERC721 ///////////////////////////////////////////////////
 
     function balanceOf(address tokenOwner) public virtual override view returns (uint256) {
         require(tokenOwner != address(0), "AssetsInventory: balance of the zero address");
@@ -86,7 +79,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
     function isApprovedForAll(
         address tokenOwner,
         address operator
-    ) public virtual override(IERC721, ERC1155AssetsInventory) view returns(bool)
+    ) public virtual override(IERC721, ERC1155AssetsInventory) view returns (bool)
     {
         return super.isApprovedForAll(tokenOwner, operator);
     }
@@ -120,7 +113,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
         return _exists(nftId);
     }
 
-/////////////////////////////////////////// Transfer Internal Functions ///////////////////////////////////////
+/////////////////////////////////////// Transfers Internal ////////////////////////////////////////
 
     /**
      * @dev Internal function to transfer the ownership of a given NFT to another address
@@ -181,7 +174,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
         );
     }
 
-/////////////////////////////////////////// Minting ///////////////////////////////////////
+//////////////////////////////////////// Minting Internal /////////////////////////////////////////
 
     function _mintNonFungible(
         address to,
@@ -198,7 +191,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
         super._mintNonFungible(to, nftId, data, batch, safe);
     }
 
-/////////////////////////////////////////// Receiver Internal Functions ///////////////////////////////////////
+///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////
 
     /**
      * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.

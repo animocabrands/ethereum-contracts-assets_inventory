@@ -16,14 +16,14 @@ abstract contract InventoryCoreMetadata is ICoreMetadata {
     EnumMap.Map internal _fungibleLayout;
     EnumMap.Map internal _nonFungibleLayout;
 
-    function _isFungible(uint256 integer) internal pure returns(bool) {
+    function _isFungible(uint256 integer) internal pure returns (bool) {
         return (integer & NF_FLAG) != 0;
     }
 
     function getAttribute(
         uint256 integer,
         bytes32 name
-    ) virtual override public view returns(uint256 value)
+    ) virtual override public view returns (uint256 value)
     {
         uint256 position;
         if (_isFungible(integer)) {
@@ -37,7 +37,7 @@ abstract contract InventoryCoreMetadata is ICoreMetadata {
         );
     }
 
-    function getAttributes(uint256 integer) virtual override public view returns(
+    function getAttributes(uint256 integer) virtual override public view returns (
         bytes32[] memory names,
         uint256[] memory values
     ) {
@@ -67,7 +67,7 @@ abstract contract InventoryCoreMetadata is ICoreMetadata {
         }
     }
 
-    function getLayout(bool fungible) virtual public view returns(
+    function getLayout(bool fungible) virtual public view returns (
         bytes32[] memory names,
         uint256[] memory lengths,
         uint256[] memory indices

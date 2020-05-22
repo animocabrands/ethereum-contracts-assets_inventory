@@ -8,7 +8,7 @@ contract CoreMetadataMock is CoreMetadata {
 
     constructor() public {}
 
-    function getLayout() external view returns(
+    function getLayout() external view returns (
         bytes32[] memory names,
         uint256[] memory lengths,
         uint256[] memory indices

@@ -21,7 +21,7 @@ contract ERC1155AssetsInventoryMock is ERC1155AssetsInventory, Ownable, MinterRo
         _createCollection(collectionId);
     }
 
-    function isNFT(uint256 id) external view returns(bool) {
+    function isNFT(uint256 id) external view returns (bool) {
         return _isNFT(id);
     }
 
