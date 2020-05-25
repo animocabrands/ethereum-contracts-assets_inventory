@@ -139,7 +139,9 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
 
         emit TransferSingle(sender, from, to, nftId, 1);
 
-        _callOnERC721Received(from, to, nftId, data, safe);
+        // if (to.isContract) {
+            _callOnERC721Received(from, to, nftId, data, safe);
+        // }
     }
 
     function _transferNonFungible(
@@ -216,7 +218,9 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
             return;
         }
 
-        if (!_callOnERC1155Received(from, to, nftId, 1, data, false)) {
+        if (_isERC1155TokenReceiver(to)) {
+            _callOnERC1155Received(from, to, nftId, 1, data);
+        } else {
             if (safe) {
                 bytes4 retval = IERC721Receiver(to).onERC721Received(
                     _msgSender(),
@@ -224,8 +228,46 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
                     nftId,
                     data
                 );
-                require(retval == _ERC721_RECEIVED, "AssetsInventory: wrong ERC721Receiver return value");
+                require(
+                    retval == _ERC721_RECEIVED,
+                    "AssetsInventory: wrong ERC721Receiver return value"
+                );
             }
         }
+    }
+
+    /**
+     * @dev internal function to tell whether a contract is an ERC1155 Receiver contract
+     * @param _contract address query contract addrss
+     * @return wheter the given contract is an ERC1155 Receiver contract
+     */
+    function _isERC1155TokenReceiver(address _contract) internal view returns(bool) {
+        bool success;
+        uint256 result;
+        bytes4 INTERFACE_ID_ERC165 = 0x01ffc9a7;
+        bytes4 erc1155ReceiverID = 0x4e2312e0;
+
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            // Find empty storage location using "free memory pointer"
+            let x:= mload(0x40)
+            // Place signature at beginning of empty storage
+            mstore(x, INTERFACE_ID_ERC165) // ERC165 interfaceId
+            // Place first argument directly next to signature
+            mstore(add(x, 0x04), erc1155ReceiverID) // ERC1155TokenReceiver interfaceId
+
+            success:= staticcall(
+                10000,          // 10k gas
+                _contract,     // To addr
+                x,             // Inputs are stored at location x
+                0x24,          // Inputs are 36 bytes long
+                x,             // Store output over input (saves space)
+                0x20)          // Outputs are 32 bytes long
+
+            result:= mload(x)                 // Load the result
+        }
+        // (10000 / 63) "not enough for supportsInterface(...)" // consume all gas, so caller can potentially know that there was not enough gas
+        assert(gasleft() > 158);
+        return success && result == 1;
     }
 }

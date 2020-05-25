@@ -94,12 +94,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 
         emit TransferSingle(sender, from, to, id, value);
 
-        if (to.isContract()) {
-            require(
-                _callOnERC1155Received(from, to, id, value, data, true),
-                "ERC1155: unknown receiver failure"
-            );
-        }
+        _callOnERC1155Received(from, to, id, value, data);
     }
 
     /**
@@ -136,12 +131,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 
         emit TransferBatch(sender, from, to, ids, values);
 
-        if (to.isContract()) {
-            require(
-                _callOnERC1155BatchReceived(from, to, ids, values, data, true),
-                "ERC1155: unknown receiver failure"
-            );
-        }
+        _callOnERC1155BatchReceived(from, to, ids, values, data);
     }
 
     /**
@@ -376,11 +366,8 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 
         emit URI(_uri(nftId), nftId);
 
-        if (safe && !batch && to.isContract()) {
-            require(
-                _callOnERC1155Received(address(0), to, nftId, 1, data, true),
-                "ERC1155: unknown receiver failure"
-            );
+        if (safe && !batch) {
+            _callOnERC1155Received(address(0), to, nftId, 1, data);
         }
     }
 
@@ -416,11 +403,8 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
             emit TransferSingle(_msgSender(), address(0), to, collectionId, value);
         }
 
-        if (safe && !batch && to.isContract()) {
-            require(
-                _callOnERC1155Received(address(0), to, collectionId, value, data, true),
-                "ERC1155: unknown receiver failure"
-            );
+        if (safe && !batch) {
+            _callOnERC1155Received(address(0), to, collectionId, value, data);
         }
     }
 
@@ -457,11 +441,8 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 
         emit TransferBatch(_msgSender(), address(0), to, ids, values);
 
-        if (safe && to.isContract()) {
-            require(
-                _callOnERC1155BatchReceived(address(0), to, ids, values, data, true),
-                "ERC1155: unknown receiver failure"
-            );
+        if (safe) {
+            _callOnERC1155BatchReceived(address(0), to, ids, values, data);
         }
     }
 
@@ -514,41 +495,25 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
         address to,
         uint256 id,
         uint256 value,
-        bytes memory data,
-        bool reverts
-    ) internal returns (bool)
+        bytes memory data
+    ) internal
     {
-        try IERC1155TokenReceiver(to).onERC1155Received(
+        if (!to.isContract()) {
+            return;
+        }
+
+        bytes4 retval = IERC1155TokenReceiver(to).onERC1155Received(
             _msgSender(),
             from,
             id,
             value,
             data
-        ) returns (bytes4 retval) {
-            if (retval == _ERC1155_RECEIVED) {
-                return true;
-            } else if (reverts) {
-                revert("ERC1155: wrong value returned by receiver implementer");
-            }
-        } catch Error(string memory reason) {
-            if (reverts) {
-                revert(reason);
-            }
-        } catch (bytes memory returnData) {
-            if (reverts) {
-                if (returnData.length > 0) {
-                    // solhint-disable-next-line no-inline-assembly
-                    assembly {
-                        let returnData_size := mload(returnData)
-                        revert(add(32, returnData), returnData_size)
-                    }
-                } else {
-                    revert("ERC1155: transfer to non-receiver contract");
-                }
-            }
-        }
+        );
 
-        return false;
+        require(
+            retval == _ERC1155_RECEIVED,
+            "ERC1155: receiver contract refused the transfer"
+        );
     }
 
     /**
@@ -566,41 +531,25 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
         address to,
         uint256[] memory ids,
         uint256[] memory values,
-        bytes memory data,
-        bool reverts
-    ) internal returns (bool)
+        bytes memory data
+    ) internal
     {
-        try IERC1155TokenReceiver(to).onERC1155BatchReceived(
+        if (!to.isContract()) {
+            return;
+        }
+
+        bytes4 retval = IERC1155TokenReceiver(to).onERC1155BatchReceived(
             _msgSender(),
             from,
             ids,
             values,
             data
-        ) returns (bytes4 retval) {
-            if (retval == _ERC1155_BATCH_RECEIVED) {
-                return true;
-            } else if (reverts) {
-                revert("ERC1155: wrong value returned by receiver implementer");
-            }
-        } catch Error(string memory reason) {
-            if (reverts) {
-                revert(reason);
-            }
-        } catch (bytes memory returnData) {
-            if (reverts) {
-                if (returnData.length > 0) {
-                    // solhint-disable-next-line no-inline-assembly
-                    assembly {
-                        let returnData_size := mload(returnData)
-                        revert(add(32, returnData), returnData_size)
-                    }
-                } else {
-                    revert("ERC1155: transfer to non-receiver contract");
-                }
-            }
-        }
+        );
 
-        return false;
+        require(
+            retval == _ERC1155_BATCH_RECEIVED,
+            "ERC1155: receiver contract refused the transfer"
+        );
     }
 
 /////////////////////////////////////////// Hooks ///////////////////////////////////////

@@ -18,45 +18,4 @@ abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, ERC165 {
     constructor() internal {
         _registerInterface(type(IERC1155TokenReceiver).interfaceId);
     }
-
-    function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes memory data
-    ) public override returns (bytes4)
-    {
-        bool accept = _onERC1155Received(operator, from, id, value, data);
-        return accept? _ERC1155_RECEIVED: _ERC1155_REJECTED;
-    }
-
-    function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] memory ids,
-        uint256[] memory values,
-        bytes memory data
-    ) public override returns (bytes4)
-    {
-        bool accept = _onERC1155BatchReceived(operator, from, ids, values, data);
-        return accept? _ERC1155_BATCH_RECEIVED: _ERC1155_REJECTED;
-    }
-
-    function _onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes memory data
-    ) internal virtual returns (bool);
-
-
-    function _onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] memory ids,
-        uint256[] memory values,
-        bytes memory data
-    ) internal virtual returns (bool);
 }

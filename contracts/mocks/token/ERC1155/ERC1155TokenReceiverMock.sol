@@ -30,34 +30,34 @@ contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
         _accept1155 = accept1155;
     }
 
-    function _onERC1155Received(
+    function onERC1155Received(
         address operator,
         address from,
         uint256 id,
         uint256 value,
         bytes memory data
-    ) internal virtual override returns (bool)
+    ) public virtual override returns (bytes4)
     {
         if (_accept1155) {
             emit ReceivedSingle(operator, from, id, value, data, gasleft());
-            return true;
+            return _ERC1155_RECEIVED;
         } else {
-            return false;
+            return _ERC1155_REJECTED;
         }
     }
 
-    function _onERC1155BatchReceived(
+    function onERC1155BatchReceived(
         address operator,
         address from,
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) internal virtual override returns (bool) {
+    ) public virtual override returns (bytes4) {
         if (_accept1155) {
             emit ReceivedBatch(operator, from, ids, values, data, gasleft());
-            return true;
+            return _ERC1155_BATCH_RECEIVED;
         } else {
-            return false;
+            return _ERC1155_REJECTED;
         }
     }
 }

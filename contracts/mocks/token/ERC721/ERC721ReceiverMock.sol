@@ -20,18 +20,18 @@ contract ERC721ReceiverMock is ERC721Receiver {
         _accept721 = accept721;
     }
 
-    function _onERC721Received(
+    function onERC721Received(
         address operator,
         address from,
         uint256 tokenId,
         bytes memory data
-    ) internal virtual override returns (bool)
+    ) public virtual override returns (bytes4)
     {
         if (_accept721) {
             emit Received(operator, from, tokenId, data, gasleft());
-            return true;
+            return _ERC721_RECEIVED;
         } else {
-            return false;
+            return _ERC721_REJECTED;
         }
     }
 }
