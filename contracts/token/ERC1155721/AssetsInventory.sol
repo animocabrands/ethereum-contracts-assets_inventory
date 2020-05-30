@@ -3,28 +3,15 @@
 pragma solidity ^0.6.8;
 
 import "./../ERC721/IERC721.sol";
-import "./../ERC721/IERC721Exists.sol";
 import "./../ERC721/IERC721Metadata.sol";
 import "./../ERC721/IERC721Receiver.sol";
 import "./../ERC1155/ERC1155AssetsInventory.sol";
 import "./../ERC1155/IERC1155TokenReceiver.sol";
 
 /**
-    @title AssetsInventory, a contract which manages up to multiple collections of fungible and non-fungible tokens
-    @dev In this implementation, with N representing the non-fungible bitmask length, IDs are composed as follow:
-    (a) Fungible Collection IDs:
-        - most significant bit == 0
-    (b) Non-Fungible Collection IDs:
-        - most significant bit == 1
-        - (256-N) least significant bits == 0
-    (c) Non-Fungible Token IDs:
-        - most significant bit == 1
-        - (256-N) least significant bits != 0
-
-    If non-fungible bitmask length == 1, there is one Non-Fungible Collection represented by the most significant bit set to 1 and other bits set to 0.
-    If non-fungible bitmask length > 1, there are multiple Non-Fungible Collections.
+ * @title AssetsInventory, an ERC1155AssetsInventory with additional support for ERC721.
  */
-abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ERC1155AssetsInventory
+abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInventory
 {
     using SafeMath for uint256;
     using Address for address;
@@ -37,9 +24,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
 
     constructor(uint256 nfMaskLength) internal ERC1155AssetsInventory(nfMaskLength) {
         _registerInterface(type(IERC721).interfaceId);
-        _registerInterface(type(IERC721Exists).interfaceId);
         _registerInterface(type(IERC721Metadata).interfaceId);
-        _registerInterface(type(IERC1155Collections).interfaceId);
     }
 
 //////////////////////////////////////// ERC721 ///////////////////////////////////////////////////
@@ -70,7 +55,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
 
     function getApproved(uint256 nftId) public virtual override view returns (address) {
         require(
-            _isNFT(nftId) && _exists(nftId),
+            _isNFT(nftId) && exists(nftId),
             "AssetsInventory: getting approval of an incorrect or non-existing NFT"
         );
         return _nftApprovals[nftId];
@@ -105,12 +90,8 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, IERC721Exists, ER
     }
 
     function tokenURI(uint256 nftId) external virtual override view returns (string memory) {
-        require(_exists(nftId), "AssetsInventory: token URI of non-existing NFT");
+        require(exists(nftId), "AssetsInventory: token URI of non-existing NFT");
         return _uri(nftId);
-    }
-
-    function exists(uint256 nftId) public virtual override view returns (bool) {
-        return _exists(nftId);
     }
 
 /////////////////////////////////////// Transfers Internal ////////////////////////////////////////

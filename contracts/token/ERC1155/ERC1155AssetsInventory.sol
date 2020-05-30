@@ -12,19 +12,16 @@ import "./../ERC1155/IERC1155Collections.sol";
 import "./../ERC1155/IERC1155TokenReceiver.sol";
 
 /**
-    @title ERC1155AssetsInventory, a contract which manages up to multiple collections of fungible and non-fungible tokens
-    @dev In this implementation, with N representing the non-fungible bitmask length, IDs are composed as follow:
-    (a) Fungible Collection IDs:
-        - most significant bit == 0
-    (b) Non-Fungible Collection IDs:
-        - most significant bit == 1
-        - (256-N) least significant bits == 0
-    (c) Non-Fungible Token IDs:
-        - most significant bit == 1
-        - (256-N) least significant bits != 0
-
-    If non-fungible bitmask length == 1, there is one Non-Fungible Collection represented by the most significant bit set to 1 and other bits set to 0.
-    If non-fungible bitmask length > 1, there are multiple Non-Fungible Collections.
+ * @title ERC1155AssetsInventory, a contract which manages up to multiple Collections of Fungible and Non-Fungible Tokens
+ * @dev In this implementation, with N representing the Non-Fungible Collection mask length, identifiers can represent either:
+ * (a) a Fungible Collection:
+ *     - most significant bit == 0
+ * (b) a Non-Fungible Collection:
+ *     - most significant bit == 1
+ *     - (256-N) least significant bits == 0
+ * (c) a Non-Fungible Token:
+ *     - most significant bit == 1
+ *     - (256-N) least significant bits != 0
  */
 abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1155Collections, ERC165, Context
 {
@@ -49,7 +46,10 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 
     /**
      * @dev Constructor function
-     * @param nfMaskLength number of bits in the Non-Fungible Collection mask
+     * @param nfMaskLength number of bits in the Non-Fungible Collection mask. MUST be within [1, 255].
+     * If nfMaskLength == 1, there is one Non-Fungible Collection represented by the most significant
+     * bit set to 1 and other bits set to 0.
+     * If nfMaskLength > 1, there are multiple Non-Fungible Collections encoded on additional bits.
      */
     constructor(uint256 nfMaskLength) internal {
         require(
@@ -63,6 +63,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
         _registerInterface(type(IERC1155).interfaceId);
         _registerInterface(type(IERC1155MetadataURI).interfaceId);
         _registerInterface(type(IERC1155Collections).interfaceId);
+        _registerInterface(type(IERC721Exists).interfaceId);
     }
 
 //////////////////////////////////////////// ERC1155 //////////////////////////////////////////////
@@ -194,18 +195,18 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 /////////////////////////////////////// ERC1155Collections ////////////////////////////////////////
 
     /**
+     * @dev See {IERC1155Collections-isFungible}.
+     */
+    function isFungible(uint256 id) public virtual override view returns (bool) {
+        return id & (_NF_BIT) == 0;
+    }
+
+    /**
      * @dev See {IERC1155Collections-collectionOf}.
      */
     function collectionOf(uint256 nftId) public virtual override view returns (uint256) {
         require(_isNFT(nftId), "ERC1155: collection of incorrect NFT id");
         return nftId & _NF_COLLECTION_MASK;
-    }
-
-    /**
-     * @dev See {IERC1155Collections-isFungible}.
-     */
-    function isFungible(uint256 id) public virtual override view returns (bool) {
-        return id & (_NF_BIT) == 0;
     }
 
     /**
@@ -216,6 +217,14 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
         address tokenOwner = _owners[nftId];
         require(tokenOwner != address(0), "ERC1155: owner of non-existing NFT");
         return tokenOwner;
+    }
+
+    /**
+     * @dev See {IERC1155Collections-exists}.
+     */
+    function exists(uint256 nftId) public virtual override view returns (bool) {
+        address tokenOwner = _owners[nftId];
+        return tokenOwner != address(0);
     }
 
 /////////////////////////////////////// ERC1155MetadataURI ////////////////////////////////////////
@@ -251,16 +260,6 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
      */
     function _isNFT(uint256 id) internal virtual view returns (bool) {
         return (id & (_NF_BIT) != 0) && (id & (~_NF_COLLECTION_MASK) != 0);
-    }
-
-    /**
-     * @dev Internal function to check existence of an NFT
-     * @param nftId uint256 identifier of the NFT
-     * @return bool whether the NFT belongs to someone
-     */
-    function _exists(uint256 nftId) internal virtual view returns (bool) {
-        address tokenOwner = _owners[nftId];
-        return tokenOwner != address(0);
     }
 
 /////////////////////////////////////// Transfers Internal ////////////////////////////////////////
@@ -347,7 +346,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
         bool batch
     ) internal virtual
     {
-        require(!_exists(nftId), "ERC1155: minting an existing id");
+        require(!exists(nftId), "ERC1155: minting an existing id");
 
         if (!batch) {
             require(to != address(0), "ERC1155: minting to the zero address");

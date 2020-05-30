@@ -5,10 +5,11 @@ pragma solidity ^0.6.8;
 import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/types/UInt256Extract.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/algo/EnumMap.sol";
-import "./IInventoryMetadata.sol";
 import "./../token/ERC1155/IERC1155Collections.sol";
+import "./ICoreMetadata.sol";
+import "./IInventoryMetadata.sol";
 
-abstract contract InventoryMetadata is IInventoryMetadata, ERC165 {
+abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165 {
 
     using UInt256Extract for uint256;
     using EnumMap for EnumMap.Map;

@@ -86,7 +86,7 @@ interface IERC1155 {
      * @notice Get the balance of an account's tokens.
      * @param owner  The address of the token holder
      * @param id     ID of the token
-     * @return        The _owner's balance of the token type requested
+     * @return       The _owner's balance of the token type requested
      */
     function balanceOf(address owner, uint256 id) external view returns (uint256);
 
@@ -94,7 +94,7 @@ interface IERC1155 {
      * @notice Get the balance of multiple account/token pairs
      * @param owners The addresses of the token holders
      * @param ids    ID of the tokens
-     * @return        The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
+     * @return       The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
      */
     function balanceOfBatch(
         address[] calldata owners,
@@ -104,8 +104,8 @@ interface IERC1155 {
     /**
      * @notice Enable or disable approval for a third party ("operator") to manage all of the caller's tokens.
      * @dev MUST emit the ApprovalForAll event on success.
-     * @param operator  Address to add to the set of authorized operators
-     * @param approved  True if the operator is approved, false to revoke approval
+     * @param operator Address to add to the set of authorized operators
+     * @param approved True if the operator is approved, false to revoke approval
     */
     function setApprovalForAll(address operator, bool approved) external;
 
@@ -113,7 +113,7 @@ interface IERC1155 {
      * @notice Queries the approval status of an operator for a given owner.
      * @param owner     The owner of the tokens
      * @param operator  Address of authorized operator
-     * @return           True if the operator is approved, false if not
+     * @return          True if the operator is approved, false if not
     */
     function isApprovedForAll(address owner, address operator) external view returns (bool);
 }

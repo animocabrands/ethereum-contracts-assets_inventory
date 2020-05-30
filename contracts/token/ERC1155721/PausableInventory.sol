@@ -8,7 +8,7 @@ import "../../utils/PausableCollections.sol";
 import "./AssetsInventory.sol";
 
 /**
- * @title PausableInventory, an inventory contract with pausable collections
+ * @title PausableInventory, an assets inventory contract with pausable collections.
  */
 abstract contract PausableInventory is AssetsInventory, PausableCollections, Pausable, PauserRole
 {

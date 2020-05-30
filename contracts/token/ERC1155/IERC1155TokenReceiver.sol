@@ -42,7 +42,7 @@ interface IERC1155TokenReceiver {
      * @param ids       An array containing ids of each token being transferred (order and length must match _values array)
      * @param values    An array containing amounts of each token being transferred (order and length must match _ids array)
      * @param data      Additional data with no specified format
-     * @return           `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+     * @return          `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
     */
     function onERC1155BatchReceived(
         address operator,

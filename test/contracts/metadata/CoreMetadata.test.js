@@ -1,20 +1,12 @@
-const { web3, contract } = require('@openzeppelin/test-environment');
-const { BN, expectRevert } = require('@openzeppelin/test-helpers');
-const BigInteger = require('big-integer');
 const { encode, decode } = require('bits.js');
-const assert = require('assert');
-require('chai').should();
+const BigInteger = require('big-integer');
+const { contract } = require('@openzeppelin/test-environment');
+const { BN, expectRevert } = require('@openzeppelin/test-helpers');
+const { shouldSupportInterfaces, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const interfacesMetadata = require('../../../src/interfaces/ERC165/Metadata');
+const { fromBytes32Attribute, toBytes32Attribute } = require('../../../src/helpers/bytes32Attributes');
 
 const CoreMetadata = contract.fromArtifact('CoreMetadataMock');
-
-const makeShortAttributeName = function (name) {
-    assert(name.length <= 32, "Attribute's name is too long");
-    return web3.utils.fromAscii(name.padEnd(32));
-}
-
-const getShortAttributeName = function (name) {
-    return web3.utils.toAscii(name).trimRight();
-}
 
 describe('CoreMetadata', function () {
 
@@ -27,7 +19,7 @@ describe('CoreMetadata', function () {
             it('reverts', async function () {
                 await expectRevert(
                     this.contract.setLayout(
-                        layout.names.map(x => makeShortAttributeName(x)),
+                        layout.names.map(x => toBytes32Attribute(x)),
                         layout.lengths,
                         layout.indices
                     ),
@@ -39,7 +31,7 @@ describe('CoreMetadata', function () {
         const itSetsTheLayout = function (layout) {
             it('sets the layout', async function () {
                 await this.contract.setLayout(
-                    layout.names.map(x => makeShortAttributeName(x)),
+                    layout.names.map(x => toBytes32Attribute(x)),
                     layout.lengths,
                     layout.indices
                 );
@@ -48,7 +40,7 @@ describe('CoreMetadata', function () {
                 newLayout.lengths.should.have.lengthOf(layout.lengths.length, 'Wrong lengths length');
                 newLayout.indices.should.have.lengthOf(layout.indices.length, 'Wrong indices length');
                 for (let i = 0; i < layout.names.length; i++) {
-                    getShortAttributeName(newLayout.names[i]).should.equal(layout.names[i], 'Wrong name');
+                    fromBytes32Attribute(newLayout.names[i]).should.equal(layout.names[i], 'Wrong name');
                     newLayout.lengths[i].should.be.bignumber.equal(new BN(layout.lengths[i]), 'Wrong length');
                     newLayout.indices[i].should.be.bignumber.equal(new BN(layout.indices[i]), 'Wrong index');
                 }
@@ -166,7 +158,7 @@ describe('CoreMetadata', function () {
             };
 
             await this.contract.setLayout(
-                layout.names.map(x => makeShortAttributeName(x)),
+                layout.names.map(x => toBytes32Attribute(x)),
                 layout.lengths,
                 layout.indices
             );
@@ -187,12 +179,12 @@ describe('CoreMetadata', function () {
                 'collection_attr1',
                 'collection_attr2',
                 'collection_attr3',
-                'Base Collection ID',
+                'baseCollectionId',
                 'token_attr1',
                 'token_attr2',
                 'token_attr3',
                 'token_attr4',
-                'Base Token ID'
+                'baseTokenId'
             ],
             lengths: [16, 8, 8, 32, 32, 64, 64, 64, 224],
             indices: [0, 16, 24, 0, 32, 64, 128, 192, 32]
@@ -209,13 +201,13 @@ describe('CoreMetadata', function () {
         ];
 
         const bitsLayout2 = [
-            { name: 'Base Collection ID', bits: 32 },
-            { name: 'Base Token ID', bits: 224 },
+            { name: 'baseCollectionId', bits: 32 },
+            { name: 'baseTokenId', bits: 224 },
         ];
 
         beforeEach(async function () {
             await this.contract.setLayout(
-                layout.names.map(x => makeShortAttributeName(x)),
+                layout.names.map(x => toBytes32Attribute(x)),
                 layout.lengths,
                 layout.indices
             );
@@ -237,14 +229,17 @@ describe('CoreMetadata', function () {
             const attributesValues = await this.contract.getAllAttributes(integer.toString(10));
 
             for (const [name, value] of Object.entries({ ...attributes1, ...attributes2 })) {
-                const index = attributesValues.names.indexOf(makeShortAttributeName(name));
-                index.should.be.gte(0, "Attribute's name is missing");
+                if (name == 'nf_flag' || name == 'nfFlag') continue;
+                const index = attributesValues.names
+                    .map(n => fromBytes32Attribute(n))
+                    .indexOf(name);
+                index.should.be.gte(0, `Missing attribute: ${name}`);
                 attributesValues.values[index].should.be.bignumber.equal(
                     new BN(`${value}`),
                     "Attribute's value from getAllAttributes() is wrong"
                 );
 
-                const attributeValue = await this.contract.getAttribute(integer.toString(10), makeShortAttributeName(name));
+                const attributeValue = await this.contract.getAttribute(integer.toString(10), toBytes32Attribute(name));
                 attributeValue.should.be.bignumber.equal(
                     new BN(`${value}`),
                     "Attribute's value from getAttribute() is wrong"
@@ -253,4 +248,8 @@ describe('CoreMetadata', function () {
         });
     });
 
+    shouldSupportInterfaces([
+        interfaces.ERC165,
+        interfacesMetadata.CoreMetadata,
+    ]);
 });

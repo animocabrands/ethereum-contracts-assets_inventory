@@ -2,8 +2,6 @@
 
 pragma solidity ^0.6.8;
 
-import "./ICoreMetadata.sol";
-
 /**
  * @dev Interface for retrieving core metadata attributes encoded in an integer
  * and based on a specific bits layout. A layout consists of a mapping of names
@@ -14,7 +12,7 @@ import "./ICoreMetadata.sol";
  * should not be expected to have knowledge of the existence of a token in a
  * specific contract.
  */
-interface IInventoryMetadata is ICoreMetadata {
+interface IInventoryMetadata {
 
     /**
      * @dev Get the address of the inventory contracts which delegated

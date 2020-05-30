@@ -10,7 +10,7 @@ pragma solidity ^0.6.8;
 interface IERC721Exists {
 
     /**
-     * @dev Checks the existence of an NFT
+     * @dev Checks the existence of an Non-Fungible Token
      * @return bool true if the token belongs to a non-zero address, false otherwise
      */
     function exists(uint256 nftId) external view returns (bool);
