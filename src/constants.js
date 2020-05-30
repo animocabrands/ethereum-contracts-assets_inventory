@@ -23,6 +23,16 @@ const ERC1155TokenReceiver_InterfaceId = interfaces.ERC1155TokenReceiver;
 
 const DefaultNFMaskLength = 32;
 
+const DefaultFungibleLayout = [
+    { name: 'baseCollectionId', bits: 256 },
+];
+
+const DefaultNonFungibleLayout = [
+    { name: 'baseTokenId', bits: 256 - DefaultNFMaskLength },
+    { name: 'baseCollectionId', bits: DefaultNFMaskLength - 1 },
+    { name: 'nfFlag', bits: 1 }
+];
+
 module.exports = {
     // Number
     DefaultNFMaskLength,
@@ -38,5 +48,8 @@ module.exports = {
         ERC721Received_MagicValue, ERC1155Received_MagicValue, ERC1155BatchReceived_MagicValue,
         ERC721_InterfaceId, ERC721Metadata_InterfaceId, ERC721Enumerable_InterfaceId, ERC721Exists_InterfaceId_Experimental, ERC721Receiver_InterfaceId,
         ERC1155_InterfaceId, ERC1155MetadataURI_InterfaceId, ERC1155Collections_InterfaceId_Experimental, ERC1155TokenReceiver_InterfaceId,
-    }
+    },
+
+    // Bits Layouts
+    DefaultFungibleLayout, DefaultNonFungibleLayout,
 };

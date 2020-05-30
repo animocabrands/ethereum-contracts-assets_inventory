@@ -2,12 +2,12 @@
 
 pragma solidity ^0.6.8;
 
-import "@openzeppelin/contracts/introspection/IERC165.sol";
+import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/types/UInt256Extract.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/algo/EnumMap.sol";
 import "./ICoreMetadata.sol";
 
-abstract contract CoreMetadata is IERC165, ICoreMetadata {
+abstract contract CoreMetadata is ERC165, ICoreMetadata {
 
     bytes4 internal constant ERC165_InterfaceId = type(IERC165).interfaceId;
     bytes4 internal constant CoreMetadata_InterfaceId = type(ICoreMetadata).interfaceId;
@@ -15,15 +15,25 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
     using UInt256Extract for uint256;
     using EnumMap for EnumMap.Map;
 
+    /**
+     * A layout is a mapping from a bytes32 name to a uint256 position.
+     * A position informs on which bits to extract from an id to retrieve
+     * a specific metadata attribute. A uint256 position is composed as follow:
+     * - an index which represents the bit position where the attribute begins,
+     *   (encoded on the 128 most significant bits)
+     * - a length which represents the number of bits for the attribute.
+     *   (encoded on the 128 least significant bits)
+     *
+     * Shorthands:
+     * - layout = mapping(name => position)
+     * - position = index << 128 | length
+     * - attribute_mask = (1 << length) - 1) << index
+     * - attribute = id & attribute_mask
+     */
     EnumMap.Map internal _bitsLayout;
 
-    /////////////////////////////////////////// ERC165 /////////////////////////////////////////////
-
-    function supportsInterface(bytes4 interfaceId) public virtual override view returns (bool) {
-        return (
-            interfaceId == ERC165_InterfaceId ||
-            interfaceId == CoreMetadata_InterfaceId
-        );
+    constructor() internal {
+        _registerInterface(type(ICoreMetadata).interfaceId);
     }
 
     function getAttribute(
@@ -38,7 +48,22 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
         );
     }
 
-    function getAttributes(uint256 integer) virtual override public view returns (
+    function getAttributes(
+        uint256 integer,
+        bytes32[] memory names
+    ) virtual override public view returns (uint256[] memory values)
+    {
+        values = new uint256[](names.length);
+        for (uint256 i = 0; i < names.length; ++i) {
+            uint256 position = uint256(_bitsLayout.get(names[i]));
+            values[i] = integer.extract(
+                uint128(position),
+                uint128(position >> 128)
+            );
+        }
+    }
+
+    function getAllAttributes(uint256 integer) virtual override public view returns (
         bytes32[] memory names,
         uint256[] memory values
     ) {
@@ -54,6 +79,22 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
                 uint128(position >> 128)
             );
         }
+    }
+
+    function _setAttribute(
+        EnumMap.Map storage layout,
+        bytes32 name,
+        uint256 length,
+        uint256 index
+    ) internal
+    {
+        // Ensures extraction preconditions are met
+        uint256(0).extract(length, index);
+
+        layout.set(name, bytes32(uint256(
+            index << 128 |
+            length
+        )));
     }
 
     function _getLayout() internal virtual view returns (
@@ -88,13 +129,7 @@ abstract contract CoreMetadata is IERC165, ICoreMetadata {
         );
         _clearLayout();
         for (uint256 i = 0; i < size; i++) {
-            uint256 length = lengths[i];
-            uint256 index = indices[i];
-            // Ensures extraction preconditions are met
-            uint256(0).extract(length, index);
-
-            uint256 position = (index << 128) | length;
-            _bitsLayout.set(names[i], bytes32(position));
+            _setAttribute(_bitsLayout, names[i], lengths[i], indices[i]);
         }
     }
 

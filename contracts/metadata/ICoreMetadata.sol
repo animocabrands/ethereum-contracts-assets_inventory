@@ -16,8 +16,8 @@ interface ICoreMetadata {
 
     /**
      * @dev Retrieve the value of a specific attribute for an integer
-     * @param integer uint256 the integer to query the attribute for
-     * @param name bytes32 the name of the attribute to retrieve
+     * @param integer uint256 the integer to inspect
+     * @param name bytes32 the attribute name to retrieve
      * @return value uint256 the value of the attribute
      */
     function getAttribute(
@@ -26,12 +26,23 @@ interface ICoreMetadata {
     ) external view returns (uint256 value);
 
     /**
+     * @dev Retrieve the value of a specific attribute for an integer
+     * @param integer uint256 the integer to inspect
+     * @param names bytes32[] the list of attribute names to retrieve
+     * @return values uint256[] the values of the attributes
+     */
+    function getAttributes(
+        uint256 integer,
+        bytes32[] calldata names
+    ) external view returns (uint256[] memory values);
+
+    /**
      * @dev Retrieve the whole core metadata for an integer
-     * @param integer uint256 the integer to query the metadata for
+     * @param integer uint256 the integer to inspect
      * @return names bytes32[] the names of the metadata attributes
      * @return values uint256[] the values of the metadata attributes
      */
-    function getAttributes(uint256 integer) external view returns (
+    function getAllAttributes(uint256 integer) external view returns (
         bytes32[] memory names,
         uint256[] memory values
     );
