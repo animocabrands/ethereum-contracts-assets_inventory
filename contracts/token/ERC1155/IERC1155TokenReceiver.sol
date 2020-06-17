@@ -1,31 +1,27 @@
-pragma solidity ^0.6.6;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.8;
 
 /**
-    @title ERC-1155 Multi Token Standard, token receiver
-    @dev See https://eips.ethereum.org/EIPS/eip-1155
-    Interface for any contract that wants to support transfers from ERC1155 asset contracts.
-    Note: The ERC-165 identifier for this interface is 0x4e2312e0.
+ * @title ERC-1155 Multi Token Standard, token receiver
+ * @dev See https://eips.ethereum.org/EIPS/eip-1155
+ * Interface for any contract that wants to support transfers from ERC1155 asset contracts.
+ * Note: The ERC-165 identifier for this interface is 0x4e2312e0.
  */
-abstract contract IERC1155TokenReceiver {
-
-    // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
-    bytes4 constant internal ERC1155_RECEIVED = 0xf23a6e61;
-
-    // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
-    bytes4 constant internal ERC1155_BATCH_RECEIVED = 0xbc197c81;
+interface IERC1155TokenReceiver {
 
     /**
-        @notice Handle the receipt of a single ERC1155 token type.
-        @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.
-        This function MUST return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` (i.e. 0xf23a6e61) if it accepts the transfer.
-        This function MUST revert if it rejects the transfer.
-        Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
-        @param operator  The address which initiated the transfer (i.e. msg.sender)
-        @param from      The address which previously owned the token
-        @param id        The ID of the token being transferred
-        @param value     The amount of tokens being transferred
-        @param data      Additional data with no specified format
-        @return bytes4   `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+     * @notice Handle the receipt of a single ERC1155 token type.
+     * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.
+     * This function MUST return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` (i.e. 0xf23a6e61) if it accepts the transfer.
+     * This function MUST revert if it rejects the transfer.
+     * Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
+     * @param operator  The address which initiated the transfer (i.e. msg.sender)
+     * @param from      The address which previously owned the token
+     * @param id        The ID of the token being transferred
+     * @param value     The amount of tokens being transferred
+     * @param data      Additional data with no specified format
+     * @return bytes4   `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
     */
     function onERC1155Received(
         address operator,
@@ -33,20 +29,20 @@ abstract contract IERC1155TokenReceiver {
         uint256 id,
         uint256 value,
         bytes calldata data
-    ) external virtual returns (bytes4);
+    ) external returns (bytes4);
 
     /**
-        @notice Handle the receipt of multiple ERC1155 token types.
-        @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeBatchTransferFrom` after the balances have been updated.
-        This function MUST return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` (i.e. 0xbc197c81) if it accepts the transfer(s).
-        This function MUST revert if it rejects the transfer(s).
-        Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
-        @param operator  The address which initiated the batch transfer (i.e. msg.sender)
-        @param from      The address which previously owned the token
-        @param ids       An array containing ids of each token being transferred (order and length must match _values array)
-        @param values    An array containing amounts of each token being transferred (order and length must match _ids array)
-        @param data      Additional data with no specified format
-        @return           `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+     * @notice Handle the receipt of multiple ERC1155 token types.
+     * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeBatchTransferFrom` after the balances have been updated.
+     * This function MUST return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` (i.e. 0xbc197c81) if it accepts the transfer(s).
+     * This function MUST revert if it rejects the transfer(s).
+     * Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
+     * @param operator  The address which initiated the batch transfer (i.e. msg.sender)
+     * @param from      The address which previously owned the token
+     * @param ids       An array containing ids of each token being transferred (order and length must match _values array)
+     * @param values    An array containing amounts of each token being transferred (order and length must match _ids array)
+     * @param data      Additional data with no specified format
+     * @return          `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
     */
     function onERC1155BatchReceived(
         address operator,
@@ -54,5 +50,5 @@ abstract contract IERC1155TokenReceiver {
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external virtual returns (bytes4);
+    ) external returns (bytes4);
 }

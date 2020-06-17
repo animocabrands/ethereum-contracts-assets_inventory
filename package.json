@@ -1,6 +1,6 @@
 {
   "name": "@animoca/ethereum-contracts-assets_inventory",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Solidity assets contracts managing fungible and non-fungible tokens",
   "repository": {
     "type": "git",
@@ -23,8 +23,11 @@
   ],
   "author": "Animoca Brands",
   "license": "MIT",
-  "dependencies": {
-    "@animoca/blockchain-inventory_metadata": "^0.0.1",
-    "@animoca/ethereum-contracts-erc20_base": "^1.0.1"
+  "dependencies": {},
+  "devDependencies": {
+    "@animoca/blockchain-inventory_metadata": "0.0.1",
+    "@animoca/ethereum-contracts-core_library": "^3.0.0",
+    "@animoca/ethereum-contracts-erc20_base": "^3.0.0",
+    "bits.js": "^0.1.1"
   }
 }
