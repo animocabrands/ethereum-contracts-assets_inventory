@@ -1,11 +1,11 @@
 const { contract } = require('@openzeppelin/test-environment');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { shouldSupportInterfaces, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const { behaviors, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
 const { ZeroAddress, } = constants;
 const interfaces721 = require('../../../../../src/interfaces/ERC165/ERC721');
 
-const { ERC721Received_MagicValue } = require('../../../../../src/constants');
+// const { ERC721Received_MagicValue } = require('../../../../../src/constants');
 const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
@@ -509,11 +509,13 @@ function shouldBehaveLikeERC721(
       });
     });
 
-    shouldSupportInterfaces([
-      interfaces.ERC165,
-      interfaces721.ERC721,
-      interfaces721.ERC721Exists_Experimental,
-    ]);
+    describe('ERC165 interfaces support', function () {
+      behaviors.shouldSupportInterfaces([
+        interfaces.ERC165,
+        interfaces721.ERC721,
+        interfaces721.ERC721Exists_Experimental,
+      ]);
+    });
   });
 }
 

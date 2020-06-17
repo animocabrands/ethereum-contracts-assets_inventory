@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.8;
+pragma solidity 0.6.8;
 
 /**
  * @dev Interface for retrieving core metadata attributes encoded in an integer
@@ -17,7 +17,7 @@ interface IInventoryMetadata {
     /**
      * @dev Get the address of the inventory contracts which delegated
      * core metadata implementation to this contract.
-     * MUST return a valid IERC1155Collections implementer address.
+     * MUST return a valid IERC1155AssetCollections implementer address.
      */
     function inventoryMetadataDelegator() external view returns (address);
 }

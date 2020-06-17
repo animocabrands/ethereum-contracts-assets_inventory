@@ -2,7 +2,7 @@ const { encode, decode } = require('bits.js');
 const BigInteger = require('big-integer');
 const { contract } = require('@openzeppelin/test-environment');
 const { BN, expectRevert } = require('@openzeppelin/test-helpers');
-const { shouldSupportInterfaces, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const { behaviors, interfaces } = require('@animoca/ethereum-contracts-core_library');
 const interfacesMetadata = require('../../../src/interfaces/ERC165/Metadata');
 const { DefaultNFMaskLength, DefaultNonFungibleLayout } = require('../../../src/constants');
 const { fromBytes32Attribute, toBytes32Attribute } = require('../../../src/helpers/bytes32Attributes');
@@ -266,7 +266,7 @@ describe('InventoryMetadata', function () {
         });
     });
 
-    shouldSupportInterfaces([
+    behaviors.shouldSupportInterfaces([
         interfaces.ERC165,
         interfacesMetadata.CoreMetadata,
         interfacesMetadata.InventoryMetadata,

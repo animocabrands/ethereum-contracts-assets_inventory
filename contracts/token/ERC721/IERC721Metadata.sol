@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.8;
+pragma solidity 0.6.8;
 
 /**
  * @title ERC721 Non-Fungible Token Standard, optional metadata extension

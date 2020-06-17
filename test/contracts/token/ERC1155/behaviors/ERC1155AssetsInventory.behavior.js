@@ -1,7 +1,7 @@
 const { contract } = require('@openzeppelin/test-environment');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { shouldSupportInterfaces, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const { behaviors, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
 const { ZeroAddress } = constants;
 const interfaces1155 = require('../../../../../src/interfaces/ERC165/ERC1155');
 
@@ -194,16 +194,17 @@ function shouldBehaveLikeERC1155AssetsInventory(
       });
 
       context('when querying the zero address', function () {
+        const revertMessage = "ERC1155: balance of the zero address";
         it('throws when query nf token id', async function () {
-          await expectRevert.unspecified(this.token.balanceOf(ZeroAddress, nft1));
+          await expectRevert(this.token.balanceOf(ZeroAddress, nft1), revertMessage);
         });
 
         it('throws when query nft collection id', async function () {
-          await expectRevert.unspecified(this.token.balanceOf(ZeroAddress, nfCollection1));
+          await expectRevert(this.token.balanceOf(ZeroAddress, nfCollection1), revertMessage);
         });
 
         it('throws when query ft collection id', async function () {
-          await expectRevert.unspecified(this.token.balanceOf(ZeroAddress, fCollection1.id));
+          await expectRevert(this.token.balanceOf(ZeroAddress, fCollection1.id), revertMessage);
         });
       });
     });
@@ -1066,11 +1067,13 @@ function shouldBehaveLikeERC1155AssetsInventory(
       });
     });
 
-    shouldSupportInterfaces([
-      interfaces.ERC165,
-      interfaces1155.ERC1155,
-      interfaces1155.ERC1155Collections_Experimental
-    ]);
+    describe('ERC165 interfaces support', function () {
+      behaviors.shouldSupportInterfaces([
+        interfaces.ERC165,
+        interfaces1155.ERC1155,
+        interfaces1155.ERC1155AssetCollections_Experimental
+      ]);
+    });
   });
 }
 

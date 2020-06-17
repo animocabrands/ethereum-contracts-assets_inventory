@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.8;
+pragma solidity 0.6.8;
 
 import "../ERC721/IERC721Exists.sol";
 
@@ -21,7 +21,7 @@ import "../ERC721/IERC721Exists.sol";
  *
  * Note: The ERC-165 identifier for this interface is 0x469bd23f.
  */
-interface IERC1155Collections is IERC721Exists {
+interface IERC1155AssetCollections {
 
     /**
      * @dev Returns whether or not an ID represents a Fungible Collection.
@@ -46,4 +46,10 @@ interface IERC1155Collections is IERC721Exists {
      * @return owner address currently marked as the owner of the Non-Fungible Token.
      */
     function ownerOf(uint256 nftId) external view returns (address owner);
+
+    /**
+     * @dev Checks the existence of an Non-Fungible Token
+     * @return bool true if the token belongs to a non-zero address, false otherwise
+     */
+    function exists(uint256 nftId) external view returns (bool);
 }

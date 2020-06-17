@@ -9,7 +9,7 @@ const ERC1155_Functions = [
     'isApprovedForAll(address,address)',
 ];
 
-const ERC1155Collections_Functions = [
+const ERC1155AssetCollections_Functions = [
     'isFungible(uint256)',
     'collectionOf(uint256)',
     'ownerOf(uint256)',
@@ -32,10 +32,10 @@ module.exports = {
         id: makeInterfaceId.ERC165(ERC1155_Functions)
     }, // 0xd9b67a26
 
-    ERC1155Collections_Experimental: {
-        name: 'ERC1155Collections',
-        functions: ERC1155Collections_Functions,
-        id: makeInterfaceId.ERC165(ERC1155Collections_Functions),
+    ERC1155AssetCollections_Experimental: {
+        name: 'ERC1155AssetCollections',
+        functions: ERC1155AssetCollections_Functions,
+        id: makeInterfaceId.ERC165(ERC1155AssetCollections_Functions),
     }, // 0x469bd23f
 
     ERC1155MetadataURI: {

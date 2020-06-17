@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.8;
+pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "./../ERC1155/IERC1155.sol";
 import "./../ERC1155/IERC1155MetadataURI.sol";
-import "./../ERC1155/IERC1155Collections.sol";
+import "./../ERC1155/IERC1155AssetCollections.sol";
 import "./../ERC1155/IERC1155TokenReceiver.sol";
 
 /**
@@ -23,7 +23,7 @@ import "./../ERC1155/IERC1155TokenReceiver.sol";
  *     - most significant bit == 1
  *     - (256-N) least significant bits != 0
  */
-abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1155Collections, ERC165, Context
+abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1155AssetCollections, ERC165, Context
 {
     using Address for address;
     using SafeMath for uint256;
@@ -62,7 +62,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
 
         _registerInterface(type(IERC1155).interfaceId);
         _registerInterface(type(IERC1155MetadataURI).interfaceId);
-        _registerInterface(type(IERC1155Collections).interfaceId);
+        _registerInterface(type(IERC1155AssetCollections).interfaceId);
         _registerInterface(type(IERC721Exists).interfaceId);
     }
 
@@ -192,17 +192,17 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
         return _operatorApprovals[tokenOwner][operator];
     }
 
-/////////////////////////////////////// ERC1155Collections ////////////////////////////////////////
+/////////////////////////////////////// ERC1155AssetCollections ////////////////////////////////////////
 
     /**
-     * @dev See {IERC1155Collections-isFungible}.
+     * @dev See {IERC1155AssetCollections-isFungible}.
      */
     function isFungible(uint256 id) public virtual override view returns (bool) {
         return id & (_NF_BIT) == 0;
     }
 
     /**
-     * @dev See {IERC1155Collections-collectionOf}.
+     * @dev See {IERC1155AssetCollections-collectionOf}.
      */
     function collectionOf(uint256 nftId) public virtual override view returns (uint256) {
         require(_isNFT(nftId), "ERC1155: collection of incorrect NFT id");
@@ -210,7 +210,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
     }
 
     /**
-     * @dev See {IERC1155Collections-ownerOf}.
+     * @dev See {IERC1155AssetCollections-ownerOf}.
      */
     function ownerOf(uint256 nftId) public virtual override view returns (address) {
         require(_isNFT(nftId), "ERC1155: owner of incorrect NFT id");
@@ -220,7 +220,7 @@ abstract contract ERC1155AssetsInventory is IERC1155, IERC1155MetadataURI, IERC1
     }
 
     /**
-     * @dev See {IERC1155Collections-exists}.
+     * @dev See {IERC1155AssetCollections-exists}.
      */
     function exists(uint256 nftId) public virtual override view returns (bool) {
         address tokenOwner = _owners[nftId];
