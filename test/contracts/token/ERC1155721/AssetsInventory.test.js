@@ -1,30 +1,27 @@
 const { contract, accounts } = require('@openzeppelin/test-environment');
 
-const { shouldBehaveLikeAssetsInventory } = require('./AssetsInventory.behavior');
-const { shouldBehaveLikeAssetsInventoryBurnable } = require('./AssetsInventoryBurnable.behavior');
+const { shouldBehaveLikeERC721 } = require('../ERC721/behaviors/ERC721.behavior');
+const { shouldBehaveLikeERC721Metadata } = require('../ERC721/behaviors/ERC721Metadata.behavior');
+const { shouldBehaveLikeERC1155MetadataURI } = require('../ERC1155/behaviors/ERC1155MetadataURI.behavior');
+const { shouldBehaveLikeERC1155AssetsInventory } = require('../ERC1155/behaviors/ERC1155AssetsInventory.behavior');
+const { shouldBehaveLikeERC1155MintableInventory } = require('../ERC1155/behaviors/ERC1155MintableInventory.behavior');
+const { shouldBehaveLikeAssetsInventory } = require('./behaviors/AssetsInventory.behavior');
 
-const AssetsInventoryMock = contract.fromArtifact('AssetsInventoryMock');
-const NonBurnableInventoryMock = contract.fromArtifact('NonBurnableInventoryMock');
+const AssetsInventory = contract.fromArtifact('AssetsInventoryMock');
 
 describe('AssetsInventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 
-  // TODO add comment explaining why semantic is reversed
-
-  context('like a non-burnable assets inventory', function () {
-      beforeEach(async function () {
-        this.token = await NonBurnableInventoryMock.new(nfMaskLength, { from: creator });
-      });
-
-      shouldBehaveLikeAssetsInventory(nfMaskLength, creator, otherAccounts, "NonBurnableInventoryMock", "NBIM");
+  beforeEach(async function () {
+    this.token = await AssetsInventory.new(nfMaskLength, { from: creator });
   });
 
-  context('like a burnable assets inventory', function () {
-      beforeEach(async function () {
-        this.token = await AssetsInventoryMock.new(nfMaskLength, { from: creator });
-      });
-
-      shouldBehaveLikeAssetsInventoryBurnable(nfMaskLength, creator, otherAccounts, "AssetsInventoryMock", "AIM");
-  });
+  shouldBehaveLikeERC721(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC721Metadata(nfMaskLength, "AssetsInventoryMock", "AIM", creator, otherAccounts);
+  shouldBehaveLikeERC1155AssetsInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155MetadataURI(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeAssetsInventory(nfMaskLength, creator, otherAccounts);
 });
+

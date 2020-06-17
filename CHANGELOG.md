@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.0.0 (20/05/2020)
+
+### Breaking changes
+ * Updated compiler to `solc:0.6.8` and fixed solidity version in contract filed.
+ * Updated `@animoca/ethereum-contracts-core_library` to version 3 and downgraded it to be a dev dependency.
+ * Updated `@animoca/ethereum-contracts-erc20_base` to version 3 and downgraded it to be a dev dependency.
+ * Added non-ERC721 versions of the inventory contracts.
+ * Major refactor of contracts and tests, increased tests coverage.
+
+### New features
+ * Metadata management contracts.
+ * Added `IERC721Exists` interface.
+ * Added abstract receiver contracts.
+
+### Improvements
+ * Refactored migrations.
+
 ## 2.0.1 (04/05/2020)
 
 ### Bugfixes
