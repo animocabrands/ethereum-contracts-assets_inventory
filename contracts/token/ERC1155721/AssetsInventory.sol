@@ -163,15 +163,15 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
         address to,
         uint256 nftId,
         bytes memory data,
-        bool batch,
-        bool safe
+        bool safe,
+        bool batch
     ) internal virtual override
     {
         _nftBalances[to] = _nftBalances[to].add(1);
 
         emit Transfer(address(0), to, nftId);
 
-        super._mintNonFungible(to, nftId, data, batch, safe);
+        super._mintNonFungible(to, nftId, data, safe, batch);
     }
 
 ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////
@@ -179,7 +179,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
     /**
      * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
      * The call is not executed if the target address is not a contract.
-     * First, 
+     * First,
      *
      * @param from address representing the previous owner of the given token ID
      * @param to target address that will receive the tokens
