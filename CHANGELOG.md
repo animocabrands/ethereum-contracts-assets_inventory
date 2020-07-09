@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0 (08/07/2020)
+
+### Bugfixes
+ * `AssetsInventory.sol`: Fixed the incorrect input parameter order of `_mintNonFungible()` and of those parameters passed to `super()`.
+
 ## 3.0.0 (20/05/2020)
 
 ### Breaking changes
@@ -54,7 +59,7 @@
  * Removed `ERC20FeesAssetsInventoryMock`, `ERC20FeesPausableInventoryMock` and the ERC20Fees-related tests.
  * `AssetsInventory` is now burnable by default.
  * Moved `UInt2Str` to `@animoca/ethereum-contracts-core_library`.
- * `inventoryIds.js` reworked and previous functions `idInfo`, `nftId` and `makeCollectionId` are DEPRECATED. 
+ * `inventoryIds.js` reworked and previous functions `idInfo`, `nftId` and `makeCollectionId` are DEPRECATED.
  * Moved `inventoryIds.js` to `src/helpers/`.
  * Moved `constants.js` to `src/`.
 
