@@ -1,6 +1,6 @@
 {
   "name": "@animoca/ethereum-contracts-assets_inventory",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Solidity assets contracts managing fungible and non-fungible tokens",
   "repository": {
     "type": "git",
