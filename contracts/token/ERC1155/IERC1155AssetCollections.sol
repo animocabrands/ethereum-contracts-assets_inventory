@@ -12,12 +12,11 @@ import "../ERC721/IERC721Exists.sol";
  * within the same contract. We consider that there 3 types of identifiers:
  * (a) Fungible Collections identifiers, each representing a set of Fungible Tokens,
  * (b) Non-Fungible Collections identifiers, each representing a set of Non-Fungible Tokens,
- * (c) Non-Fungible Tokens identifiers.
- *
- * IERC1155 behavior MAY be updated as follow:
- * `balanceOf` and `balanceOfBatch`:
- * - when applied to a Non-Fungible Collection, MAY return the balance of Non-Fungible Tokens for this collection,
- * - when applied to a Non-Fungible Token, SHOULD return 1.
+ * (c) Non-Fungible Tokens identifiers. 
+
+
+ * In the same way a fungible token (represented by its balance) belongs to a particular id
+ * which can be used to store common information about this token, including the metadata.
  *
  * Note: The ERC-165 identifier for this interface is 0x469bd23f.
  */

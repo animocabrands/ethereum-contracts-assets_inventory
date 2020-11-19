@@ -6,7 +6,9 @@
  * Updated to `@animoca/ethereum-contracts-core_library@3.1.1`.
 
 ### New features
- * Added `ERC721.sol`, a standalone ERC721 implementation.
+ * Added `ERC721`, a standalone ERC721 implementation.
+ * Added `IERC1155Inventory`, interface which adds `totalSupply(uint256)` to `IERC1155AssetCollections`.
+ * Added `ERC1155Inventory` and `ERC1155InventoryMock` (implementation optimised compared to `ERC1155AssetsInventory`).
 
 ## 4.0.0
 
