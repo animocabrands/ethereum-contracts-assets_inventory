@@ -38,14 +38,14 @@ function shouldBehaveLikeERC1155Inventory(
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
   const unknownNft = makeNonFungibleTokenId(99, 99, nfMaskLength);
 
-  describe('like an ERC1155AssetsInventory', function () {
+  describe('like an ERC1155Inventory', function () {
     beforeEach(async function () {
-      await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
-      await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
-      await this.token.mintFungible(owner, fCollection3.id, fCollection3.supply, { from: creator });
-      await this.token.mintNonFungible(owner, nft1, { from: creator });
-      await this.token.mintNonFungible(owner, nft2, { from: creator });
-      await this.token.mintNonFungible(owner, nft3, { from: creator });
+      await this.token.mint(owner, fCollection1.id, fCollection1.supply, { from: creator });
+      await this.token.mint(owner, fCollection2.id, fCollection2.supply, { from: creator });
+      await this.token.mint(owner, fCollection3.id, fCollection3.supply, { from: creator });
+      await this.token.mint(owner, nft1, 1, { from: creator });
+      await this.token.mint(owner, nft2, 1, { from: creator });
+      await this.token.mint(owner, nft3, 1, { from: creator });
 
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
@@ -74,18 +74,6 @@ function shouldBehaveLikeERC1155Inventory(
         }
 
         this.contract = this.token;
-      });
-
-      it('should emit a URI event', async function () {
-        for (const collection of Object.values(collections)) {
-          expectEvent(
-            this.createCollectionReceipt[collection],
-            'URI',
-            {
-              _value: await this.token.uri(collection),
-              _id: collection
-            });
-        }
       });
     });
 
