@@ -7,7 +7,7 @@ const { shouldBehaveLikeERC1155MetadataURI } = require('./behaviors/ERC1155Metad
 
 const ERC1155Inventory = contract.fromArtifact('ERC1155InventoryMock');
 
-describe.only('ERC1155Inventory', function () {
+describe('ERC1155Inventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 

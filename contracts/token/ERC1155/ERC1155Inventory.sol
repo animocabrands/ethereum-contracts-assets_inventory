@@ -44,7 +44,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
     mapping(uint256 => mapping(address => uint256)) internal _balances;
     mapping(uint256 => uint256) internal _supplies;
     mapping(uint256 => address) internal _owners;
-    mapping(uint256 => bool) internal _created;
+    mapping(uint256 => address) public creator;
 
     /**
      * @dev Constructor function
@@ -235,24 +235,24 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
      * Creates a collection.
      * @dev Reverts if `collectionId` does not represent a collection.
      * @dev Reverts if `collectionId` has already been created.
-     * @dev Emits a {IERC1155-URI} event.
      * @dev Emits a {IERC1155Inventory-CollectionCreated} event.
+     * @dev Emits a {IERC1155-URI} event.
      * @param collectionId Identifier of the collection.
      */
     function _createCollection(uint256 collectionId) internal virtual {
         require(!isNFT(collectionId), "Inventory: not a collection");
-        require(!_created[collectionId], "Inventory: existing collection");
-        _created[collectionId] = true;
-        emit URI(_uri(collectionId), collectionId);
+        require(creator[collectionId] == address(0), "Inventory: existing collection");
+        creator[collectionId] = _msgSender();
         emit CollectionCreated(collectionId, isFungible(collectionId));
+        emit URI(_uri(collectionId), collectionId);
     }
 
     //================================== Transfer Internal =======================================/
 
     /**
      * Transfers tokens to another address.
-     * @dev Reverts if `batch` is false and `to` is the zero address.
-     * @dev Reverts if `batch` is false the sender is not approved.
+     * @dev Reverts if `isBatch` is false and `to` is the zero address.
+     * @dev Reverts if `isBatch` is false the sender is not approved.
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
@@ -401,14 +401,14 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
 
     /**
      * Mints some token.
-     * @dev Reverts if `batch` is false and `to` is the zero address.
+     * @dev Reverts if `isBatch` is false and `to` is the zero address.
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
      * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
-     * @dev Reverts if `batch` is false, `safe` is true and the call to the receiver contract fails or is refused.
-     * @dev Emits an {IERC1155-TransferSingle} event if `batch` is false.
+     * @dev Reverts if `isBatch` is false, `safe` is true and the call to the receiver contract fails or is refused.
+     * @dev Emits an {IERC1155-TransferSingle} event if `isBatch` is false.
      * @param to Address of the new token owner.
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
@@ -459,7 +459,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
     }
 
     /**
-     * @dev Mints a isBatch of tokens.
+     * Mints a batch of tokens.
      * @dev Reverts if `ids` and `values` have different lengths.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if one of `ids` represents a non-fungible collection.
@@ -500,7 +500,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
     }
 
     /**
-     * @dev Mints a isBatch of non-fungible tokens belonging to the same collection.
+     * Mints a batch of non-fungible tokens belonging to the same collection.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
      * @dev Reverts if one of `nftIds` represents a non-fungible token which is owned by a non-zero address.
@@ -552,13 +552,13 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
 
     /**
      * Burns some token.
-     * @dev Reverts if `batch` is false and the sender is not approved.
+     * @dev Reverts if `isBatch` is false and the sender is not approved.
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
      * @dev Reverts if `id` represents a fungible collection and `value` is higher than `from`'s balance.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is not owned by `from`.
-     * @dev Emits an {IERC1155-TransferSingle} event if `batch` is false.
+     * @dev Emits an {IERC1155-TransferSingle} event if `isBatch` is false.
      * @param from Address of the current token owner.
      * @param id Identifier of the token to burn.
      * @param value Amount of token to burn.
