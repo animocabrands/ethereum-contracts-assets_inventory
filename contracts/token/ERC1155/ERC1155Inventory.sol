@@ -303,8 +303,8 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         _balances[collectionId][to] += value;
 
         if (!isBatch) {
-            _callOnERC1155Received(from, to, id, value, data);
             emit TransferSingle(sender, from, to, id, value);
+            _callOnERC1155Received(from, to, id, value, data);
         }
     }
 
@@ -453,6 +453,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
 
         if (!isBatch) {
             emit TransferSingle(_msgSender(), address(0), to, id, value);
+
             if (safe) {
                 _callOnERC1155Received(address(0), to, id, value, data);
             }
@@ -633,8 +634,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
             _burnFrom(from, ids[i], values[i], isBatch);
         }
 
-        address to = address(0);
-        emit TransferBatch(sender, from, to, ids, values);
+        emit TransferBatch(sender, from, address(0), ids, values);
     }
 
     /**
@@ -701,7 +701,6 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         }
 
         bytes4 retval = IERC1155TokenReceiver(to).onERC1155Received(_msgSender(), from, id, value, data);
-
         require(retval == _ERC1155_RECEIVED, "Inventory: transfer refused");
     }
 
@@ -727,7 +726,6 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         }
 
         bytes4 retval = IERC1155TokenReceiver(to).onERC1155BatchReceived(_msgSender(), from, ids, values, data);
-
         require(retval == _ERC1155_BATCH_RECEIVED, "Inventory: transfer refused");
     }
 }
