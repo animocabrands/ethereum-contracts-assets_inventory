@@ -13,17 +13,25 @@ pragma solidity 0.6.8;
  * (b) Non-Fungible Collections identifiers, each representing a set of Non-Fungible Tokens,
  * (c) Non-Fungible Tokens identifiers. 
 
-
- * In the same way a fungible token (represented by its balance) belongs to a particular id
- * which can be used to store common information about this token, including the metadata.
+ * Identifiers nature
+ * |       Type                | isFungible  | isCollection | isToken |
+ * |  Fungible Collection      |   true      |     true     |  true   |
+ * |  Non-Fungible Collection  |   false     |     true     |  false  |
+ * |  Non-Fungible Token       |   false     |     false    |  true   |
+ *
+ * Identifiers capabilities
+ * |       Type                |  transfer  |   balance    |   supply    |  owner  |
+ * |  Fungible Collection      |    OK      |     OK       |     OK      |   NOK   |
+ * |  Non-Fungible Collection  |    NOK     |     OK       |     OK      |   NOK   |
+ * |  Non-Fungible Token       |    OK      |   0 or 1     |   0 or 1    |   OK    |
  *
  * Note: The ERC-165 identifier for this interface is 0x469bd23f.
  */
 interface IERC1155Inventory {
 
     /**
-     * Event emitted when a collection is created.
-     *  This event SHOULD NOT be emitted twice for the same `id`.
+     * Optional event emitted when a collection is created.
+     *  This event SHOULD NOT be emitted twice for the same `collectionId`.
      * 
      *  The parameters in the functions `collectionOf` and `ownerOf` are required to be
      *  non-fungible token identifiers, so they should not be called with any collection

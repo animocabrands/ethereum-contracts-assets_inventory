@@ -1059,7 +1059,7 @@ function shouldBehaveLikeERC1155Inventory(
       behaviors.shouldSupportInterfaces([
         interfaces.ERC165,
         interfaces1155.ERC1155,
-        interfaces1155.ERC1155AssetCollections2_Experimental
+        interfaces1155.ERC1155Inventory_Experimental
       ]);
     });
   });

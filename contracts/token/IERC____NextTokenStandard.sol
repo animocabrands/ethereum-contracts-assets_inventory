@@ -3,12 +3,27 @@
 pragma solidity 0.6.8;
 
 
+/**
+ * 
+ * | Type  | isFungible  | isCollection | isToken |
+ * | FC    |   true      |     true     |  true   |
+ * | NFC   |   false     |     true     |  false  |
+ * | NFT   |   false     |     false    |  true   |
+ * 
+ * | Type  | transfer    |    balance   |   supply    | owner |
+ * | FC    |   OK        |     OK       |     OK      |  NOK  |
+ * | NFC   |   NOK       |     OK       |     OK      |  NOK  |
+ * | NFT   |   OK        |   0 or 1     |   0 or 1    |  OK   |
+ */
+
 interface IERC____NextTokenStandard {
 
+    /**
+     * Event emitted every time 
+     */
     event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
     event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
     event TransferBatchOperator(address indexed operator, address[] froms, address[] tos, uint256[] ids, uint256[] values);
-
     event OperatorsApproval (address indexed owner, address[] indexed operators, bool[] approved);
 
     //                                Approvals                                 //
@@ -28,10 +43,10 @@ interface IERC____NextTokenStandard {
     function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view returns (uint256[] memory balances);
     function ownerOfBatch(uint256[] calldata nftIds) external view returns (address[] memory owners);
 
-    //                         Fungibility Introspection                        //
+    //                         Identifiers Introspection                        //
 
-    function isFungibleBatch(uint256[] calldata ids) external view returns (bool[] memory fungible);
-    function collectionOfBatch(uint256[] calldata nftIds) external view returns (uint256[] memory collectionIds);
+    function isFungibleBatch(uint256[] calldata ids) external pure returns (bool[] memory fungible);
+    function collectionOfBatch(uint256[] calldata nftIds) external pure returns (uint256[] memory collectionIds);
 }
 
 interface IERC____NextTokenStandard_MetadataEvent {
@@ -48,8 +63,8 @@ interface IERC____NextTokenStandard_MetadataFunction {
      * The uri function SHOULD be used to retrieve values if no event was emitted.
      * The uri function MUST return the same value as the latest event for an _id if it was emitted.
      * The uri function MUST NOT be used to check for the existence of a token as it is possible for an implementation to return a valid string even if the token does not exist.
-     * @param id Identifier to retrieve the URI of.
      * @dev URIs are defined in RFC 3986.
+     * @param id Identifier to retrieve the URI of.
      * @return URI string
      */
     function uri(uint256 id) external view returns (string memory);

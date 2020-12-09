@@ -22,6 +22,8 @@ import "./../ERC1155/IERC1155TokenReceiver.sol";
  * (c) a Non-Fungible Token:
  *     - most significant bit == 1
  *     - (256-N) least significant bits != 0
+ * with N = 32.
+ * 
  */
 abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inventory, ERC165, Context {
     using Address for address;
@@ -143,7 +145,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
      */
     function setApprovalForAll(address operator, bool approved) public virtual override {
         address sender = _msgSender();
-        require(operator != sender, "Inventory: approval to sender");
+        require(operator != sender, "Inventory: self-approval");
         _operators[sender][operator] = approved;
         emit ApprovalForAll(sender, operator, approved);
     }
@@ -214,15 +216,6 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         return (id & _NF_BIT) != 0 && (id & _NF_TOKEN_MASK != 0);
     }
 
-    /**
-     * @dev Introspects whether an identifier represents an non-fungible collection.
-     * @param id Identifier to query.
-     * @return True if `id` represents an non-fungible collection.
-     */
-    function isNFTCollection(uint256 id) public virtual pure returns (bool) {
-        return (id & _NF_BIT) != 0 && (id & _NF_TOKEN_MASK == 0);
-    }
-
     //================================== Metadata Internal =======================================/
 
     /**
@@ -235,7 +228,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
     //================================== Inventory Collections Internal =======================================/
 
     /**
-     * Creates a collection.
+     * Creates a collection (optional).
      * @dev Reverts if `collectionId` does not represent a collection.
      * @dev Reverts if `collectionId` has already been created.
      * @dev Emits a {IERC1155Inventory-CollectionCreated} event.
@@ -277,7 +270,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
     ) internal virtual {
         address sender;
         if (!isBatch) {
-            require(to != address(0), "Inventory: zero address");
+            require(to != address(0), "Inventory: transfer to zero");
             sender = _msgSender();
             bool operatable = (from == sender) || _operators[from][sender];
             require(operatable, "Inventory: non-approved sender");
@@ -296,7 +289,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
             // cannot underflow as balance is verified through ownership
             _balances[collectionId][from] -= value;
         } else {
-            revert("Inventory: wrong identifier");
+            revert("Inventory: not a token id");
         }
 
         // cannot overflow as supply cannot overflow
@@ -332,7 +325,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         uint256[] memory values,
         bytes memory data
     ) internal virtual {
-        require(to != address(0), "Inventory: zero address");
+        require(to != address(0), "Inventory: transfer to zero");
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
         address sender = _msgSender();
@@ -365,7 +358,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         uint256[] memory nftIds,
         bytes memory data
     ) internal virtual {
-        require(to != address(0), "Inventory: zero address");
+        require(to != address(0), "Inventory: transfer to zero");
 
         uint256 length = nftIds.length;
         uint256[] memory values = new uint256[](length);
@@ -378,13 +371,13 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         for (uint256 i = 0; i < length; i++) {
             uint256 nftId = nftIds[i];
             require(isNFT(nftId), "Inventory: not an NFT");
-            require(_owners[nftId] == uint256(from), "Inventory: NFT not owned");
+            require(_owners[nftId] == uint256(from), "Inventory: non-owned NFT");
             _owners[nftId] = uint256(to);
             values[i] = 1;
             if (i == 0) {
                 collectionId = nftId & _NF_COLLECTION_MASK;
             } else {
-                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: inconsistent collections");
+                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
             }
         }
 
@@ -426,7 +419,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         bool isBatch
     ) internal virtual {
         if (!isBatch) {
-            require(to != address(0), "Inventory: zero address");
+            require(to != address(0), "Inventory: transfer to zero");
         }
 
         uint256 collectionId;
@@ -445,7 +438,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
             // overflows due to the cost of minting unique tokens
             _supplies[collectionId] += value;
         } else {
-            revert("Inventory: wrong identifier");
+            revert("Inventory: not a token id");
         }
 
         // cannot overflow as supply cannot overflow
@@ -487,7 +480,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 
-        require(to != address(0), "Inventory: zero address");
+        require(to != address(0), "Inventory: transfer to zero");
 
         bool isBatch = true;
         for (uint256 i = 0; i < length; i++) {
@@ -520,7 +513,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         bytes memory data,
         bool safe
     ) internal virtual {
-        require(to != address(0), "Inventory: zero address");
+        require(to != address(0), "Inventory: transfer to zero");
         uint256 length = nftIds.length;
         uint256[] memory values = new uint256[](length);
 
@@ -534,7 +527,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
             if (i == 0) {
                 collectionId = nftId & _NF_COLLECTION_MASK;
             } else {
-                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: inconsistent collections");
+                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
             }
         }
 
@@ -592,7 +585,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
             // cannot underflow as balance is confirmed through ownership
             _balances[collectionId][from] -= value;
         } else {
-            revert("Inventory: wrong identifier");
+            revert("Inventory: not a token id");
         }
 
         // Cannot underflow
@@ -659,13 +652,13 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         for (uint256 i = 0; i < length; i++) {
             uint256 nftId = nftIds[i];
             require(isNFT(nftId), "Inventory: not an NFT");
-            require(_owners[nftId] == uint256(from), "Inventory: NFT not owned");
+            require(_owners[nftId] == uint256(from), "Inventory: non-owned NFT");
             _owners[nftId] = _BURNT_NFT_OWNER;
             values[i] = 1;
             if (i == 0) {
                 collectionId = nftId & _NF_COLLECTION_MASK;
             } else {
-                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: inconsistent collections");
+                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
             }
         }
 
