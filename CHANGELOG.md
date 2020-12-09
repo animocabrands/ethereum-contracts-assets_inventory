@@ -1,11 +1,21 @@
 # Changelog
 
-## 4.0.0 (08/07/2020)
+## 5.0.0
+
+### Breaking changes
+ * Updated to `@animoca/ethereum-contracts-core_library@3.1.1`.
+
+### New features
+ * Added `ERC721`, a standalone ERC721 implementation.
+ * Added `IERC1155Inventory`, interface which adds `totalSupply(uint256)` to `IERC1155AssetCollections`.
+ * Added `ERC1155Inventory` and `ERC1155InventoryMock` (implementation optimised compared to `ERC1155AssetsInventory`).
+
+## 4.0.0
 
 ### Bugfixes
  * `AssetsInventory.sol`: Fixed the incorrect input parameter order of `_mintNonFungible()` and of those parameters passed to `super()`.
 
-## 3.0.0 (20/05/2020)
+## 3.0.0
 
 ### Breaking changes
  * Updated compiler to `solc:0.6.8` and fixed solidity version in contract filed.
@@ -22,7 +32,7 @@
 ### Improvements
  * Refactored migrations.
 
-## 2.0.1 (04/05/2020)
+## 2.0.1
 
 ### Bugfixes
  * Changed `_uri(uint256)` from `pure` to `view`.
@@ -41,18 +51,18 @@
  * Added `Meta20InventoryMock.sol` and related migration.
  * Added internal functions `_mintFungible` and `_mintNonFungible` to `AssetsInventory`.
 
-## 1.1.2 (23/04/2020)
+## 1.1.2
 
 ### Features
  * Inventory mocks now have `MinterRole` and minting functions are `onlyMinter` instead of `onlyOwner`.
 
-## 1.1.1 (15/04/2020)
+## 1.1.1
 
 ### Breaking changes
  * Moved `inventoryIds` to `@animoca/blockchain-inventory_metadata`.
  * inventoryIds is not exported any more at module level.
 
-## 1.1.0 (14/04/2020)
+## 1.1.0
 
 ### Breaking changes
  * Moved `ERC20Fees` and `WhitelistedOperators` to `@animoca/ethereum-contracts-erc20_base`.
