@@ -36,24 +36,6 @@ interface IERC1155Inventory {
     event CollectionCreated (uint256 indexed collectionId, bool indexed fungible);
 
     /**
-     * Introspects whether or not `id` represents a fungible collection.
-     *  This function MAY return true even if `id` represents a fungible collections which is not-yet created (`CollectionCreated` not emitted).
-     * @param id The identifier to query.
-     * @return bool True if `id` represents a fungible collection, false otherwise.
-     */
-    function isFungible(uint256 id) external view returns (bool);
-
-    /**
-     * Introspects the non-fungible collection to which `nftId` belongs.
-     *  This function MUST return a value representing a non-fungible collection.
-     *  This function MAY return a value for a non-existing token, and SHOULD NOT be used to check the existence of a non-fungible token.
-     * @dev Reverts if `nftId` does not represent a non-fungible token.
-     * @param nftId The token identifier to query the collection of.
-     * @return uint256 the non-fungible collection identifier to which `nftId` belongs.
-     */
-    function collectionOf(uint256 nftId) external view returns (uint256);
-
-    /**
      * Retrieves the owner of a non-fungible token.
      * @dev Reverts if `nftId` is owned by the zero address. // ERC721 compatibility
      * @dev Reverts if `nftId` does not represent a non-fungible token.
@@ -70,6 +52,24 @@ interface IERC1155Inventory {
      * @return The supplies for each identifier in `ids`.
      */
     function totalSupply(uint256 id) external view returns (uint256);
+
+    /**
+     * Introspects whether or not `id` represents a fungible collection.
+     *  This function MUST return true even for a fungible collections which is not-yet created.
+     * @param id The identifier to query.
+     * @return bool True if `id` represents a fungible collection, false otherwise.
+     */
+    function isFungible(uint256 id) external pure returns (bool);
+
+    /**
+     * Introspects the non-fungible collection to which `nftId` belongs.
+     *  This function MUST return a value representing a non-fungible collection.
+     *  This function MUST return a value for a non-existing token, and SHOULD NOT be used to check the existence of a non-fungible token.
+     * @dev Reverts if `nftId` does not represent a non-fungible token.
+     * @param nftId The token identifier to query the collection of.
+     * @return uint256 the non-fungible collection identifier to which `nftId` belongs.
+     */
+    function collectionOf(uint256 nftId) external pure returns (uint256);
 
     /**
      * @notice this definition replaces the original {ERC1155-balanceOf}.
