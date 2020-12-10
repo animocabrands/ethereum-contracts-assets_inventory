@@ -3,11 +3,13 @@ const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metada
 
 const { behaviors } = require('@animoca/ethereum-contracts-core_library');
 const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
+const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 
 function shouldBehaveLikeERC721Metadata(
     nfMaskLength,
     name,
     symbol,
+    newABI,
     creator,
     [owner]
 ) {
@@ -27,7 +29,11 @@ function shouldBehaveLikeERC721Metadata(
 
     describe('metadata URI', function () {
         beforeEach(async function () {
-            await this.token.mintNonFungible(owner, nft1, { from: creator });
+            if (newABI) {
+                await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: creator });
+            } else {
+                await this.token.mintNonFungible(owner, nft1, { from: creator });
+            }
         });
 
         it('tokenURI()', async function () {

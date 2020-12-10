@@ -20,13 +20,13 @@ describe('PausableInventory', function () {
     this.token = await PausableInventory.new(nfMaskLength, { from: creator });
   });
 
-  shouldBehaveLikeERC721(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeERC721Metadata(nfMaskLength, "PausableInventoryMock", "PIM", creator, otherAccounts);
+  shouldBehaveLikeERC721(nfMaskLength, false, creator, otherAccounts);
+  shouldBehaveLikeERC721Metadata(nfMaskLength, "PausableInventoryMock", "PIM", false, creator, otherAccounts);
   shouldBehaveLikeERC721Pausable(nfMaskLength, creator, otherAccounts);
   shouldBehaveLikeERC1155AssetsInventory(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, false, creator, otherAccounts);
   shouldBehaveLikeERC1155MetadataURI(nfMaskLength, creator, otherAccounts);
   shouldBehaveLikeERC1155PausableInventory(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeAssetsInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeAssetsInventory(nfMaskLength, false, creator, otherAccounts);
   shouldBehaveLikeBurnableInventory(nfMaskLength, creator, otherAccounts);
 });

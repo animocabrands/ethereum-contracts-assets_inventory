@@ -1,9 +1,10 @@
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
-const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').constants;
+const { ZeroAddress, EmptyByte } = require('@animoca/ethereum-contracts-core_library').constants;
 
 function shouldBehaveLikeERC1155BurnableInventory(
     nfMaskLength,
+    newABI,
     [creator, owner, operator, other],
     [
         NonOwned_RevertMessage,
@@ -22,9 +23,15 @@ function shouldBehaveLikeERC1155BurnableInventory(
 
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
-            await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
             await this.token.createCollection(nfCollection, { from: creator });
-            await this.token.mintNonFungible(owner, nft, { from: creator });
+            if (newABI) {
+                await this.token.mint(owner, fCollection.id, fCollection.supply, EmptyByte, true, { from: creator });
+                await this.token.mint(owner, nft, 1, EmptyByte, true, { from: creator });
+            } else {
+                await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
+                await this.token.mintNonFungible(owner, nft, { from: creator });
+
+            }
         });
 
         describe('burnFrom', function () {

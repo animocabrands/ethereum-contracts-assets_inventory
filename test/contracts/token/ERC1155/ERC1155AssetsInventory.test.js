@@ -15,7 +15,7 @@ describe('ERC1155AssetsInventory', function () {
   });
 
   shouldBehaveLikeERC1155AssetsInventory(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, false, creator, otherAccounts);
   shouldBehaveLikeERC1155MetadataURI(nfMaskLength);
 });
 

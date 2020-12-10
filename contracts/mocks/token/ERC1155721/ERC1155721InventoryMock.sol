@@ -2,11 +2,15 @@
 
 pragma solidity 0.6.8;
 
-import "../../../token/ERC1155/ERC1155Inventory.sol";
+import "../../../token/ERC1155721/ERC1155721Inventory.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
+contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, MinterRole {
+
+    string public override constant name = "ERC1155721InventoryMock";
+    string public override constant symbol = "INV";
+
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================
@@ -31,46 +35,22 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
      * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @param to Address of the new token owner.
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
+     * @param data If `safe` is true, optional data to send along to a receiver contract.
+     * @param safe Whether to call a receiver contract.
      */
     function mint(
         address to,
         uint256 id,
-        uint256 value
-    ) external onlyMinter {
-        bytes memory data = "";
-        bool safe = false;
-        bool isBatch = false;
-        _mint(to, id, value, data, safe, isBatch);
-    }
-
-    /**
-     * Mints some token and calls the receiver function if the receiver is a contract.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if `id` represents a non-fungible collection.
-     * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
-     * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
-     * @dev Reverts if the call to the receiver contract fails or is refused.
-     * @dev Emits an {IERC1155-TransferSingle} event.
-     * @param to Address of the new token owner.
-     * @param id Identifier of the token to mint.
-     * @param value Amount of token to mint.
-     * @param data Optional data to send along to a receiver contract.
-     */
-    function safeMint(
-        address to,
-        uint256 id,
         uint256 value,
-        bytes calldata data
+        bytes calldata data,
+        bool safe
     ) external onlyMinter {
-        bool safe = true;
-        bool isBatch = false;
-        _mint(to, id, value, data, safe, isBatch);
+        _mint(to, id, value, data, safe, false);
     }
 
     /**
@@ -82,61 +62,22 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
      * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param to Address of the new tokens owner.
-     * @param ids Identifiers of the tokens to mint.
-     * @param values Amounts of tokens to mint.
-     */
-    function batchMint(
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external onlyMinter {
-        bytes memory data = "";
-        bool safe = false;
-        _batchMint(to, ids, values, data, safe);
-    }
-
-    /**
-     * Mints a batch of tokens and calls the receiver function if the receiver is a contract.
-     * @dev Reverts if `ids` and `values` have different lengths.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents a non-fungible token and its paired value is not 1.
-     * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
-     * @dev Reverts the call to the receiver contract fails or is refused.
+     * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new tokens owner.
      * @param ids Identifiers of the tokens to mint.
      * @param values Amounts of tokens to mint.
      * @param data Optional data to send along to a receiver contract.
+     * @param safe Whether to call a receiver contract.
      */
-    function safeBatchMint(
+    function batchMint(
         address to,
         uint256[] calldata ids,
         uint256[] calldata values,
-        bytes calldata data
+        bytes calldata data,
+        bool safe
     ) external onlyMinter {
-        bool safe = true;
         _batchMint(to, ids, values, data, safe);
-    }
-
-    /**
-     * Mints a batch of non-fungible tokens belonging to the same collection.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if two of `nftIds` have a different collection.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param to Address of the new tokens owner.
-     * @param nftIds Identifiers of the tokens to mint.
-     */
-    function sameNFTCollectionBatchMint(address to, uint256[] calldata nftIds) external onlyMinter {
-        bytes memory data = "";
-        bool safe = false;
-        _sameNFTCollectionBatchMint(to, nftIds, data, safe);
     }
 
     /**
@@ -145,18 +86,19 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
      * @dev Reverts if one of `nftIds` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if two of `nftIds` have a different collection.
-     * @dev Reverts if the call to the receiver contract fails or is refused.
+     * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new tokens owner.
      * @param nftIds Identifiers of the tokens to mint.
      * @param data Optional data to send along to a receiver contract.
+     * @param safe Whether to call a receiver contract.
      */
     function sameNFTCollectionSafeBatchMint(
         address to,
         uint256[] calldata nftIds,
-        bytes calldata data
+        bytes calldata data,
+        bool safe
     ) external onlyMinter {
-        bool safe = true;
         _sameNFTCollectionBatchMint(to, nftIds, data, safe);
     }
 

@@ -18,11 +18,11 @@ describe('BurnableInventory', function () {
     this.token = await BurnableInventory.new(nfMaskLength, { from: creator });
   });
 
-  shouldBehaveLikeERC721(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeERC721Metadata(nfMaskLength, "AssetsInventoryMock", "AIM", creator, otherAccounts);
+  shouldBehaveLikeERC721(nfMaskLength, false, creator, otherAccounts);
+  shouldBehaveLikeERC721Metadata(nfMaskLength, "AssetsInventoryMock", "AIM", false, creator, otherAccounts);
   shouldBehaveLikeERC1155AssetsInventory(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, false, creator, otherAccounts);
   shouldBehaveLikeERC1155MetadataURI(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeAssetsInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeAssetsInventory(nfMaskLength, false, creator, otherAccounts);
   shouldBehaveLikeBurnableInventory(nfMaskLength, creator, otherAccounts);
 });

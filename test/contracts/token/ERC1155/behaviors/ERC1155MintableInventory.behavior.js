@@ -10,6 +10,7 @@ const {
 
 function shouldBehaveLikeERC1155MintableInventory(
     nfMaskLength,
+    newABI,
     creator,
     [minter, nonMinter, owner, newOwner, approved]
 ) {
@@ -35,22 +36,39 @@ function shouldBehaveLikeERC1155MintableInventory(
 
         context('mintNonFungible', function () {
             it('should revert if the sender is not a Minter', async function () {
-                await expectRevert.unspecified(this.token.mintNonFungible(owner, nft1, { from: nonMinter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.mint(owner, nft1, 1, EmptyByte, true,{ from: nonMinter }));
+                } else {
+                    await expectRevert.unspecified(this.token.mintNonFungible(owner, nft1, { from: nonMinter }));
+                }
             });
 
             it('should revert if the owner is the zero address', async function () {
-                await expectRevert.unspecified(this.token.mintNonFungible(ZeroAddress, nft1, { from: minter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.mint(ZeroAddress, nft1, 1, EmptyByte, true,{ from: minter }));
+                } else {
+                    await expectRevert.unspecified(this.token.mintNonFungible(ZeroAddress, nft1, { from: minter }));
+                }
             });
 
             it('should revert if the token has already been minted', async function () {
-                await this.token.mintNonFungible(owner, nft1, { from: minter });
-                await expectRevert.unspecified(this.token.mintNonFungible(owner, nft1, { from: minter }));
+                if (newABI) {
+                    await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: minter });
+                    await expectRevert.unspecified(this.token.mint(owner, nft1, 1, EmptyByte, true, { from: minter }));
+                } else {
+                    await this.token.mintNonFungible(owner, nft1, { from: minter });
+                    await expectRevert.unspecified(this.token.mintNonFungible(owner, nft1, { from: minter }));
+                }
             });
 
             context('when successful', function () {
                 beforeEach(async function () {
                     this.uri = await this.token.uri(nft1);
-                    this.receipt = await this.token.mintNonFungible(owner, nft1, { from: minter });
+                    if (newABI) {
+                        this.receipt = await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: minter });
+                    } else {
+                        this.receipt = await this.token.mintNonFungible(owner, nft1, { from: minter });
+                    }
                 });
 
                 it('should assign the token to the new owner', async function () {
@@ -86,12 +104,13 @@ function shouldBehaveLikeERC1155MintableInventory(
                     });
                 });
 
-                it('should emit the URI event', async function () {
-                    expectEvent(this.receipt, 'URI', {
-                        _value: this.uri,
-                        _id: nft1
-                    });
-                });
+                // Not compulsory
+                // it('should emit the URI event', async function () {
+                //     expectEvent(this.receipt, 'URI', {
+                //         _value: this.uri,
+                //         _id: nft1
+                //     });
+                // });
             });
         });
 
@@ -99,16 +118,31 @@ function shouldBehaveLikeERC1155MintableInventory(
             let supply = new BN(10);
 
             it('should revert if the sender is not a Minter', async function () {
-                await expectRevert.unspecified(this.token.mintFungible(owner, fCollection1, supply, { from: nonMinter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.mint(owner, fCollection1, supply, EmptyByte, true, { from: nonMinter }));
+                } else {
+                    await expectRevert.unspecified(this.token.mintFungible(owner, fCollection1, supply, { from: nonMinter }));
+                }
             });
 
             it('should revert if the owner is the zero address', async function () {
-                await expectRevert.unspecified(this.token.mintFungible(ZeroAddress, fCollection1, supply, { from: minter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.mint(ZeroAddress, fCollection1, supply, EmptyByte, true, { from: minter }));
+                } else {
+                    await expectRevert.unspecified(this.token.mintFungible(ZeroAddress, fCollection1, supply, { from: minter }));
+                }
             });
 
             it('should mint if the token has already been minted', async function () {
-                await this.token.mintFungible(owner, fCollection1, supply, { from: minter });
-                await this.token.mintFungible(owner, fCollection1, supply, { from: minter });
+                if (newABI) {
+                    await this.token.mint(owner, fCollection1, supply, EmptyByte, true, { from: minter });
+                    await this.token.mint(owner, fCollection1, supply, EmptyByte, true, { from: minter });
+
+                } else {
+                    await this.token.mintFungible(owner, fCollection1, supply, { from: minter });
+                    await this.token.mintFungible(owner, fCollection1, supply, { from: minter });
+
+                }
                 (await this.token.balanceOf(owner, fCollection1)).toNumber().should.be.equal(supply.toNumber() * 2);
             });
 
@@ -118,7 +152,11 @@ function shouldBehaveLikeERC1155MintableInventory(
 
             context('when successful', function () {
                 beforeEach(async function () {
-                    this.receipt = await this.token.mintFungible(owner, fCollection1, supply, { from: minter });
+                    if (newABI) {
+                        this.receipt = await this.token.mint(owner, fCollection1, supply, EmptyByte, true, { from: minter });
+                    } else {
+                        this.receipt = await this.token.mintFungible(owner, fCollection1, supply, { from: minter });
+                    }
                 });
 
                 it('should increase the fungible collection balance of the owner', async function () {
@@ -139,19 +177,35 @@ function shouldBehaveLikeERC1155MintableInventory(
 
         context('batchMint', function () {
             it('should revert if the sender is not a Minter', async function () {
-                await expectRevert.unspecified(this.token.batchMint(owner, tokensToBatchMint.ids, tokensToBatchMint.supplies, { from: nonMinter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(owner, tokensToBatchMint.ids, tokensToBatchMint.supplies, EmptyByte, true, { from: nonMinter }));
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(owner, tokensToBatchMint.ids, tokensToBatchMint.supplies, { from: nonMinter }));
+                }
             });
 
             it('should revert if the fungible quantity is less than 1', async function () {
-                await expectRevert.unspecified(this.token.batchMint(owner, [fCollection1], [new BN(0)], { from: minter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(owner, [fCollection1], [new BN(0)], EmptyByte, true, { from: minter }));
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(owner, [fCollection1], [new BN(0)], { from: minter }));
+                }
             });
 
             it('it should revert if the non-fungible quantity is greater than 1', async function () {
-                await expectRevert.unspecified(this.token.batchMint(owner, [nft1], [new BN(2)], { from: minter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(owner, [nft1], [new BN(2)], EmptyByte, true, { from: minter }));
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(owner, [nft1], [new BN(2)], { from: minter }));
+                }
             });
 
             it('it should revert if the non-fungible quantity is less than 1', async function () {
-                await expectRevert.unspecified(this.token.batchMint(owner, [nft1], [new BN(0)], { from: minter }));
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(owner, [nft1], [new BN(0)], EmptyByte, true, { from: minter }));
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(owner, [nft1], [new BN(0)], { from: minter }));
+                }
             });
 
             it('it should revert if there is a mismatch in the param array lengths', async function () {
@@ -160,12 +214,24 @@ function shouldBehaveLikeERC1155MintableInventory(
                     supplies: [new BN(1), new BN(1)]
                 }
 
-                await expectRevert.unspecified(this.token.batchMint(
-                    owner,
-                    wrongTokensToBatchMint.ids,
-                    wrongTokensToBatchMint.supplies,
-                    { from: minter })
-                );
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(
+                        owner,
+                        wrongTokensToBatchMint.ids,
+                        wrongTokensToBatchMint.supplies,
+                        EmptyByte,
+                        true,
+                        { from: minter })
+                    );
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(
+                        owner,
+                        wrongTokensToBatchMint.ids,
+                        wrongTokensToBatchMint.supplies,
+                        { from: minter })
+                    );
+                    
+                }
             });
 
             it('should revert if minting a collection', async function () {
@@ -174,12 +240,23 @@ function shouldBehaveLikeERC1155MintableInventory(
                     supplies: [new BN(1)]
                 }
 
-                await expectRevert.unspecified(this.token.batchMint(
-                    owner,
-                    wrongTokensToBatchMint.ids,
-                    wrongTokensToBatchMint.supplies,
-                    { from: minter })
-                );
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(
+                        owner,
+                        wrongTokensToBatchMint.ids,
+                        wrongTokensToBatchMint.supplies,
+                        EmptyByte,
+                        true,
+                        { from: minter })
+                    );
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(
+                        owner,
+                        wrongTokensToBatchMint.ids,
+                        wrongTokensToBatchMint.supplies,
+                        { from: minter })
+                    );
+                }
             });
 
             it('should revert if minting a non-fungible token that already has been minted', async function () {
@@ -187,12 +264,24 @@ function shouldBehaveLikeERC1155MintableInventory(
                     ids: [nft1, nft2, nft2], // same token id
                     supplies: [new BN(1), new BN(1), new BN(1)]
                 }
-                await expectRevert.unspecified(this.token.batchMint(
-                    owner,
-                    wrongTokensToBatchMint.ids,
-                    wrongTokensToBatchMint.supplies,
-                    { from: minter })
-                );
+
+                if (newABI) {
+                    await expectRevert.unspecified(this.token.batchMint(
+                        owner,
+                        wrongTokensToBatchMint.ids,
+                        wrongTokensToBatchMint.supplies,
+                        EmptyByte,
+                        true,
+                        { from: minter })
+                    );
+                } else {
+                    await expectRevert.unspecified(this.token.batchMint(
+                        owner,
+                        wrongTokensToBatchMint.ids,
+                        wrongTokensToBatchMint.supplies,
+                        { from: minter })
+                    );
+                }
             });
 
             context('when successful', function () {
@@ -203,12 +292,25 @@ function shouldBehaveLikeERC1155MintableInventory(
                 // }
 
                 beforeEach(async function () {
-                    this.receipt = await this.token.batchMint(
-                        owner,
-                        tokensToBatchMint.ids,
-                        tokensToBatchMint.supplies,
-                        { from: minter }
-                    );
+                    if (newABI) {
+                        this.receipt = await this.token.batchMint(
+                            owner,
+                            tokensToBatchMint.ids,
+                            tokensToBatchMint.supplies,
+                            EmptyByte,
+                            true,
+                            { from: minter }
+                        );
+                    } else {
+                        this.receipt = await this.token.batchMint(
+                            owner,
+                            tokensToBatchMint.ids,
+                            tokensToBatchMint.supplies,
+                            EmptyByte,
+                            true,
+                            { from: minter }
+                        );
+                    }
                 });
 
                 it('should increase the fungible collection balances of the owner', async function () {
@@ -263,17 +365,17 @@ function shouldBehaveLikeERC1155MintableInventory(
                 //     });
                 // });
 
-                it('should emit URI events', async function () {
-                    for (const id of tokensToBatchMint.ids) {
-                        const fungible = await this.token.isFungible(id);
-                        if (!fungible) {
-                            expectEvent(this.receipt, 'URI', {
-                                _value: await this.token.uri(id),
-                                _id: id
-                            });
-                        }
-                    }
-                });
+                // it('should emit URI events', async function () {
+                //     for (const id of tokensToBatchMint.ids) {
+                //         const fungible = await this.token.isFungible(id);
+                //         if (!fungible) {
+                //             expectEvent(this.receipt, 'URI', {
+                //                 _value: await this.token.uri(id),
+                //                 _id: id
+                //             });
+                //         }
+                //     }
+                // });
             });
         });
 

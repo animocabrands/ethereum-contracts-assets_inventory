@@ -4,6 +4,7 @@ const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { behaviors, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
 const { ZeroAddress } = constants;
 const interfaces1155 = require('../../../../../src/interfaces/ERC165/ERC1155');
+const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
@@ -40,12 +41,12 @@ function shouldBehaveLikeERC1155Inventory(
 
   describe('like an ERC1155Inventory', function () {
     beforeEach(async function () {
-      await this.token.mint(owner, fCollection1.id, fCollection1.supply, { from: creator });
-      await this.token.mint(owner, fCollection2.id, fCollection2.supply, { from: creator });
-      await this.token.mint(owner, fCollection3.id, fCollection3.supply, { from: creator });
-      await this.token.mint(owner, nft1, 1, { from: creator });
-      await this.token.mint(owner, nft2, 1, { from: creator });
-      await this.token.mint(owner, nft3, 1, { from: creator });
+      await this.token.mint(owner, fCollection1.id, fCollection1.supply, EmptyByte, true, { from: creator });
+      await this.token.mint(owner, fCollection2.id, fCollection2.supply, EmptyByte, true, { from: creator });
+      await this.token.mint(owner, fCollection3.id, fCollection3.supply, EmptyByte, true, { from: creator });
+      await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: creator });
+      await this.token.mint(owner, nft2, 1, EmptyByte, true, { from: creator });
+      await this.token.mint(owner, nft3, 1, EmptyByte, true, { from: creator });
 
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
