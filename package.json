@@ -28,7 +28,6 @@
     "@animoca/blockchain-inventory_metadata": "0.0.1",
     "@animoca/ethereum-contracts-core_library": "^3.1.1",
     "@animoca/ethereum-contracts-erc20_base": "^3.0.0",
-    "@openzeppelin/contracts-git": "git+https://github.com/openzeppelin/contracts.git",
     "@openzeppelin/test-helpers": "git+https://github.com/nataouze/openzeppelin-test-helpers.git#fix_bn_array_event_args",
     "bits.js": "^0.1.1"
   }
