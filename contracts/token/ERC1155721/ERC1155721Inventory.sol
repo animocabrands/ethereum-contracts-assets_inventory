@@ -3,6 +3,7 @@
 pragma solidity 0.6.8;
 
 import "./../ERC721/IERC721.sol";
+import "./../ERC721/IERC721Exists.sol";
 import "./../ERC721/IERC721Metadata.sol";
 import "./../ERC721/IERC721Receiver.sol";
 import "./../ERC1155/ERC1155Inventory.sol";
@@ -12,7 +13,7 @@ import "./../ERC1155/ERC1155Inventory.sol";
 /**
  * @title ERC1155721Inventory, an ERC1155Inventory with additional support for ERC721.
  */
-abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Inventory {
+abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata, ERC1155Inventory {
     using SafeMath for uint256;
     using Address for address;
 
@@ -29,6 +30,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     constructor() internal ERC1155Inventory() {
         _registerInterface(type(IERC721).interfaceId);
+        _registerInterface(type(IERC721Exists).interfaceId);
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
@@ -56,7 +58,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     function getApproved(uint256 nftId) public virtual override view returns (address) {
         uint256 tokenOwner = _owners[nftId];
-        require(isNFT(nftId) && address(tokenOwner) != address(0), "Inventory: non-existing NFT");
+        require(isNFT(nftId) && (address(tokenOwner) != address(0)), "Inventory: non-existing NFT");
         if (tokenOwner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) {
             return _nftApprovals[nftId];
         } else {
@@ -95,8 +97,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     }
 
     function tokenURI(uint256 nftId) external virtual override view returns (string memory) {
-        require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
+        require(exists(nftId), "Inventory: non-existing NFT");
         return _uri(nftId);
+    }
+
+    function exists(uint256 nftId) public override view returns (bool) {
+        return address(_owners[nftId]) != address(0);
     }
 
     //================================== Minting Internal Functions =======================================/
