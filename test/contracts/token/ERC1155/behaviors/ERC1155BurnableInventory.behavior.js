@@ -156,10 +156,14 @@ function shouldBehaveLikeERC1155BurnableInventory(
                 });
 
                 context('sent more than owned', function () {
+                    beforeEach(async function () {
+                        await this.token.setApprovalForAll(operator, true, { from: owner });
+                    });
+
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(owner, fCollection.id, 11, { from: other }),
-                            NonApproved_RevertMessage
+                            this.token.burnFrom(owner, fCollection.id, 11, { from: operator }),
+                            'SafeMath: subtraction overflow'
                         );
                     });
                 });
