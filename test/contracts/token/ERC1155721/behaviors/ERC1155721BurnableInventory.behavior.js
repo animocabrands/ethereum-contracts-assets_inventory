@@ -11,7 +11,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
     nfMaskLength,
     newABI,
     creator,
-    [owner, operator, other]
+    [owner, operator, other],
 ) {
     describe('like a burnable ERC1155721Inventory', function () {
 

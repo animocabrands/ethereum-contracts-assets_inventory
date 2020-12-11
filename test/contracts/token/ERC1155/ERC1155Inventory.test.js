@@ -21,7 +21,7 @@ describe('ERC1155Inventory', function () {
   shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
 
-  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, accounts, [
+  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, creator, otherAccounts, [
       'Inventory: non-owned NFT',
       'Inventory: non-approved sender',
       'Inventory: non-existing NFT'

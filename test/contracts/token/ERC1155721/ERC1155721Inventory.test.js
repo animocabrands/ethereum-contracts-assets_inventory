@@ -28,7 +28,7 @@ describe('ERC1155721Inventory', function () {
   shouldBehaveLikeERC721Metadata(nfMaskLength, "ERC1155721InventoryMock", "INV", true, creator, otherAccounts);
   shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, accounts, [
+  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, creator, otherAccounts, [
     'Inventory: non-owned NFT',
     'Inventory: non-approved sender',
     'Inventory: non-existing NFT'

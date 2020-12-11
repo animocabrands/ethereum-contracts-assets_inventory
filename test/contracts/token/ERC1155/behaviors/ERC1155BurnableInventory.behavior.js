@@ -7,7 +7,8 @@ const { ZeroAddress, EmptyByte } = require('@animoca/ethereum-contracts-core_lib
 function shouldBehaveLikeERC1155BurnableInventory(
     nfMaskLength,
     newABI,
-    [creator, owner, operator, other],
+    creator,
+    [owner, operator, other],
     [
         NonOwned_RevertMessage,
         NonApproved_RevertMessage,

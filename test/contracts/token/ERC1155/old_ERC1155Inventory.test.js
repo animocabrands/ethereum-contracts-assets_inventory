@@ -20,7 +20,7 @@ describe('old_ERC1155Inventory', function () {
 
   shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, accounts, [
+  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, creator, otherAccounts, [
     'ERC1155: transfer of a non-owned NFT',
     'ERC1155: transfer by a non-approved sender',
     'ERC1155: owner of non-existing NFT'
