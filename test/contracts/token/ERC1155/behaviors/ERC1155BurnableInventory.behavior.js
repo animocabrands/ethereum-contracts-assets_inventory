@@ -41,17 +41,23 @@ function shouldBehaveLikeERC1155BurnableInventory(
             context('with a non-fungible token', function () {
 
                 const burnNft = function (from, sender, nft) {
-                    let ownerOf, balanceBefore, receipt, balanceAfter;
+                    let ownerOf, balanceBefore, nftBalanceBefore, receipt, balanceAfter, nftBalanceAfter;
 
                     beforeEach(async function () {
                         ownerOf = await this.token.ownerOf(nft);
                         balanceBefore = await this.token.balanceOf(from, nfCollection);
+                        nftBalanceBefore = await this.token.balanceOf(owner, nft);
                         receipt = await this.token.burnFrom(from, nft, '1', { from: sender });
                         balanceAfter = await this.token.balanceOf(owner, nfCollection);
+                        nftBalanceAfter = await this.token.balanceOf(owner, nft);
                     });
 
                     it('updates the collection balance', function () {
                         balanceAfter.should.be.bignumber.equal(balanceBefore.subn(1));
+                    });
+
+                    it('updates the nft balance', function () {
+                        nftBalanceAfter.should.be.bignumber.equal(nftBalanceBefore.subn(1));
                     });
 
                     it('emits a TransferSingle', function () {
