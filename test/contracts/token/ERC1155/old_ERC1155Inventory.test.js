@@ -1,13 +1,16 @@
 const { contract, accounts } = require('@openzeppelin/test-environment');
+const { behaviors, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const interfaces1155 = require('../../../../src/interfaces/ERC165/ERC1155');
 
-const { shouldBehaveLikeERC1155AssetsInventory } = require('./behaviors/ERC1155AssetsInventory.behavior');
+const { shouldBehaveLikeERC1155Inventory } = require('./behaviors/ERC1155Inventory.behavior');
 const { shouldBehaveLikeERC1155BurnableInventory } = require('./behaviors/ERC1155BurnableInventory.behavior');
 const { shouldBehaveLikeERC1155MintableInventory } = require('./behaviors/ERC1155MintableInventory.behavior');
 const { shouldBehaveLikeERC1155MetadataURI } = require('./behaviors/ERC1155MetadataURI.behavior');
 
 const ERC1155BurnableInventory = contract.fromArtifact('ERC1155BurnableInventoryMock');
+const newABI = false;
 
-describe('ERC1155BurnableInventory', function () {
+describe('old_ERC1155Inventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 
@@ -15,12 +18,20 @@ describe('ERC1155BurnableInventory', function () {
     this.token = await ERC1155BurnableInventory.new(nfMaskLength, { from: creator });
   });
 
-  shouldBehaveLikeERC1155AssetsInventory(nfMaskLength, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, false, creator, otherAccounts);
-  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, false, accounts, [
+  shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
+  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
+  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, accounts, [
     'ERC1155: transfer of a non-owned NFT',
     'ERC1155: transfer by a non-approved sender',
     'ERC1155: owner of non-existing NFT'
   ]);
   shouldBehaveLikeERC1155MetadataURI(nfMaskLength);
+
+  describe('ERC165 interfaces support', function () {
+    behaviors.shouldSupportInterfaces([
+      interfaces.ERC165,
+      interfaces1155.ERC1155,
+      interfaces1155.ERC1155AssetCollections_Experimental
+    ]);
+  });
 });

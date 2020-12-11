@@ -5,7 +5,6 @@ const { behaviors, constants, interfaces } = require('@animoca/ethereum-contract
 const { ZeroAddress, EmptyByte} = constants;
 const interfaces721 = require('../../../../../src/interfaces/ERC165/ERC721');
 
-// const { ERC721Received_MagicValue } = require('../../../../../src/constants');
 const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
@@ -519,7 +518,6 @@ function shouldBehaveLikeERC721(
       behaviors.shouldSupportInterfaces([
         interfaces.ERC165,
         interfaces721.ERC721,
-        interfaces721.ERC721Exists_Experimental,
       ]);
     });
   });

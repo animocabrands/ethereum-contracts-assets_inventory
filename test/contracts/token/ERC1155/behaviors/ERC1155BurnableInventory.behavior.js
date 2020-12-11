@@ -2,6 +2,8 @@ const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const { ZeroAddress, EmptyByte } = require('@animoca/ethereum-contracts-core_library').constants;
 
+
+// TODO, checks for totalSupply if new ABI
 function shouldBehaveLikeERC1155BurnableInventory(
     nfMaskLength,
     newABI,
@@ -12,7 +14,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
         NonExistingNFT_RevertMessage,
     ]
 ) {
-    describe('like a burnable ERC1155AssetsInventory', function () {
+    describe('like a burnable ERC1155Inventory', function () {
 
         const fCollection = {
             id: makeFungibleCollectionId(1),
@@ -20,6 +22,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
         };
         const nfCollection = makeNonFungibleCollectionId(1, nfMaskLength);
         const nft = makeNonFungibleTokenId(1, 1, nfMaskLength);
+        const otherNft = makeNonFungibleTokenId(1, 2, nfMaskLength);
 
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
@@ -27,10 +30,11 @@ function shouldBehaveLikeERC1155BurnableInventory(
             if (newABI) {
                 await this.token.mint(owner, fCollection.id, fCollection.supply, EmptyByte, true, { from: creator });
                 await this.token.mint(owner, nft, 1, EmptyByte, true, { from: creator });
+                await this.token.mint(other, otherNft, 1, EmptyByte, true, { from: creator });
             } else {
                 await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
                 await this.token.mintNonFungible(owner, nft, { from: creator });
-
+                await this.token.mintNonFungible(other, otherNft, 1, { from: creator });
             }
         });
 
@@ -67,14 +71,15 @@ function shouldBehaveLikeERC1155BurnableInventory(
                         await expectRevert(this.token.ownerOf(nft), NonExistingNFT_RevertMessage);
                     });
 
-                    // TODO move to AssetsInventory.behavior
+                    // TODO move to ERC1155721
                     // const nftBalanceBefore = await contract.balanceOf(owner);
                     // const existsBefore = await contract.exists(nft);
                     // existsBefore.should.be.true;
 
-                    // TODO move to AssetsInventory.behavior
+                    // TODO move to ERC1155721
                     // const nftBalanceAfter = await contract.balanceOf(owner);
                     // nftBalanceAfter.should.be.bignumber.equal(nftBalanceBefore.subn(1));
+
                 }
 
                 context('from is not the owner', function () {
@@ -168,6 +173,8 @@ function shouldBehaveLikeERC1155BurnableInventory(
                     });
                 });
             });
+
+            // TODO batchBurnFrom
         });
     });
 }

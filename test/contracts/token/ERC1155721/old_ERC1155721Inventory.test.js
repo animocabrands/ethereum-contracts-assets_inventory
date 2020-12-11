@@ -12,28 +12,27 @@ const { shouldBehaveLikeERC1155721Inventory } = require('./behaviors/ERC1155721I
 const { shouldBehaveLikeERC1155721MintableInventory } = require('./behaviors/ERC1155721MintableInventory.behavior');
 const { shouldBehaveLikeERC1155721BurnableInventory } = require('./behaviors/ERC1155721BurnableInventory.behavior');
 
-const ERC1155721Inventory = contract.fromArtifact('ERC1155721InventoryMock');
-const newABI = true;
+const BurnableInventory = contract.fromArtifact('BurnableInventoryMock');
+const newABI = false;
 
-describe('ERC1155721Inventory', function () {
+describe('old_ERC1155721Inventory', function () {
   const [creator, ...otherAccounts] = accounts;
   const nfMaskLength = 32;
 
   beforeEach(async function () {
-    this.token = await ERC1155721Inventory.new({ from: creator });
+    this.token = await BurnableInventory.new(nfMaskLength, { from: creator });
   });
 
-
   shouldBehaveLikeERC721(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC721Metadata(nfMaskLength, "ERC1155721InventoryMock", "INV", true, creator, otherAccounts);
+  shouldBehaveLikeERC721Metadata(nfMaskLength, "AssetsInventoryMock", "AIM", false, creator, otherAccounts);
   shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, accounts, [
-    'Inventory: non-owned NFT',
-    'Inventory: non-approved sender',
-    'Inventory: non-existing NFT'
+    'ERC1155: transfer of a non-owned NFT',
+    'ERC1155: transfer by a non-approved sender',
+    'ERC1155: owner of non-existing NFT'
   ]);
-  shouldBehaveLikeERC1155MetadataURI(nfMaskLength);
+  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
+  shouldBehaveLikeERC1155MetadataURI(nfMaskLength, creator, otherAccounts);
   shouldBehaveLikeERC1155721Inventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155721MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155721BurnableInventory(nfMaskLength, newABI, creator, otherAccounts);
@@ -42,8 +41,7 @@ describe('ERC1155721Inventory', function () {
     behaviors.shouldSupportInterfaces([
       interfaces.ERC165,
       interfaces1155.ERC1155,
-      interfaces1155.ERC1155Inventory_Experimental
+      interfaces1155.ERC1155AssetCollections_Experimental
     ]);
   });
 });
-

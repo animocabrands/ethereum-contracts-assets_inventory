@@ -2,18 +2,17 @@
 
 pragma solidity 0.6.8;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./../ERC721/IERC721.sol";
-import "./../ERC721/IERC721Exists.sol";
 import "./../ERC721/IERC721Metadata.sol";
 import "./../ERC721/IERC721Receiver.sol";
-import "./../ERC1155/ERC1155Inventory.sol";
-
-// import "./../ERC1155/IERC1155TokenReceiver.sol";
+import "./../ERC1155/ERC1155InventoryBase.sol";
 
 /**
  * @title ERC1155721Inventory, an ERC1155Inventory with additional support for ERC721.
  */
-abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata, ERC1155Inventory {
+abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155InventoryBase {
     using SafeMath for uint256;
     using Address for address;
 
@@ -28,10 +27,48 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
     mapping(address => uint256) internal _nftBalances;
     mapping(uint256 => address) internal _nftApprovals;
 
-    constructor() internal ERC1155Inventory() {
+    constructor() internal ERC1155InventoryBase() {
         _registerInterface(type(IERC721).interfaceId);
-        _registerInterface(type(IERC721Exists).interfaceId);
         _registerInterface(type(IERC721Metadata).interfaceId);
+    }
+
+    //================================== ERC1155 =======================================/
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bytes memory data
+    ) public virtual override {
+        _safeTransferFrom(from, to, id, value, data, /* isBatch */false, /* operatable */false);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory values,
+        bytes memory data
+    ) public virtual override {
+        _safeBatchTransferFrom(from, to, ids, values, data);
+    }
+
+    //========================== ERC1155Inventory (Optimised Transfer) ================================/
+
+    function sameNFTCollectionSafeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory nftIds,
+        bytes memory data
+    ) public virtual {
+        _sameNFTCollectionSafeBatchTransferFrom(from, to, nftIds, data);
     }
 
     //===================================== ERC721 ==========================================/
@@ -41,8 +78,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         return _nftBalances[tokenOwner];
     }
 
-    function ownerOf(uint256 nftId) public virtual override(IERC721, ERC1155Inventory) view returns (address) {
-        return ERC1155Inventory.ownerOf(nftId);
+    function ownerOf(uint256 nftId) public virtual override(IERC721, ERC1155InventoryBase) view returns (address) {
+        return ERC1155InventoryBase.ownerOf(nftId);
     }
 
     function approve(address to, uint256 nftId) public virtual override {
@@ -69,43 +106,46 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
     function isApprovedForAll(address tokenOwner, address operator)
         public
         virtual
-        override(IERC721, ERC1155Inventory)
+        override(IERC721, ERC1155InventoryBase)
         view
         returns (bool)
     {
-        return ERC1155Inventory.isApprovedForAll(tokenOwner, operator);
+        return ERC1155InventoryBase.isApprovedForAll(tokenOwner, operator);
     }
 
-    function setApprovalForAll(address operator, bool approved) public virtual override(IERC721, ERC1155Inventory) {
-        return ERC1155Inventory.setApprovalForAll(operator, approved);
+    function setApprovalForAll(address operator, bool approved) public virtual override(IERC721, ERC1155InventoryBase) {
+        return ERC1155InventoryBase.setApprovalForAll(operator, approved);
     }
-
 
     function transferFrom(address from, address to, uint256 nftId) public virtual override {
-        require(isNFT(nftId), "Inventory: not an NFT");
-        _transferFrom(from, to, nftId, 1, "", false, false, _UNUSED_BOOL);
+        _transferFrom_ERC721(from, to, nftId, "", /* safe */false);
     }
 
     function safeTransferFrom(address from, address to, uint256 nftId) public virtual override {
-        require(isNFT(nftId), "Inventory: not an NFT");
-        _transferFrom(from, to, nftId, 1, "", false, true, _UNUSED_BOOL);
+        _transferFrom_ERC721(from, to, nftId, "", /* safe */true);
     }
 
     function safeTransferFrom(address from, address to, uint256 nftId, bytes memory data) public virtual override {
-        require(isNFT(nftId), "Inventory: not an NFT");
-        _transferFrom(from, to, nftId, 1, data, false, true, _UNUSED_BOOL);
+        _transferFrom_ERC721(from, to, nftId, data, /* safe */true);
     }
 
     function tokenURI(uint256 nftId) external virtual override view returns (string memory) {
-        require(exists(nftId), "Inventory: non-existing NFT");
+        require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
         return _uri(nftId);
     }
 
-    function exists(uint256 nftId) public override view returns (bool) {
-        return address(_owners[nftId]) != address(0);
-    }
+    //================================== Minting Core Internal Helpers =======================================/
 
-    //================================== Minting Internal Functions =======================================/
+    function _mintFungible(
+        address to,
+        uint256 id,
+        uint256 value
+    ) internal {
+        require(value != 0, "Inventory: zero value");
+        _supplies[id] = _supplies[id].add(value);
+        // cannot overflow as supply cannot overflow
+        _balances[id][to] += value;
+    }
 
     function _mintNonFungible(
         address to,
@@ -113,7 +153,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         uint256 value,
         bool isSameNFTCollectionOperation,
         bool isBatchOperation
-    ) internal virtual override {
+    ) internal {
         require(value == 1, "Inventory: wrong NFT value");
         require(_owners[id] == 0, "Inventory: existing/burnt NFT");
 
@@ -124,7 +164,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
             // it is virtually impossible that a non-fungible collection supply
             // overflows due to the cost of minting individual tokens
             _supplies[collectionId] += 1;
-            // cannot overflow as supply cannot overflow
+            // cannot overflow as sßupply cannot overflow
             _balances[collectionId][to] += 1;
 
             if (!isBatchOperation) {
@@ -133,6 +173,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
             }
         }
     }
+
+    //================================== Minting Internal Functions =======================================/
 
     /**
      * Mints some token.
@@ -158,7 +200,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         bytes memory data,
         bool safe,
         bool isBatch
-    ) internal virtual override {
+    ) internal virtual {
         if (!isBatch) {
             require(to != address(0), "Inventory: transfer to zero");
         }
@@ -185,6 +227,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         }
     }
 
+    //================================== Minting Internal Functions =======================================/
+
     /**
      * Mints a batch of tokens.
      * @dev Reverts if `ids` and `values` have different lengths.
@@ -208,7 +252,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         uint256[] memory values,
         bytes memory data,
         bool safe
-    ) internal virtual override {
+    ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
@@ -251,7 +295,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         uint256[] memory nftIds,
         bytes memory data,
         bool safe
-    ) internal virtual override {
+    ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         uint256 length = nftIds.length;
         uint256[] memory values = new uint256[](length);
@@ -282,7 +326,21 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         }
     }
 
-    //============================== Transfer Internal Functions =======================================/
+    //================================== Minting Core Internal Helpers =======================================/
+
+    function _transferFungible(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bool operatable
+    ) internal {
+        require(operatable, "Inventory: non-approved sender");
+        require(value != 0, "Inventory: zero value");
+        _balances[id][from] = _balances[id][from].sub(value);
+        // cannot overflow as supply cannot overflow
+        _balances[id][to] += value;
+    }
 
     function _transferNonFungible(
         address from,
@@ -292,7 +350,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         bool isSameNFTCollectionOperation,
         bool isBatchOperation,
         bool operatable
-    ) internal virtual override {
+    ) internal virtual {
         require(value == 1, "Inventory: wrong NFT value");
         uint256 owner = _owners[id];
         require(from == address(owner), "Inventory: non-owned NFT");
@@ -319,6 +377,48 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         }
     }
 
+    //============================== Transfer Internal Functions =======================================/
+
+    /**
+     * Transfers tokens to another address.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if the sender is not approved.
+     * @dev Reverts if `id` does not represent a non-fungible token.
+     * @dev Reverts if `id` is not owned by `from`.
+     * @dev Reverts if `safe` is true and .
+     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @param from Current token owner.
+     * @param to Address of the new token owner.
+     * @param id Identifier of the token to transfer.
+     * @param data Optional data to pass to the receiver contract.
+     * @param safe Whether this is a safe transfer.
+     */
+    function _transferFrom_ERC721(
+        address from,
+        address to,
+        uint256 id,
+        bytes memory data,
+        bool safe
+    ) internal {
+        require(to != address(0), "Inventory: transfer to zero");
+        address sender = _msgSender();
+        bool operatable = _isOperatable(from, sender);
+
+        require(isNFT(id), "Inventory: not an NFT");
+        _transferNonFungible(from, to, id, 1, false, false, operatable);
+
+        emit Transfer(from, to, id);
+        emit TransferSingle(sender, from, to, id, 1);
+        if (to.isContract()) {
+            if (_isERC1155TokenReceiver(to)) {
+                _callOnERC1155Received(from, to, id, 1, data);
+            } else if (safe) {
+                _callOnERC721Received(from, to, id, data);
+            }
+        }
+    }
+
     /**
      * Transfers tokens to another address.
      * @dev Reverts if `isBatch` is false and `to` is the zero address.
@@ -335,19 +435,17 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
      * @param value Amount of token to transfer.
      * @param data Optional data to pass to the receiver contract.
      * @param isBatch Whether this function is called by `_safeBatchTransferFrom`.
-     * @param safe Whether this is a safe transfer.
      * @param operatable Whether the sender has an operator-level approval.
      */
-    function _transferFrom(
+    function _safeTransferFrom(
         address from,
         address to,
         uint256 id,
         uint256 value,
         bytes memory data,
         bool isBatch,
-        bool safe,
         bool operatable
-    ) internal virtual override {
+    ) internal virtual {
         address sender = _msgSender();
         if (!isBatch) {
             require(to != address(0), "Inventory: transfer to zero");
@@ -355,8 +453,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         }
 
         if (isFungible(id)) {
-            require(operatable, "Inventory: non-approved sender");
-            _transferFungible(from, to, id, value);
+            _transferFungible(from, to, id, value, operatable);
         } else if (id & _NF_TOKEN_MASK != 0) {
             _transferNonFungible(from, to, id, value, false, isBatch, operatable);
             emit Transfer(from, to, id);
@@ -366,12 +463,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
 
         if (!isBatch) {
             emit TransferSingle(sender, from, to, id, value);
-            if (safe && to.isContract()) {
-                if (_isERC1155TokenReceiver(to)) {
-                    _callOnERC1155Received(from, to, id, value, data);
-                } else {
-                    _callOnERC721Received(from, to, id, data);
-                }
+            if (to.isContract()) {
+                _callOnERC1155Received(from, to, id, value, data);
             }
         }
     }
@@ -399,7 +492,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) internal virtual override {
+    ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
@@ -409,7 +502,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         uint256 transferredNFTs = 0;
         for (uint256 i = 0; i < length; i++) {
             uint256 id = ids[i];
-            _transferFrom(from, to, id, values[i], data, true, true, operatable);
+            _safeTransferFrom(from, to, id, values[i], data, true, operatable);
             if (isNFT(id)) {
                 transferredNFTs++;
             }
@@ -444,7 +537,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         address to,
         uint256[] memory nftIds,
         bytes memory data
-    ) internal virtual override {
+    ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
@@ -483,6 +576,19 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
 
     //================================ Burning Internal Functions ======================================/
 
+    function _burnFungible(
+        address from,
+        uint256 id,
+        uint256 value,
+        bool operatable
+    ) internal {
+        require(value != 0, "Inventory: zero value");
+        require(operatable, "Inventory: non-approved sender");
+        _balances[id][from] = _balances[id][from].sub(value);
+        // Cannot underflow
+        _supplies[id] -= value;
+    }
+
     function _burnNonFungible(
         address from,
         uint256 id,
@@ -490,7 +596,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         bool isSameNFTCollectionOperation,
         bool isBatchOperation,
         bool operatable
-    ) internal virtual override {
+    ) internal virtual {
         require(value == 1, "Inventory: wrong NFT value");
         uint256 owner = _owners[id];
         require(from == address(owner), "Inventory: non-owned NFT");
@@ -536,15 +642,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         uint256 value,
         bool isBatch,
         bool operatable
-    ) internal virtual override {
+    ) internal virtual {
         address sender = _msgSender();
         if (!isBatch) {
             operatable = _isOperatable(from, sender);
         }
 
         if (isFungible(id)) {
-            _burnFungible(from, id, value);
-            require(operatable, "Inventory: non-approved sender");
+            _burnFungible(from, id, value, operatable);
         } else if (id & _NF_TOKEN_MASK != 0) {
             _burnNonFungible(from, id, value, false, isBatch, operatable);
             emit Transfer(from, address(0), id);
@@ -575,7 +680,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         address from,
         uint256[] memory ids,
         uint256[] memory values
-    ) internal virtual override {
+    ) internal virtual {
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 
@@ -608,7 +713,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
      * @param from address address that will own the minted tokens
      * @param nftIds uint256[] identifiers of the tokens to be minted
      */
-    function _sameNFTCollectionBatchBurnFrom(address from, uint256[] memory nftIds) internal virtual override {
+    function _sameNFTCollectionBatchBurnFrom(address from, uint256[] memory nftIds) internal virtual {
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
@@ -641,27 +746,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
     ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////
 
     /**
-     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
-     * The call is not executed if the target address is not a contract.
-     *
-     * @param from address representing the previous owner of the given token ID
-     * @param to target address that will receive the tokens
-     * @param nftId uint256 identifiers to be transferred
-     * @param data bytes optional data to send along with the call
-     */
-    function _callOnERC721Received(
-        address from,
-        address to,
-        uint256 nftId,
-        bytes memory data
-    ) internal {
-        require(
-            IERC721Receiver(to).onERC721Received(_msgSender(), from, nftId, data) == _ERC721_RECEIVED,
-            "Inventory: transfer refused"
-        );
-    }
-
-    /**
      * @dev internal function to tell whether a contract is an ERC1155 Receiver contract
      * @param _contract address query contract addrss
      * @return wheter the given contract is an ERC1155 Receiver contract
@@ -681,5 +765,26 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Exists, IERC721Metadata
         // (10000 / 63) "not enough for supportsInterface(...)" // consume all gas, so caller can potentially know that there was not enough gas
         assert(gasleft() > 158);
         return success && result;
+    }
+
+    /**
+     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
+     * The call is not executed if the target address is not a contract.
+     *
+     * @param from address representing the previous owner of the given token ID
+     * @param to target address that will receive the tokens
+     * @param nftId uint256 identifiers to be transferred
+     * @param data bytes optional data to send along with the call
+     */
+    function _callOnERC721Received(
+        address from,
+        address to,
+        uint256 nftId,
+        bytes memory data
+    ) internal {
+        require(
+            IERC721Receiver(to).onERC721Received(_msgSender(), from, nftId, data) == _ERC721_RECEIVED,
+            "Inventory: transfer refused"
+        );
     }
 }

@@ -1,3 +1,4 @@
+const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').constants;
@@ -5,12 +6,14 @@ const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').cons
 const NonOwned_RevertMessage = 'ERC1155: transfer of a non-owned NFT';
 const NonApproved_RevertMessage = 'ERC1155: transfer by a non-approved sender';
 
-function shouldBehaveLikeBurnableInventory(
+// TODO check for totalSupply if newABI
+function shouldBehaveLikeERC1155721BurnableInventory(
     nfMaskLength,
+    newABI,
     creator,
     [owner, operator, other]
 ) {
-    describe('like a burnable AssetsInventory', function () {
+    describe('like a burnable ERC1155721Inventory', function () {
 
         const fCollection = {
             id: makeFungibleCollectionId(1),
@@ -21,9 +24,14 @@ function shouldBehaveLikeBurnableInventory(
 
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
-            await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
             await this.token.createCollection(nfCollection, { from: creator });
-            await this.token.mintNonFungible(owner, nft, { from: creator });
+            if (newABI) {
+                await this.token.mint(owner, fCollection.id, fCollection.supply, EmptyByte, true, { from: creator });
+                await this.token.mint(owner, nft, 1, EmptyByte, true, { from: creator });
+            } else {
+                await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
+                await this.token.mintNonFungible(owner, nft, { from: creator });
+            }
         });
 
         describe('burnFrom', function () {
@@ -165,5 +173,5 @@ function shouldBehaveLikeBurnableInventory(
 }
 
 module.exports = {
-    shouldBehaveLikeBurnableInventory,
+    shouldBehaveLikeERC1155721BurnableInventory,
 };

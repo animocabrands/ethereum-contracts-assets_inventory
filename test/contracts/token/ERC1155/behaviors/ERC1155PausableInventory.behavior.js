@@ -25,7 +25,7 @@ function shouldBehaveLikeERC1155PausableInventory(
     const nft2 = makeNonFungibleTokenId(1, 2, nfMaskLength);
     const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
-    describe('like an ERC1155PausableInventory', function () {
+    describe('like a pausable ERC1155Inventory', function () {
         beforeEach(async function () {
             await this.token.createCollection(fCollection1.id, { from: creator });
             await this.token.createCollection(fCollection2.id, { from: creator });

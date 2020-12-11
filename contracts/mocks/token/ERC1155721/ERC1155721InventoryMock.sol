@@ -124,7 +124,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, Minter
         uint256 id,
         uint256 value
     ) external {
-        _burnFrom(from, id, value, false, _UNUSED_BOOL);
+        _burnFrom(from, id, value, /* isBatch */false, /* operatable */false);
     }
 
     /**
@@ -167,7 +167,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, Minter
     //                                  ERC1155 Internal Functions
     // ===================================================================================================
 
-    function _uri(uint256 id) internal override(ERC1155Inventory, BaseMetadataURI) view returns (string memory) {
+    function _uri(uint256 id) internal override(ERC1155InventoryBase, BaseMetadataURI) view returns (string memory) {
         return BaseMetadataURI._uri(id);
     }
 }

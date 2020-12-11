@@ -35,16 +35,17 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @param to Address of the new token owner.
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
+     * @param data Optional data to send along to a receiver contract.
+     * @param safe Whether to call a receiver contract.
      */
     function mint(
         address to,
         uint256 id,
-        uint256 value
+        uint256 value,
+        bytes calldata data,
+        bool safe
     ) external onlyMinter {
-        bytes memory data = "";
-        bool safe = false;
-        bool isBatch = false;
-        _mint(to, id, value, data, safe, isBatch);
+        _mint(to, id, value, data, safe, false);
     }
 
     /**
@@ -62,16 +63,16 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @param value Amount of token to mint.
      * @param data Optional data to send along to a receiver contract.
      */
-    function safeMint(
-        address to,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external onlyMinter {
-        bool safe = true;
-        bool isBatch = false;
-        _mint(to, id, value, data, safe, isBatch);
-    }
+    // function safeMint(
+    //     address to,
+    //     uint256 id,
+    //     uint256 value,
+    //     bytes calldata data
+    // ) external onlyMinter {
+    //     bool safe = true;
+    //     bool isBatch = false;
+    //     _mint(to, id, value, data, safe, isBatch);
+    // }
 
     /**
      * Mints a batch of tokens.
@@ -86,14 +87,16 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @param to Address of the new tokens owner.
      * @param ids Identifiers of the tokens to mint.
      * @param values Amounts of tokens to mint.
+     * @param data Optional data to send along to a receiver contract.
+     * @param safe Whether to call a receiver contract.
      */
     function batchMint(
         address to,
         uint256[] calldata ids,
-        uint256[] calldata values
+        uint256[] calldata values,
+        bytes calldata data,
+        bool safe
     ) external onlyMinter {
-        bytes memory data = "";
-        bool safe = false;
         _batchMint(to, ids, values, data, safe);
     }
 
@@ -113,15 +116,15 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @param values Amounts of tokens to mint.
      * @param data Optional data to send along to a receiver contract.
      */
-    function safeBatchMint(
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external onlyMinter {
-        bool safe = true;
-        _batchMint(to, ids, values, data, safe);
-    }
+    // function safeBatchMint(
+    //     address to,
+    //     uint256[] calldata ids,
+    //     uint256[] calldata values,
+    //     bytes calldata data
+    // ) external onlyMinter {
+    //     bool safe = true;
+    //     _batchMint(to, ids, values, data, safe);
+    // }
 
     /**
      * Mints a batch of non-fungible tokens belonging to the same collection.
@@ -132,10 +135,15 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new tokens owner.
      * @param nftIds Identifiers of the tokens to mint.
+     * @param data Optional data to send along to a receiver contract.
+     * @param safe Whether to call a receiver contract.
      */
-    function sameNFTCollectionBatchMint(address to, uint256[] calldata nftIds) external onlyMinter {
-        bytes memory data = "";
-        bool safe = false;
+    function sameNFTCollectionBatchMint(
+        address to,
+        uint256[] calldata nftIds,
+        bytes calldata data,
+        bool safe
+    ) external onlyMinter {
         _sameNFTCollectionBatchMint(to, nftIds, data, safe);
     }
 
@@ -151,14 +159,14 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @param nftIds Identifiers of the tokens to mint.
      * @param data Optional data to send along to a receiver contract.
      */
-    function sameNFTCollectionSafeBatchMint(
-        address to,
-        uint256[] calldata nftIds,
-        bytes calldata data
-    ) external onlyMinter {
-        bool safe = true;
-        _sameNFTCollectionBatchMint(to, nftIds, data, safe);
-    }
+    // function sameNFTCollectionSafeBatchMint(
+    //     address to,
+    //     uint256[] calldata nftIds,
+    //     bytes calldata data
+    // ) external onlyMinter {
+    //     bool safe = true;
+    //     _sameNFTCollectionBatchMint(to, nftIds, data, safe);
+    // }
 
     // ===================================================================================================
     //                                 User Public Functions
@@ -182,7 +190,7 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
         uint256 id,
         uint256 value
     ) external {
-        _burnFrom(from, id, value, false, _UNUSED_BOOL);
+        _burnFrom(from, id, value, false);
     }
 
     /**
@@ -225,7 +233,7 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
     //                                  ERC1155 Internal Functions
     // ===================================================================================================
 
-    function _uri(uint256 id) internal override(ERC1155Inventory, BaseMetadataURI) view returns (string memory) {
+    function _uri(uint256 id) internal override(ERC1155InventoryBase, BaseMetadataURI) view returns (string memory) {
         return BaseMetadataURI._uri(id);
     }
 }

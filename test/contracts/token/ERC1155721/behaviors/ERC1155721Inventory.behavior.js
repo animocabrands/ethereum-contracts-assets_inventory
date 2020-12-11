@@ -8,7 +8,7 @@ const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTo
 
 const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
 
-function shouldBehaveLikeAssetsInventory(
+function shouldBehaveLikeERC1155721Inventory(
   nfMaskLength,
   newABI,
   creator,
@@ -34,7 +34,7 @@ function shouldBehaveLikeAssetsInventory(
   const nft2 = makeNonFungibleTokenId(1, 2, nfMaskLength);
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
-  describe('like an AssetsInventory', function () {
+  describe('like an ERC1155721Inventory', function () {
     beforeEach(async function () {
 
       if (newABI) {
@@ -324,5 +324,5 @@ function shouldBehaveLikeAssetsInventory(
 }
 
 module.exports = {
-  shouldBehaveLikeAssetsInventory,
+    shouldBehaveLikeERC1155721Inventory,
 };
