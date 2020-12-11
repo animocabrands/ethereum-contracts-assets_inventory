@@ -56,10 +56,6 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                         balanceAfter.should.be.bignumber.equal(balanceBefore.subn(1));
                     });
 
-                    it('updates the collection balance', function () {
-                        balanceAfter.should.be.bignumber.equal(balanceBefore.subn(1));
-                    });
-
                     it('updates the nft balance', function () {
                         nftBalanceAfter.should.be.bignumber.equal(nftBalanceBefore.subn(1));
                     });
