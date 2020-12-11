@@ -92,7 +92,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
 
                 context('sent by an approved operator', function () {
                     beforeEach(async function () {
-                        this.token.setApprovalForAll(operator, true, { from: owner });
+                        await this.token.setApprovalForAll(operator, true, { from: owner });
                     });
 
                     burnNft.bind(this, owner, operator, nft)();
@@ -140,7 +140,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
 
                 context('sent by an approved operator', function () {
                     beforeEach(async function () {
-                        this.token.setApprovalForAll(operator, true, { from: owner });
+                        await this.token.setApprovalForAll(operator, true, { from: owner });
                     });
 
                     burnFungible.bind(this, owner, operator, fCollection.id, 3)();
