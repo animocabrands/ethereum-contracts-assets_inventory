@@ -49,7 +49,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
         address sender = _msgSender();
         require((sender == tokenOwner) || _operators[tokenOwner][sender], "Inventory: non-approved sender");
-        _owners[nftId] = uint256(tokenOwner) & _APPROVAL_BIT_TOKEN_OWNER_;
+        _owners[nftId] = uint256(tokenOwner) | _APPROVAL_BIT_TOKEN_OWNER_;
         _nftApprovals[nftId] = to;
         emit Approval(tokenOwner, to, nftId);
     }
