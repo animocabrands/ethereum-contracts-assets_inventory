@@ -23,7 +23,6 @@ function shouldBehaveLikeERC1155BurnableInventory(
         };
         const nfCollection = makeNonFungibleCollectionId(1, nfMaskLength);
         const nft = makeNonFungibleTokenId(1, 1, nfMaskLength);
-        const otherNft = makeNonFungibleTokenId(1, 2, nfMaskLength);
 
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
@@ -31,11 +30,9 @@ function shouldBehaveLikeERC1155BurnableInventory(
             if (newABI) {
                 await this.token.mint(owner, fCollection.id, fCollection.supply, EmptyByte, true, { from: creator });
                 await this.token.mint(owner, nft, 1, EmptyByte, true, { from: creator });
-                await this.token.mint(other, otherNft, 1, EmptyByte, true, { from: creator });
             } else {
                 await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
                 await this.token.mintNonFungible(owner, nft, { from: creator });
-                await this.token.mintNonFungible(other, otherNft, 1, { from: creator });
             }
         });
 
