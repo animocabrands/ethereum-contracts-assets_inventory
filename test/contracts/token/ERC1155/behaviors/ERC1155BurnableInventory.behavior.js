@@ -72,7 +72,10 @@ function shouldBehaveLikeERC1155BurnableInventory(
 
                     it('burns the token', async function () {
                         ownerOf.should.equal(owner);
-                        await expectRevert(this.token.ownerOf(nft), NonExistingNFT_RevertMessage);
+                        await expectRevert(
+                            this.token.ownerOf(nft),
+                            NonExistingNFT_RevertMessage
+                        );
                     });
 
                     // TODO move to ERC1155721
