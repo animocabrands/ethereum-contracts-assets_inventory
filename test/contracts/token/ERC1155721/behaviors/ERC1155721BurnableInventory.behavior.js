@@ -3,15 +3,17 @@ const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').constants;
 
-const NonOwned_RevertMessage = 'ERC1155: transfer of a non-owned NFT';
-const NonApproved_RevertMessage = 'ERC1155: transfer by a non-approved sender';
-
 // TODO check for totalSupply if newABI
 function shouldBehaveLikeERC1155721BurnableInventory(
     nfMaskLength,
     newABI,
     creator,
     [owner, operator, other],
+    [
+        NonOwned_RevertMessage,
+        NonApproved_RevertMessage,
+        NonExistingNFT_RevertMessage,
+    ]
 ) {
     describe('like a burnable ERC1155721Inventory', function () {
 
@@ -76,7 +78,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                         ownerOf.should.equal(owner);
                         await expectRevert(
                             this.token.ownerOf(nft),
-                            "ERC1155: owner of non-existing NFT"
+                            NonExistingNFT_RevertMessage
                         );
                     });
                 }

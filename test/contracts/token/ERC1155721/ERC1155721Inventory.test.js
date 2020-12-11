@@ -36,7 +36,11 @@ describe('ERC1155721Inventory', function () {
   shouldBehaveLikeERC1155MetadataURI(nfMaskLength);
   shouldBehaveLikeERC1155721Inventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155721MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155721BurnableInventory(nfMaskLength, newABI, creator, otherAccounts);
+  shouldBehaveLikeERC1155721BurnableInventory(nfMaskLength, newABI, creator, otherAccounts, [
+    'Inventory: non-owned NFT',
+    'Inventory: non-approved sender',
+    'Inventory: non-existing NFT',
+  ]);
 
   describe('ERC165 interfaces support', function () {
     behaviors.shouldSupportInterfaces([
