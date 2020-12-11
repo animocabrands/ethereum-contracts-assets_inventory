@@ -74,7 +74,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         uint256 value,
         bytes memory data
     ) public virtual override {
-        _transferFrom(from, to, id, value, data, false);
+        _safeTransferFrom(from, to, id, value, data, false);
     }
 
     /**
@@ -568,6 +568,17 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         _transferFrom(from, to, id, value, data, isBatch, _UNUSED_BOOL, _UNUSED_BOOL);
     }
 
+    function _safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bytes memory data,
+        bool isBatch
+    ) internal virtual {
+        _transferFrom(from, to, id, value, data, isBatch, true, _UNUSED_BOOL);
+    }
+
     /**
      * Transfers multiple tokens to another address
      * @dev Reverts if `ids` and `values` have inconsistent lengths.
@@ -599,7 +610,7 @@ abstract contract ERC1155Inventory is IERC1155, IERC1155MetadataURI, IERC1155Inv
         require(_isOperatable(from, sender), "Inventory: non-approved sender");
 
         for (uint256 i = 0; i < length; i++) {
-            _transferFrom(from, to, ids[i], values[i], data, true);
+            _safeTransferFrom(from, to, ids[i], values[i], data, true);
         }
 
         emit TransferBatch(sender, from, to, ids, values);
