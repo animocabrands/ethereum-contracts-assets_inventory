@@ -104,7 +104,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, nft, 1, { from: other }),
-                            NonOwned_RevertMessage
+                            NonApproved_RevertMessage
                         );
                     });
                 });
@@ -160,8 +160,8 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 context('sent more than owned', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(owner, fCollection.id, 11, { from: other }),
-                            NonApproved_RevertMessage
+                            this.token.burnFrom(owner, fCollection.id, 11, { from: operator }),
+                            'SafeMath: subtraction overflow'
                         );
                     });
                 });
