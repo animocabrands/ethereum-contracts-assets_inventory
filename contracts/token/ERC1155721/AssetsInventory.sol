@@ -135,7 +135,7 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
     {
         require(
             operatable || (_nftApprovals[nftId] == _msgSender()),
-            "ERC1155: transfer of a non-owned NFT"
+            "ERC1155: transfer by a non-approved sender"
         );
 
         _nftApprovals[nftId] = address(0);
