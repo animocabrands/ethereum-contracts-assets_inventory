@@ -82,7 +82,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 context('from is not the owner', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(other, nft, 1, { from: owner }),
+                            this.token.burnFrom(other, nft, 1, { from: other }),
                             NonOwned_RevertMessage
                         );
                     });
