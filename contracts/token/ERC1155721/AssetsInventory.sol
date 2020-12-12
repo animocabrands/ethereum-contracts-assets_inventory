@@ -138,6 +138,14 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
             "ERC1155: transfer by a non-approved sender"
         );
 
+        super._transferNonFungible(
+            from,
+            to,
+            nftId,
+            true,
+            burn
+        );
+
         _nftApprovals[nftId] = address(0);
 
         _nftBalances[from] = _nftBalances[from].sub(1);
@@ -147,14 +155,6 @@ abstract contract AssetsInventory is IERC721, IERC721Metadata, ERC1155AssetsInve
         }
 
         emit Transfer(from, to, nftId);
-
-        super._transferNonFungible(
-            from,
-            to,
-            nftId,
-            true,
-            burn
-        );
     }
 
 //////////////////////////////////////// Minting Internal /////////////////////////////////////////
