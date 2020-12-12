@@ -22,7 +22,6 @@ import "./ERC1155InventoryBase.sol";
  */
 abstract contract ERC1155Inventory is ERC1155InventoryBase {
     using Address for address;
-    using SafeMath for uint256;
 
 
     //================================== ERC1155 =======================================/
@@ -72,8 +71,11 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         uint256 value
     ) internal {
         require(value != 0, "Inventory: zero value");
-        _supplies[id] = _supplies[id].add(value);
-        // cannot overflow as supply cannot overflow
+        uint256 supply = _supplies[id];
+        uint256 newSupply = supply + value;
+        require(newSupply > supply, "Inventory: supply overflow");
+        _supplies[id] = newSupply;
+        // cannot overflow as any balance is bounded up by the supply which cannot overflow
         _balances[id][to] += value;
     }
 
@@ -238,7 +240,9 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         uint256 value
     ) internal {
         require(value != 0, "Inventory: zero value");
-        _balances[id][from] = _balances[id][from].sub(value);
+        uint256 balance = _balances[id][from];
+        require(balance >= value, "Inventory: not enough balance");
+        _balances[id][from] = balance - value;
         // cannot overflow as supply cannot overflow
         _balances[id][to] += value;
     }
@@ -406,7 +410,9 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         uint256 value
     ) internal {
         require(value != 0, "Inventory: zero value");
-        _balances[id][from] = _balances[id][from].sub(value);
+        uint256 balance = _balances[id][from];
+        require(balance >= value, "Inventory: not enough balance");
+        _balances[id][from] = balance - value;
         // Cannot underflow
         _supplies[id] -= value;
     }

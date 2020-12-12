@@ -13,6 +13,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
         NonOwned_RevertMessage,
         NonApproved_RevertMessage,
         NonExistingNFT_RevertMessage,
+        InsufficientBalance_RevertMessage,
     ]
 ) {
     describe('like a burnable ERC1155721Inventory', function () {
@@ -158,14 +159,10 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 });
 
                 context('sent more than owned', function () {
-                    // beforeEach(async function () {
-                    //     await this.token.setApprovalForAll(operator, true, { from: owner });
-                    // });
-
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, fCollection.id, 11, { from: owner }),
-                            'SafeMath: subtraction overflow'
+                            InsufficientBalance_RevertMessage,
                         );
                     });
                 });

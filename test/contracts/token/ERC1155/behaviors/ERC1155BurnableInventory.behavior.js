@@ -13,6 +13,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
         NonOwned_RevertMessage,
         NonApproved_RevertMessage,
         NonExistingNFT_RevertMessage,
+        InsufficientBalance_RevertMessage,
     ]
 ) {
     describe('like a burnable ERC1155Inventory', function () {
@@ -175,7 +176,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, fCollection.id, 11, { from: operator }),
-                            'SafeMath: subtraction overflow'
+                            InsufficientBalance_RevertMessage
                         );
                     });
                 });

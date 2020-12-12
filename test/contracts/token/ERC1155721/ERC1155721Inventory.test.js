@@ -4,6 +4,7 @@ const interfaces1155 = require('../../../../src/interfaces/ERC165/ERC1155');
 
 const { shouldBehaveLikeERC721 } = require('../ERC721/behaviors/ERC721.behavior');
 const { shouldBehaveLikeERC721Metadata } = require('../ERC721/behaviors/ERC721Metadata.behavior');
+const { shouldBehaveLikeERC1155 } = require('../ERC1155/behaviors/ERC1155.behavior');
 const { shouldBehaveLikeERC1155Inventory } = require('../ERC1155/behaviors/ERC1155Inventory.behavior');
 const { shouldBehaveLikeERC1155BurnableInventory } = require('../ERC1155/behaviors/ERC1155BurnableInventory.behavior');
 const { shouldBehaveLikeERC1155MintableInventory } = require('../ERC1155/behaviors/ERC1155MintableInventory.behavior');
@@ -26,12 +27,23 @@ describe('ERC1155721Inventory', function () {
 
   shouldBehaveLikeERC721(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC721Metadata(nfMaskLength, "ERC1155721InventoryMock", "INV", true, creator, otherAccounts);
+  shouldBehaveLikeERC1155(newABI, creator, otherAccounts, {
+    NonApproved: 'Inventory: non-approved sender',
+    NonApproved_Batch: 'Inventory: non-approved sender',
+    SelfApproval: 'Inventory: self-approval',
+    ZeroAddress: 'Inventory: zero address',
+    TransferToZero: 'Inventory: transfer to zero',
+    InconsistentArrays: 'Inventory: inconsistent arrays',
+    InsufficientBalance: 'Inventory: not enough balance',
+    TransferRejected: 'Inventory: transfer refused',
+  });
   shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
   shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, creator, otherAccounts, [
     'Inventory: non-owned NFT',
     'Inventory: non-approved sender',
-    'Inventory: non-existing NFT'
+    'Inventory: non-existing NFT',
+    'Inventory: not enough balance'
   ]);
   shouldBehaveLikeERC1155MetadataURI(nfMaskLength);
   shouldBehaveLikeERC1155721Inventory(nfMaskLength, newABI, creator, otherAccounts);
@@ -40,6 +52,7 @@ describe('ERC1155721Inventory', function () {
     'Inventory: non-owned NFT',
     'Inventory: non-approved sender',
     'Inventory: non-existing NFT',
+    'Inventory: not enough balance',
   ]);
 
   describe('ERC165 interfaces support', function () {

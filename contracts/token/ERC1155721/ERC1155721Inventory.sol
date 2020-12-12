@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.8;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./../ERC721/IERC721.sol";
 import "./../ERC721/IERC721Metadata.sol";
@@ -13,7 +13,7 @@ import "./../ERC1155/ERC1155InventoryBase.sol";
  * @title ERC1155721Inventory, an ERC1155Inventory with additional support for ERC721.
  */
 abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155InventoryBase {
-    using SafeMath for uint256;
+    // using SafeMath for uint256;
     using Address for address;
 
     //bytes4(keccak256("supportsInterface(byte4)"))
@@ -142,7 +142,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 value
     ) internal {
         require(value != 0, "Inventory: zero value");
-        _supplies[id] = _supplies[id].add(value);
+        uint256 supply = _supplies[id];
+        uint256 newSupply = supply + value;
+        require(newSupply > supply, "Inventory: supply overflow");
+        _supplies[id] = newSupply;
         // cannot overflow as supply cannot overflow
         _balances[id][to] += value;
     }
@@ -337,7 +340,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     ) internal {
         require(operatable, "Inventory: non-approved sender");
         require(value != 0, "Inventory: zero value");
-        _balances[id][from] = _balances[id][from].sub(value);
+        uint256 balance = _balances[id][from];
+        require(balance >= value, "Inventory: not enough balance");
+        _balances[id][from] = balance - value;
         // cannot overflow as supply cannot overflow
         _balances[id][to] += value;
     }
@@ -584,7 +589,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     ) internal {
         require(value != 0, "Inventory: zero value");
         require(operatable, "Inventory: non-approved sender");
-        _balances[id][from] = _balances[id][from].sub(value);
+        uint256 balance = _balances[id][from];
+        require(balance >= value, "Inventory: not enough balance");
+        _balances[id][from] = balance - value;
         // Cannot underflow
         _supplies[id] -= value;
     }
