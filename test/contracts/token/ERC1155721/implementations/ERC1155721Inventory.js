@@ -1,4 +1,5 @@
 module.exports = {
+    contract: "ERC1155721InventoryMock",
     newABI: true,
     nfMaskLength: 32,
     name: "ERC1155721InventoryMock",

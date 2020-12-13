@@ -5,11 +5,8 @@ const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').cons
 
 // TODO check for totalSupply if newABI
 function shouldBehaveLikeERC1155721BurnableInventory(
-    nfMaskLength,
-    newABI,
-    creator,
-    [owner, operator, other],
-    revertMessages,
+    {nfMaskLength, newABI, revertMessages},
+    [creator, owner, operator, other],
 ) {
     describe('like a burnable ERC1155721Inventory', function () {
 

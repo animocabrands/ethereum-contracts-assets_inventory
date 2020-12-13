@@ -10,9 +10,8 @@ const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metada
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
 
 function shouldBehaveLikeERC721(
-  nfMaskLength,
-  newABI,
-  creator, [owner, approved, anotherApproved, operator, other]
+  {nfMaskLength, newABI},
+  [creator, owner, approved, anotherApproved, operator, other]
 ) {
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);

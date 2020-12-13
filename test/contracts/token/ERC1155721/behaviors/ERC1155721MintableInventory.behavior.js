@@ -10,15 +10,13 @@ const {
     getNonFungibleBaseCollectionId
 } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
+// TODO add specific 1155721 receiver logic on minting
 const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
 
 function shouldBehaveLikeERC1155721MintableInventory(
-    nfMaskLength,
-    newABI,
-    creator,
-    [minter, nonMinter, owner, newOwner, approved]
+    {nfMaskLength, newABI},
+    [creator, minter, nonMinter, owner, newOwner, approved]
 ) {
-
     const fCollection1 = makeFungibleCollectionId(1);
     const fCollection2 = makeFungibleCollectionId(2);
     const fCollection3 = makeFungibleCollectionId(3);

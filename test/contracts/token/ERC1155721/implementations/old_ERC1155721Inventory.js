@@ -1,4 +1,5 @@
 module.exports = {
+    contract: "BurnableInventoryMock",
     newABI: false,
     nfMaskLength: 32,
     name: "AssetsInventoryMock",

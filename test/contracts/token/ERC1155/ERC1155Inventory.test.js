@@ -8,22 +8,21 @@ const { shouldBehaveLikeERC1155MintableInventory } = require('./behaviors/ERC115
 const { shouldBehaveLikeERC1155BurnableInventory } = require('./behaviors/ERC1155BurnableInventory.behavior');
 const { shouldBehaveLikeERC1155MetadataURI } = require('./behaviors/ERC1155MetadataURI.behavior');
 
-const ERC1155Inventory = contract.fromArtifact('ERC1155InventoryMock');
-const impl = require('./implementations/ERC1155Inventory');
+const implementation = require('./implementations/ERC1155Inventory');
+const ERC1155Inventory = contract.fromArtifact(implementation.contract);
 
 describe('ERC1155Inventory', function () {
-  const [creator, ...otherAccounts] = accounts;
+  const [creator] = accounts;
 
   beforeEach(async function () {
     this.token = await ERC1155Inventory.new({ from: creator });
   });
 
-  shouldBehaveLikeERC1155(impl.newABI, creator, otherAccounts, impl.revertMessages);
-  shouldBehaveLikeERC1155Inventory(impl.nfMaskLength, impl.newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(impl.nfMaskLength, impl.newABI, creator, otherAccounts);
-
-  shouldBehaveLikeERC1155BurnableInventory(impl.nfMaskLength, impl.newABI, creator, otherAccounts, impl.revertMessages);
-  shouldBehaveLikeERC1155MetadataURI(impl.nfMaskLength);
+  shouldBehaveLikeERC1155(implementation, accounts);
+  shouldBehaveLikeERC1155Inventory(implementation, accounts);
+  shouldBehaveLikeERC1155MintableInventory(implementation, accounts);
+  shouldBehaveLikeERC1155BurnableInventory(implementation, accounts);
+  shouldBehaveLikeERC1155MetadataURI(implementation, accounts);
 
   describe('ERC165 interfaces support', function () {
     behaviors.shouldSupportInterfaces([

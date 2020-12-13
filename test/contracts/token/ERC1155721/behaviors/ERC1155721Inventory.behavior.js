@@ -9,10 +9,8 @@ const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTo
 const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
 
 function shouldBehaveLikeERC1155721Inventory(
-  nfMaskLength,
-  newABI,
-  creator,
-  [owner, approved, operator, other]
+  {nfMaskLength, newABI},
+  [creator, owner, approved, operator, other]
 ) {
 
   const fCollection1 = {

@@ -1,4 +1,5 @@
 module.exports = {
+    contract: "ERC1155BurnableInventoryMock",
     newABI: false,
     nfMaskLength: 32,
     revertMessages: {

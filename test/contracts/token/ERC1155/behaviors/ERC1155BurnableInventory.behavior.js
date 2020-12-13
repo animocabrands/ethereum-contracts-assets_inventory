@@ -5,11 +5,8 @@ const { ZeroAddress, EmptyByte } = require('@animoca/ethereum-contracts-core_lib
 
 // TODO, checks for totalSupply if new ABI
 function shouldBehaveLikeERC1155BurnableInventory(
-    nfMaskLength,
-    newABI,
-    creator,
-    [owner, operator, other],
-    revertMessages
+    {nfMaskLength, newABI, revertMessages},
+    [creator, owner, operator, other],
 ) {
     describe('like a burnable ERC1155Inventory', function () {
 

@@ -5,7 +5,8 @@ const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
 function shouldBehaveLikeERC1155PausableInventory(
-    nfMaskLength, creator, [owner, recipient, operator]
+    {nfMaskLength},
+    [creator, owner, recipient, operator]
 ) {
 
     const mockData = '0x42';

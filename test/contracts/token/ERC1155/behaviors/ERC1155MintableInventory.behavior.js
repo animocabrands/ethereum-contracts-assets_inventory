@@ -14,10 +14,8 @@ const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
 
 // TODO, checks for totalSupply if new ABI
 function shouldBehaveLikeERC1155MintableInventory(
-    nfMaskLength,
-    newABI,
-    creator,
-    [minter, nonMinter, owner, newOwner, approved]
+    {nfMaskLength, newABI},
+    [creator, minter, nonMinter, owner, newOwner, approved]
 ) {
 
     const fCollection1 = makeFungibleCollectionId(1);

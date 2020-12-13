@@ -1,15 +1,15 @@
 const { contract, accounts } = require('@openzeppelin/test-environment');
 const { shouldBehaveLikeERC1155PausableInventory } = require('../ERC1155/behaviors/ERC1155PausableInventory.behavior');
 
-const PausableInventory = contract.fromArtifact('PausableInventoryMock');
+const implementation = require('./implementations/old_ERC1155721PausableInventory');
+const PausableInventory = contract.fromArtifact(implementation.contract);
 
 describe('old_ERC1155721PausableInventory', function () {
   const [creator, ...otherAccounts] = accounts;
-  const nfMaskLength = 32;
 
   beforeEach(async function () {
-    this.token = await PausableInventory.new(nfMaskLength, { from: creator });
+    this.token = await PausableInventory.new(implementation.nfMaskLength, { from: creator });
   });
 
-  shouldBehaveLikeERC1155PausableInventory(nfMaskLength, creator, otherAccounts);
+  shouldBehaveLikeERC1155PausableInventory(implementation, accounts);
 });

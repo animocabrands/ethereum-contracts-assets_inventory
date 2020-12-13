@@ -6,12 +6,8 @@ const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
 const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 
 function shouldBehaveLikeERC721Metadata(
-    nfMaskLength,
-    name,
-    symbol,
-    newABI,
-    creator,
-    [owner]
+    {nfMaskLength, name, symbol, newABI},
+    [creator, owner],
 ) {
 
     const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);

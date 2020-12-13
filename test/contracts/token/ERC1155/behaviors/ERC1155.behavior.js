@@ -9,10 +9,8 @@ const { expect } = require('chai');
 const ERC1155ReceiverMock = contract.fromArtifact('ERC1155TokenReceiverMock');
 
 function shouldBehaveLikeERC1155 (
-    newABI,
-    minter,
-    [creator, firstTokenHolder, secondTokenHolder, multiTokenHolder, recipient, proxy],
-    revertMessages
+    {newABI, revertMessages},
+    [minter, firstTokenHolder, secondTokenHolder, multiTokenHolder, recipient, proxy],
   ) {
   const firstTokenId = new BN(1);
   const secondTokenId = new BN(2);

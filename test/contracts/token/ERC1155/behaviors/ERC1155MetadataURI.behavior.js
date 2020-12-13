@@ -3,7 +3,8 @@ const { behaviors } = require('@animoca/ethereum-contracts-core_library');
 const interfaces = require('../../../../../src/interfaces/ERC165/ERC1155');
 
 function shouldBehaveLikeERC1155MetadataURI(
-    nfMaskLength
+  {nfMaskLength},
+  [_]
 ) {
 
     const fCollection = makeFungibleCollectionId(1);

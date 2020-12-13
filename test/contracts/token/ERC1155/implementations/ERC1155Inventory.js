@@ -1,4 +1,5 @@
 module.exports = {
+    contract: "ERC1155InventoryMock",
     newABI: true,
     nfMaskLength: 32,
     revertMessages: {
