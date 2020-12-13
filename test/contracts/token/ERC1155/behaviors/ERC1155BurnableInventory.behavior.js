@@ -9,12 +9,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
     newABI,
     creator,
     [owner, operator, other],
-    [
-        NonOwned_RevertMessage,
-        NonApproved_RevertMessage,
-        NonExistingNFT_RevertMessage,
-        InsufficientBalance_RevertMessage,
-    ]
+    revertMessages
 ) {
     describe('like a burnable ERC1155Inventory', function () {
 
@@ -75,7 +70,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
                         ownerOf.should.equal(owner);
                         await expectRevert(
                             this.token.ownerOf(nft),
-                            NonExistingNFT_RevertMessage
+                            revertMessages.NonExistingNFT
                         );
                     });
 
@@ -94,7 +89,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(other, nft, 1, { from: other }),
-                            NonOwned_RevertMessage
+                            revertMessages.NonOwnedNFT
                         );
                     });
                 });
@@ -115,7 +110,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, nft, 1, { from: other }),
-                            NonApproved_RevertMessage
+                            revertMessages.NonApproved
                         );
                     });
                 });
@@ -163,7 +158,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, fCollection.id, 4, { from: other }),
-                            NonApproved_RevertMessage
+                            revertMessages.NonApproved
                         );
                     });
                 });
@@ -176,7 +171,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, fCollection.id, 11, { from: operator }),
-                            InsufficientBalance_RevertMessage
+                            revertMessages.InsufficientBalance
                         );
                     });
                 });

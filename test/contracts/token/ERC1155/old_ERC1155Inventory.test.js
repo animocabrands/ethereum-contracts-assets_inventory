@@ -9,35 +9,20 @@ const { shouldBehaveLikeERC1155MintableInventory } = require('./behaviors/ERC115
 const { shouldBehaveLikeERC1155MetadataURI } = require('./behaviors/ERC1155MetadataURI.behavior');
 
 const ERC1155BurnableInventory = contract.fromArtifact('ERC1155BurnableInventoryMock');
-const newABI = false;
+const impl = require('./implementations/old_ERC1155Inventory');
 
 describe('old_ERC1155Inventory', function () {
   const [creator, ...otherAccounts] = accounts;
-  const nfMaskLength = 32;
 
   beforeEach(async function () {
-    this.token = await ERC1155BurnableInventory.new(nfMaskLength, { from: creator });
+    this.token = await ERC1155BurnableInventory.new(impl.nfMaskLength, { from: creator });
   });
 
-  shouldBehaveLikeERC1155(newABI, creator, otherAccounts, {
-    NonApproved: 'ERC1155: transfer by a non-approved sender',
-    NonApproved_Batch: 'AssetsInventory: transfer by a non-approved sender',
-    SelfApproval: 'ERC1155: setting approval to caller',
-    ZeroAddress: 'ERC1155: balance of the zero address',
-    TransferToZero: 'ERC1155: transfer to the zero address',
-    InconsistentArrays: 'ERC1155: inconsistent array lengths',
-    InsufficientBalance: 'SafeMath: subtraction overflow',
-    TransferRejected: 'ERC1155: receiver contract refused the transfer',
-  });
-  shouldBehaveLikeERC1155Inventory(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155MintableInventory(nfMaskLength, newABI, creator, otherAccounts);
-  shouldBehaveLikeERC1155BurnableInventory(nfMaskLength, newABI, creator, otherAccounts, [
-    'ERC1155: transfer of a non-owned NFT',
-    'ERC1155: transfer by a non-approved sender',
-    'ERC1155: owner of non-existing NFT',
-    'SafeMath: subtraction overflow'
-  ]);
-  shouldBehaveLikeERC1155MetadataURI(nfMaskLength);
+  shouldBehaveLikeERC1155(impl.newABI, creator, otherAccounts, impl.revertMessages);
+  shouldBehaveLikeERC1155Inventory(impl.nfMaskLength, impl.newABI, creator, otherAccounts);
+  shouldBehaveLikeERC1155MintableInventory(impl.nfMaskLength, impl.newABI, creator, otherAccounts);
+  shouldBehaveLikeERC1155BurnableInventory(impl.nfMaskLength, impl.newABI, creator, otherAccounts, impl.revertMessages);
+  shouldBehaveLikeERC1155MetadataURI(impl.nfMaskLength);
 
   describe('ERC165 interfaces support', function () {
     behaviors.shouldSupportInterfaces([
