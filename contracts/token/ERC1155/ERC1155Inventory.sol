@@ -153,9 +153,9 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 
-        uint256 nfCollectionId = 0;
-        uint256 nfCollectionCount = 0;
-        for (uint256 i = 0; i < length; i++) {
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
@@ -300,9 +300,9 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         address sender = _msgSender();
         require(_isOperatable(from, sender), "Inventory: non-approved sender");
 
-        uint256 nfCollectionId = 0;
-        uint256 nfCollectionCount = 0;
-        for (uint256 i = 0; i < length; i++) {
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
@@ -432,9 +432,9 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         address sender = _msgSender();
         require(_isOperatable(from, sender), "Inventory: non-approved sender");
 
-        uint256 nfCollectionId = 0;
-        uint256 nfCollectionCount = 0;
-        for (uint256 i = 0; i < length; i++) {
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {

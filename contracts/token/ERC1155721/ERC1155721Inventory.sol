@@ -260,10 +260,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 
-        uint256 nfCollectionId = 0;
-        uint256 nfCollectionCount = 0;
-        uint256 nftsCount = 0;
-        for (uint256 i = 0; i < length; i++) {
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        uint256 nftsCount;
+        for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
@@ -483,10 +483,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        uint256 nfCollectionId = 0;
-        uint256 nfCollectionCount = 0;
-        uint256 nftsCount = 0;
-        for (uint256 i = 0; i < length; i++) {
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        uint256 nftsCount;
+        for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             if (isFungible(id)) {
                 _transferFungible(from, to, id, values[i], operatable); 
@@ -629,10 +629,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        uint256 nfCollectionId = 0;
-        uint256 nfCollectionCount = 0;
-        uint256 nftsCount = 0;
-        for (uint256 i = 0; i < length; i++) {
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        uint256 nftsCount;
+        for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             if (isFungible(id)) {
                 _burnFungible(from, id, values[i], operatable); 
