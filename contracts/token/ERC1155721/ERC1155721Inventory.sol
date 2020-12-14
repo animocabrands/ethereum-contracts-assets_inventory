@@ -62,13 +62,13 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     //========================== ERC1155Inventory (Optimised Transfer) ================================/
 
-    function sameNFTCollectionSafeBatchTransferFrom(
+    function safeBatchTransferFromNFTs(
         address from,
         address to,
         uint256[] memory nftIds,
         bytes memory data
     ) public virtual {
-        _sameNFTCollectionSafeBatchTransferFrom(from, to, nftIds, data);
+        _safeBatchTransferFromNFTs(from, to, nftIds, data);
     }
 
     //===================================== ERC721 ==========================================/
@@ -150,7 +150,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         _balances[id][to] += value;
     }
 
-    function _mintNonFungible(
+    function _mintNFT(
         address to,
         uint256 id,
         uint256 value,
@@ -180,6 +180,40 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     //================================== Minting Internal Functions =======================================/
 
     /**
+     * Mints an NFT.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if `id` does not represent a non-fungible token.
+     * @dev Reverts if `safe` is true, the receiver is a contract and the receiver call fails or is refused.
+     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @param to Address of the new token owner.
+     * @param nftId Identifier of the token to transfer.
+     * @param data Optional data to pass to the receiver contract.
+     * @param safe Whether this is a safe transfer.
+     */
+    function _mint_ERC721(
+        address to,
+        uint256 nftId,
+        bytes memory data,
+        bool safe
+    ) internal {
+        require(to != address(0), "Inventory: transfer to zero");
+        require(isNFT(nftId), "Inventory: not an NFT");
+
+        _mintNFT(to, nftId, 1, false, false);
+
+        emit Transfer(address(0), to, nftId);
+        emit TransferSingle(_msgSender(), address(0), to, nftId, 1);
+        if (to.isContract()) {
+            if (_isERC1155TokenReceiver(to)) {
+                _callOnERC1155Received(address(0), to, nftId, 1, data);
+            } else if (safe) {
+                _callOnERC721Received(address(0), to, nftId, data);
+            }
+        }
+    }
+
+    /**
      * Mints some token.
      * @dev Reverts if `isBatch` is false and `to` is the zero address.
      * @dev Reverts if `id` represents a non-fungible collection.
@@ -193,15 +227,13 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
      * @param data Optional data to send along to a receiver contract.
-     * @param safe Whether to call the receiver contract.
      * @param isBatch Whether this function is called by `_batchMint`.
      */
-    function _mint(
+    function _safeMint(
         address to,
         uint256 id,
         uint256 value,
         bytes memory data,
-        bool safe,
         bool isBatch
     ) internal virtual {
         if (!isBatch) {
@@ -211,7 +243,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         if (isFungible(id)) {
             _mintFungible(to, id, value);
         } else if (id & _NF_TOKEN_MASK != 0) {
-            _mintNonFungible(to, id, value, false, isBatch);
+            _mintNFT(to, id, value, false, isBatch);
             emit Transfer(address(0), to, id);
         } else {
             revert("Inventory: not a token id");
@@ -219,18 +251,11 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
         if (!isBatch) {
             emit TransferSingle(sender, address(0), to, id, value);
-
-            if (safe && to.isContract()) {
-                if (_isERC1155TokenReceiver(to)) {
-                    _callOnERC1155Received(address(0), to, id, value, data);
-                } else {
-                    _callOnERC721Received(address(0), to, id, data);
-                }
+            if (to.isContract()) {
+                _callOnERC1155Received(address(0), to, id, value, data);
             }
         }
     }
-
-    //================================== Minting Internal Functions =======================================/
 
     /**
      * Mints a batch of tokens.
@@ -247,14 +272,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param ids Identifiers of the tokens to mint.
      * @param values Amounts of tokens to mint.
      * @param data Optional data to send along to a receiver contract.
-     * @param safe Whether to call the receiver contract.
      */
-    function _batchMint(
+    function _safeBatchMint(
         address to,
         uint256[] memory ids,
         uint256[] memory values,
-        bytes memory data,
-        bool safe
+        bytes memory data
     ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         uint256 length = ids.length;
@@ -263,7 +286,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 mintedNFTs = 0;
         for (uint256 i = 0; i < length; i++) {
             uint256 id = ids[i];
-            _mint(to, id, values[i], data, safe, true);
+            _safeMint(to, id, values[i], data, true);
             if (isNFT(id)) {
                 mintedNFTs += 1;
             }
@@ -275,7 +298,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
 
         emit TransferBatch(_msgSender(), address(0), to, ids, values);
-        if (safe && to.isContract()) {
+        if (to.isContract()) {
             _callOnERC1155BatchReceived(address(0), to, ids, values, data);
         }
     }
@@ -291,13 +314,11 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param to Address of the new tokens owner.
      * @param nftIds Identifiers of the tokens to mint.
      * @param data Optional data to send along to a receiver contract.
-     * @param safe Whether to call the receiver contract.
      */
-    function _sameNFTCollectionBatchMint(
+    function _safeBatchMintNFTs(
         address to,
         uint256[] memory nftIds,
-        bytes memory data,
-        bool safe
+        bytes memory data
     ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         uint256 length = nftIds.length;
@@ -307,13 +328,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 collectionId;
         for (uint256 i = 0; i < length; i++) {
             uint256 nftId = nftIds[i];
+            require(isNFT(nftId), "Inventory: not an NFT");
             if (i == 0) {
                 collectionId = nftId & _NF_COLLECTION_MASK;
             } else {
                 require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
             }
             values[i] = 1;
-            _mintNonFungible(to, nftId, 1, true, true);
+            _mintNFT(to, nftId, 1, true, true);
             emit Transfer(address(0), to, nftId);
         }
 
@@ -324,12 +346,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         _nftBalances[to] += length;
 
         emit TransferBatch(sender, address(0), to, nftIds, values);
-        if (safe && to.isContract()) {
+        if (to.isContract()) {
             _callOnERC1155BatchReceived(address(0), to, nftIds, values, data);
         }
     }
 
-    //================================== Minting Core Internal Helpers =======================================/
+    //================================== Transfer Core Internal Helpers =======================================/
 
     function _transferFungible(
         address from,
@@ -347,7 +369,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         _balances[id][to] += value;
     }
 
-    function _transferNonFungible(
+    function _transferNFT(
         address from,
         address to,
         uint256 id,
@@ -385,7 +407,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     //============================== Transfer Internal Functions =======================================/
 
     /**
-     * Transfers tokens to another address.
+     * Transfers an NFT to another address.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if `id` does not represent a non-fungible token.
@@ -395,31 +417,31 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @param from Current token owner.
      * @param to Address of the new token owner.
-     * @param id Identifier of the token to transfer.
+     * @param nftId Identifier of the token to transfer.
      * @param data Optional data to pass to the receiver contract.
      * @param safe Whether this is a safe transfer.
      */
     function _transferFrom_ERC721(
         address from,
         address to,
-        uint256 id,
+        uint256 nftId,
         bytes memory data,
         bool safe
     ) internal {
         require(to != address(0), "Inventory: transfer to zero");
+        require(isNFT(nftId), "Inventory: not an NFT");
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        require(isNFT(id), "Inventory: not an NFT");
-        _transferNonFungible(from, to, id, 1, false, false, operatable);
+        _transferNFT(from, to, nftId, 1, false, false, operatable);
 
-        emit Transfer(from, to, id);
-        emit TransferSingle(sender, from, to, id, 1);
+        emit Transfer(from, to, nftId);
+        emit TransferSingle(sender, from, to, nftId, 1);
         if (to.isContract()) {
             if (_isERC1155TokenReceiver(to)) {
-                _callOnERC1155Received(from, to, id, 1, data);
+                _callOnERC1155Received(from, to, nftId, 1, data);
             } else if (safe) {
-                _callOnERC721Received(from, to, id, data);
+                _callOnERC721Received(from, to, nftId, data);
             }
         }
     }
@@ -460,7 +482,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         if (isFungible(id)) {
             _transferFungible(from, to, id, value, operatable);
         } else if (id & _NF_TOKEN_MASK != 0) {
-            _transferNonFungible(from, to, id, value, false, isBatch, operatable);
+            _transferNFT(from, to, id, value, false, isBatch, operatable);
             emit Transfer(from, to, id);
         } else {
             revert("Inventory: not a token id");
@@ -534,10 +556,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if two of `nftIds` have a different collection.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new tokens owner.
-     * @param nftIds Identifiers of the non-fungible tokens to mint.
+     * @param nftIds Identifiers of the non-fungible tokens to transfer.
      * @param data Optional data to send along to a receiver contract.
      */
-    function _sameNFTCollectionSafeBatchTransferFrom(
+    function _safeBatchTransferFromNFTs(
         address from,
         address to,
         uint256[] memory nftIds,
@@ -553,13 +575,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 collectionId;
         for (uint256 i = 0; i < length; i++) {
             uint256 nftId = nftIds[i];
+            require(isNFT(nftId), "Inventory: not an NFT");
             if (i == 0) {
                 collectionId = nftId & _NF_COLLECTION_MASK;
             } else {
                 require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
             }
             values[i] = 1;
-            _transferNonFungible(from, to, nftId, 1, true, true, operatable);
+            _transferNFT(from, to, nftId, 1, true, true, operatable);
             emit Transfer(from, to, nftId);
         }
 
@@ -596,7 +619,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         _supplies[id] -= value;
     }
 
-    function _burnNonFungible(
+    function _burnNFT(
         address from,
         uint256 id,
         uint256 value,
@@ -658,7 +681,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         if (isFungible(id)) {
             _burnFungible(from, id, value, operatable);
         } else if (id & _NF_TOKEN_MASK != 0) {
-            _burnNonFungible(from, id, value, false, isBatch, operatable);
+            _burnNFT(from, id, value, false, isBatch, operatable);
             emit Transfer(from, address(0), id);
         } else {
             revert("Inventory: not a token id");
@@ -717,10 +740,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if one of `nftIds` is not owned by `from`.
      * @dev Reverts if there are different collections for `nftIds`.
      * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param from address address that will own the minted tokens
-     * @param nftIds uint256[] identifiers of the tokens to be minted
+     * @param from address address that will own the tokens to burn.
+     * @param nftIds uint256[] identifiers of the tokens to burn.
      */
-    function _sameNFTCollectionBatchBurnFrom(address from, uint256[] memory nftIds) internal virtual {
+    function _batchBurnFromNFTs(address from, uint256[] memory nftIds) internal virtual {
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
@@ -730,13 +753,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 collectionId;
         for (uint256 i = 0; i < length; i++) {
             uint256 nftId = nftIds[i];
+            require(isNFT(nftId), "Inventory: not an NFT");
             if (i == 0) {
                 collectionId = nftId & _NF_COLLECTION_MASK;
             } else {
                 require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
             }
             values[i] = 1;
-            _burnNonFungible(from, nftId, 1, true, true, operatable);
+            _burnNFT(from, nftId, 1, true, true, operatable);
             emit Transfer(from, address(0), nftId);
         }
 

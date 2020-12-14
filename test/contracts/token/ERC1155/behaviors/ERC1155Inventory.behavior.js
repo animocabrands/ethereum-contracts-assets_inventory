@@ -10,7 +10,7 @@ const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTo
 const ERC1155TokenReceiverMock = contract.fromArtifact('ERC1155TokenReceiverMock');
 
 function shouldBehaveLikeERC1155Inventory(
-  {nfMaskLength, newABI},
+  {nfMaskLength, mint},
   [creator, owner, operator, other]
 ) {
   const fCollection1 = {
@@ -41,21 +41,12 @@ function shouldBehaveLikeERC1155Inventory(
   // TODO, checks for totalSupply if new ABI
   describe('like an ERC1155Inventory', function () {
     beforeEach(async function () {
-        if (newABI) {
-            await this.token.mint(owner, fCollection1.id, fCollection1.supply, EmptyByte, true, { from: creator });
-            await this.token.mint(owner, fCollection2.id, fCollection2.supply, EmptyByte, true, { from: creator });
-            await this.token.mint(owner, fCollection3.id, fCollection3.supply, EmptyByte, true, { from: creator });
-            await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: creator });
-            await this.token.mint(owner, nft2, 1, EmptyByte, true, { from: creator });
-            await this.token.mint(owner, nft3, 1, EmptyByte, true, { from: creator }); 
-        } else {
-            await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
-            await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
-            await this.token.mintFungible(owner, fCollection3.id, fCollection3.supply, { from: creator });
-            await this.token.mintNonFungible(owner, nft1, { from: creator });
-            await this.token.mintNonFungible(owner, nft2, { from: creator });
-            await this.token.mintNonFungible(owner, nft3, { from: creator });
-        }
+      await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+      await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
+      await mint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', { from: creator });
+      await mint(this.token, owner, nft1, 1, '0x', { from: creator });
+      await mint(this.token, owner, nft2, 1, '0x', { from: creator });
+      await mint(this.token, owner, nft3, 1, '0x', { from: creator }); 
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 

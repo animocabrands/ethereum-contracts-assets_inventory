@@ -5,7 +5,7 @@ const { ZeroAddress, EmptyByte } = require('@animoca/ethereum-contracts-core_lib
 
 // TODO, checks for totalSupply if new ABI
 function shouldBehaveLikeERC1155BurnableInventory(
-    {nfMaskLength, newABI, revertMessages},
+    {nfMaskLength, revertMessages, mint},
     [creator, owner, operator, other],
 ) {
     describe('like a burnable ERC1155Inventory', function () {
@@ -20,13 +20,8 @@ function shouldBehaveLikeERC1155BurnableInventory(
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
             await this.token.createCollection(nfCollection, { from: creator });
-            if (newABI) {
-                await this.token.mint(owner, fCollection.id, fCollection.supply, EmptyByte, true, { from: creator });
-                await this.token.mint(owner, nft, 1, EmptyByte, true, { from: creator });
-            } else {
-                await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
-                await this.token.mintNonFungible(owner, nft, { from: creator });
-            }
+            await mint(this.token, owner, fCollection.id, fCollection.supply, '0x', { from: creator });
+            await mint(this.token, owner, nft, 1, '0x', { from: creator });
         });
 
         describe('burnFrom', function () {

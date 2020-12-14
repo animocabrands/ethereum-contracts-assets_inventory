@@ -9,7 +9,7 @@ const { expect } = require('chai');
 const ERC1155ReceiverMock = contract.fromArtifact('ERC1155TokenReceiverMock');
 
 function shouldBehaveLikeERC1155 (
-    {newABI, revertMessages},
+    {revertMessages, mint},
     [minter, firstTokenHolder, secondTokenHolder, multiTokenHolder, recipient, proxy],
   ) {
   const firstTokenId = new BN(1);
@@ -49,33 +49,18 @@ function shouldBehaveLikeERC1155 (
 
       context('when accounts own some tokens', function () {
         beforeEach(async function () {
-            if (newABI) {
-                await this.token.mint(firstTokenHolder, firstTokenId, firstAmount, '0x', true, {
+            await mint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
+                from: minter,
+            });
+            await mint(
+                this.token,
+                secondTokenHolder,
+                secondTokenId,
+                secondAmount,
+                '0x',
+                {
                     from: minter,
-                  });
-                  await this.token.mint(
-                    secondTokenHolder,
-                    secondTokenId,
-                    secondAmount,
-                    '0x',
-                    true,
-                    {
-                      from: minter,
-                    },
-                  );
-            } else {
-                await this.token.mintFungible(firstTokenHolder, firstTokenId, firstAmount, {
-                    from: minter,
-                  });
-                  await this.token.mintFungible(
-                    secondTokenHolder,
-                    secondTokenId,
-                    secondAmount,
-                    {
-                      from: minter,
-                    },
-                  );
-            }
+                });
         });
 
         it('returns the amount of tokens owned by the given addresses', async function () {
@@ -141,34 +126,19 @@ function shouldBehaveLikeERC1155 (
 
       context('when accounts own some tokens', function () {
         beforeEach(async function () {
-            if (newABI) {
-                await this.token.mint(firstTokenHolder, firstTokenId, firstAmount, '0x', true, {
+            await mint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
+                from: minter,
+            });
+            await mint(
+                this.token,
+                secondTokenHolder,
+                secondTokenId,
+                secondAmount,
+                '0x',
+                {
                     from: minter,
-                  });
-                  await this.token.mint(
-                    secondTokenHolder,
-                    secondTokenId,
-                    secondAmount,
-                    '0x',
-                    true,
-                    {
-                      from: minter,
-                    },
-                  );
-            } else {
-                await this.token.mintFungible(firstTokenHolder, firstTokenId, firstAmount, {
-                    from: minter,
-                  });
-                  await this.token.mintFungible(
-                    secondTokenHolder,
-                    secondTokenId,
-                    secondAmount,
-                    {
-                      from: minter,
-                    },
-                  );
-            }
-
+                },
+            );
         });
 
         it('returns amounts owned by each account in order passed', async function () {
@@ -225,33 +195,19 @@ function shouldBehaveLikeERC1155 (
 
     describe('safeTransferFrom', function () {
       beforeEach(async function () {
-          if (newABI) {
-            await this.token.mint(multiTokenHolder, firstTokenId, firstAmount, '0x', true, {
+        await mint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
+            from: minter,
+        });
+
+        await mint(
+            this.token,
+            multiTokenHolder,
+            secondTokenId,
+            secondAmount,
+            '0x',
+            {
                 from: minter,
-              });
-              await this.token.mint(
-                multiTokenHolder,
-                secondTokenId,
-                secondAmount,
-                '0x',
-                true,
-                {
-                  from: minter,
-                },
-              );
-          } else {
-            await this.token.mintFungible(multiTokenHolder, firstTokenId, firstAmount, {
-                from: minter,
-              });
-              await this.token.mintFungible(
-                multiTokenHolder,
-                secondTokenId,
-                secondAmount,
-                {
-                  from: minter,
-                },
-              );
-          }
+            });
       });
 
       it('reverts when transferring more than balance', async function () {
@@ -468,34 +424,18 @@ function shouldBehaveLikeERC1155 (
 
     describe('safeBatchTransferFrom', function () {
       beforeEach(async function () {
-          if (newABI) {
-            await this.token.mint(multiTokenHolder, firstTokenId, firstAmount, '0x', true, {
+        await mint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
+            from: minter,
+            });
+        await mint(
+            this.token,
+            multiTokenHolder,
+            secondTokenId,
+            secondAmount,
+            '0x',
+            {
                 from: minter,
-              });
-              await this.token.mint(
-                multiTokenHolder,
-                secondTokenId,
-                secondAmount,
-                '0x',
-                true,
-                {
-                  from: minter,
-                },
-              );
-          } else {
-            await this.token.mintFungible(multiTokenHolder, firstTokenId, firstAmount, {
-                from: minter,
-              });
-              await this.token.mintFungible(
-                multiTokenHolder,
-                secondTokenId,
-                secondAmount,
-                {
-                  from: minter,
-                },
-              );
-          }
-
+            });
       });
 
       it('reverts when transferring amount more than any of balances', async function () {

@@ -1,6 +1,21 @@
+const mint_ERC721 = async function(contract, to, nftId, overrides) {
+    return contract.mint(to, nftId, overrides);
+};
+
+const safeMint_ERC721 = async function(contract, to, nftId, data, overrides) {
+    return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
+};
+
+const safeMint = async function(contract, to, id, value, data, overrides) {
+    return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, data, overrides);
+};
+
+const safeBatchMint = async function(contract, to, ids, values, data, overrides) {
+    return contract.safeBatchMint(to, ids, values, data, overrides);
+};
+
 module.exports = {
     contract: "ERC1155721InventoryMock",
-    newABI: true,
     nfMaskLength: 32,
     name: "ERC1155721InventoryMock",
     symbol: "INV",
@@ -16,4 +31,10 @@ module.exports = {
         NonExistingNFT: "Inventory: non-existing NFT",
         NonOwnedNFT: "Inventory: non-owned NFT",
     },
+    mint_ERC721,
+    safeMint_ERC721,
+    safeMint,
+    safeBatchMint,
+    mint: safeMint,
+    batchMint: safeBatchMint,
 };

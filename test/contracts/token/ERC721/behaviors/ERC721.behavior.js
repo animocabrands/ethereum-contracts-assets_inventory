@@ -10,7 +10,7 @@ const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metada
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
 
 function shouldBehaveLikeERC721(
-  {nfMaskLength, newABI},
+  {nfMaskLength, safeMint_ERC721},
   [creator, owner, approved, anotherApproved, operator, other]
 ) {
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
@@ -19,13 +19,8 @@ function shouldBehaveLikeERC721(
 
   describe('like an ERC721', function () {
     beforeEach(async function () {
-        if (newABI) {
-            await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: creator });
-            await this.token.mint(owner, nft2, 1, EmptyByte, true, { from: creator });
-        } else {
-            await this.token.mintNonFungible(owner, nft1, { from: creator });
-            await this.token.mintNonFungible(owner, nft2, { from: creator });
-        }
+      await safeMint_ERC721(this.token, owner, nft1, '0x', { from: creator });
+      await safeMint_ERC721(this.token, owner, nft2, '0x', { from: creator });
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 

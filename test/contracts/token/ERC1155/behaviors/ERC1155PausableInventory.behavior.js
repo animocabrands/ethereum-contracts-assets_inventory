@@ -5,7 +5,7 @@ const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
 function shouldBehaveLikeERC1155PausableInventory(
-    {nfMaskLength},
+    {nfMaskLength, mint},
     [creator, owner, recipient, operator]
 ) {
 
@@ -33,11 +33,11 @@ function shouldBehaveLikeERC1155PausableInventory(
             await this.token.createCollection(nfCollection1, { from: creator });
             await this.token.createCollection(nfCollection2, { from: creator });
 
-            await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
-            await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
-            await this.token.mintNonFungible(owner, nft1, { from: creator });
-            await this.token.mintNonFungible(owner, nft2, { from: creator });
-            await this.token.mintNonFungible(owner, nft3, { from: creator });
+            await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+            await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
+            await mint(this.token, owner, nft1, 1, '0x', { from: creator });
+            await mint(this.token, owner, nft2, 1, '0x', { from: creator });
+            await mint(this.token, owner, nft3, 1, '0x', { from: creator });
         });
         
         describe('PausableCollections', function () {

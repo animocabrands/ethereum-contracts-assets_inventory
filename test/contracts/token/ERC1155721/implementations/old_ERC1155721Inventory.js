@@ -1,3 +1,19 @@
+const mint_ERC721 = async function(contract, to, nftId, overrides) {
+    return contract.mintNonFungible(to, nftId, overrides);
+};
+
+const safeMint_ERC721 = async function(contract, to, nftId, overrides) {
+    return contract.mintNonFungible(to, nftId, overrides);
+};
+
+const safeMint = async function(contract, to, id, value, data, overrides) {
+    return contract.safeBatchMint(to, [id], [value], data, overrides);
+};
+
+const safeBatchMint = async function(contract, to, ids, values, data, overrides) {
+    return contract.safeBatchMint(to, ids, values, data, overrides);
+};
+
 module.exports = {
     contract: "BurnableInventoryMock",
     newABI: false,
@@ -16,4 +32,10 @@ module.exports = {
         NonExistingNFT: "ERC1155: owner of non-existing NFT",
         NonOwnedNFT: "ERC1155: transfer of a non-owned NFT",
     },
+    mint_ERC721,
+    safeMint_ERC721,
+    safeMint,
+    safeBatchMint,
+    mint: safeMint,
+    batchMint: safeBatchMint,
 };

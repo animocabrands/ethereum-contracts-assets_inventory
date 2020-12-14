@@ -6,7 +6,7 @@ const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
 const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 
 function shouldBehaveLikeERC721Metadata(
-    {nfMaskLength, name, symbol, newABI},
+    {nfMaskLength, name, symbol, safeMint_ERC721},
     [creator, owner],
 ) {
 
@@ -24,11 +24,7 @@ function shouldBehaveLikeERC721Metadata(
 
         describe('tokenURI', function () {
             beforeEach(async function () {
-                if (newABI) {
-                    await this.token.mint(owner, nft1, 1, EmptyByte, true, { from: creator });
-                } else {
-                    await this.token.mintNonFungible(owner, nft1, { from: creator });
-                }
+                await safeMint_ERC721(this.token, owner, nft1, '0x', { from: creator });
             });
     
             it('tokenURI()', async function () {

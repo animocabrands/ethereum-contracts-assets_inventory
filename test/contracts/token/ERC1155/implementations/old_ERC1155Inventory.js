@@ -1,6 +1,13 @@
+const safeMint = async function(contract, to, id, value, data, overrides) {
+    return contract.safeBatchMint(to, [id], [value], data, overrides);
+};
+
+const safeBatchMint = async function(contract, to, ids, values, data, overrides) {
+    return contract.safeBatchMint(to, ids, values, data, overrides);
+};
+
 module.exports = {
     contract: "ERC1155BurnableInventoryMock",
-    newABI: false,
     nfMaskLength: 32,
     revertMessages: {
         NonApproved: 'ERC1155: transfer by a non-approved sender',
@@ -14,4 +21,8 @@ module.exports = {
         NonExistingNFT: "ERC1155: owner of non-existing NFT",
         NonOwnedNFT: "ERC1155: transfer of a non-owned NFT",
     },
+    safeMint,
+    safeBatchMint,
+    mint: safeMint,
+    batchMint: safeBatchMint,
 };
