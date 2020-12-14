@@ -160,8 +160,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
-    //================================== Minting Internal Functions =======================================/
-
     /**
      * Mints an NFT using ERC721 logic.
      * @dev Reverts if `to` is the zero address.
@@ -195,6 +193,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
             }
         }
     }
+
+    //================================== Minting Internal Functions =======================================/
 
     /**
      * Mints some token.
