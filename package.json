@@ -1,6 +1,6 @@
 {
   "name": "@animoca/ethereum-contracts-assets_inventory",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "Solidity assets contracts managing fungible and non-fungible tokens",
   "repository": {
     "type": "git",
@@ -27,7 +27,6 @@
   "devDependencies": {
     "@animoca/blockchain-inventory_metadata": "0.0.1",
     "@animoca/ethereum-contracts-core_library": "=3.1.1",
-    "@animoca/ethereum-contracts-erc20_base": "=3.0.0",
     "@openzeppelin/test-helpers": "git+https://github.com/nataouze/openzeppelin-test-helpers.git#fix_bn_array_event_args",
     "bits.js": "^0.1.1"
   }

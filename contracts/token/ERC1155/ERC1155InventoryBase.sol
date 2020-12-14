@@ -2,8 +2,6 @@
 
 pragma solidity 0.6.8;
 
-// import "@openzeppelin/contracts/math/SafeMath.sol";
-// import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "./../ERC1155/IERC1155.sol";
@@ -13,9 +11,6 @@ import "./../ERC1155/IERC1155TokenReceiver.sol";
 
 
 abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC1155Inventory, ERC165, Context {
-    // using Address for address;
-    // using SafeMath for uint256;
-
     // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
     bytes4 internal constant _ERC1155_RECEIVED = 0xf23a6e61;
 

@@ -17,6 +17,7 @@ const safeBatchMint = async function(contract, to, ids, values, data, overrides)
 module.exports = {
     contract: "ERC1155721InventoryMock",
     nfMaskLength: 32,
+    suppliesManagement: true,
     name: "ERC1155721InventoryMock",
     symbol: "INV",
     revertMessages: {

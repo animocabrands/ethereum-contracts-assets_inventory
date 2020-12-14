@@ -2,7 +2,6 @@
 
 pragma solidity 0.6.8;
 
-// import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./../ERC721/IERC721.sol";
 import "./../ERC721/IERC721Metadata.sol";
@@ -13,7 +12,6 @@ import "./../ERC1155/ERC1155InventoryBase.sol";
  * @title ERC1155721Inventory, an ERC1155Inventory with additional support for ERC721.
  */
 abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155InventoryBase {
-    // using SafeMath for uint256;
     using Address for address;
 
     //bytes4(keccak256("supportsInterface(byte4)"))
@@ -160,6 +158,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
+    //================================== Minting Internal Functions =======================================/
+
     /**
      * Mints an NFT using ERC721 logic.
      * @dev Reverts if `to` is the zero address.
@@ -194,7 +194,58 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
-    //================================== Minting Internal Functions =======================================/
+    /**
+     * Unsafely mints a batch of NFTs using ERC721 logic.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if `id` does not represent a non-fungible token.
+     * @dev Reverts if `safe` is true, the receiver is a contract and the receiver call fails or is refused.
+     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @param to Address of the new token owner.
+     * @param nftIds Identifiers of the tokens to transfer.
+     */
+    function _batchMint_ERC721(
+        address to,
+        uint256[] memory nftIds
+    ) internal {
+        require(to != address(0), "Inventory: transfer to zero");
+
+        uint256 length = nftIds.length;
+        uint256[] memory values = new uint256[](length);
+
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        for (uint256 i; i < length; i++) {
+            uint256 nftId = nftIds[i];
+            require(isNFT(nftId), "Inventory: not an NFT");
+            values[i] = 1;
+            _mintNFT(to, nftId, 1, true);
+            emit Transfer(address(0), to, nftId);
+            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
+            if (nfCollectionId == 0) {
+                nfCollectionId = nextCollectionId;
+                nfCollectionCount = 1;
+            } else {
+                if (nextCollectionId != nfCollectionId) {
+                    _balances[nfCollectionId][to] += nfCollectionCount;
+                    _supplies[nfCollectionId] += nfCollectionCount;
+                    nfCollectionId = nextCollectionId;
+                    nfCollectionCount = 1;
+                } else {
+                    nfCollectionCount++;
+                }
+            }
+        }
+
+        _balances[nfCollectionId][to] += nfCollectionCount;
+        _supplies[nfCollectionId] += nfCollectionCount;
+        _nftBalances[to] += length;
+
+        emit TransferBatch(_msgSender(), address(0), to, nftIds, values);
+        if (to.isContract() && _isERC1155TokenReceiver(to)) {
+            _callOnERC1155BatchReceived(address(0), to, nftIds, values, "");
+        }
+    }
 
     /**
      * Mints some token.
@@ -375,8 +426,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * Transfers an NFT to another address.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
-     * @dev Reverts if `id` does not represent a non-fungible token.
-     * @dev Reverts if `id` is not owned by `from`.
+     * @dev Reverts if `nftId` does not represent a non-fungible token.
+     * @dev Reverts if `nftId` is not owned by `from`.
      * @dev Reverts if `safe` is true and .
      * @dev Emits an {IERC721-Transfer} event.
      * @dev Emits an {IERC1155-TransferSingle} event.
@@ -408,6 +459,62 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
             } else if (safe) {
                 _callOnERC721Received(from, to, nftId, data);
             }
+        }
+    }
+
+    /**
+     * Transfers a batch of NFTs to another address.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if the sender is not approved.
+     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
+     * @dev Reverts if one of `nftIds` is not owned by `from`.
+     * @dev Emits up to sevral {IERC721-Transfer} events.
+     * @dev Emits an {IERC1155-TransferBatch} event.
+     * @param from Current token owner.
+     * @param to Address of the new token owner.
+     * @param nftIds Identifiers of the token sto transfer.
+     */
+    function _batchTransferFrom_ERC721(
+        address from,
+        address to,
+        uint256[] memory nftIds
+    ) internal {
+        require(to != address(0), "Inventory: transfer to zero");
+        address sender = _msgSender();
+        bool operatable = _isOperatable(from, sender);
+
+        uint256 length = nftIds.length;
+        uint256[] memory values = new uint256[](length);
+
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        for (uint256 i; i < length; i++) {
+            uint256 nftId = nftIds[i];
+            require(isNFT(nftId), "Inventory: not an NFT");
+            values[i] = 1;
+            _transferNFT(from, to, nftId, 1, operatable, true);
+            emit Transfer(from, to, nftId);
+            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
+            if (nfCollectionId == 0) {
+                nfCollectionId = nextCollectionId;
+                nfCollectionCount = 1;
+            } else {
+                if (nextCollectionId != nfCollectionId) {
+                    transferNFTUpdateCollectionBalances(from, to, nextCollectionId, nfCollectionCount);
+                    nfCollectionId = nextCollectionId;
+                    nfCollectionCount = 1;
+                } else {
+                    nfCollectionCount++;
+                }
+            }
+        }
+
+        transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+        transferNFTUpdateBalances(from, to, length);
+
+        emit TransferBatch(_msgSender(), from, to, nftIds, values);
+        if (to.isContract() && _isERC1155TokenReceiver(to)) {
+            _callOnERC1155BatchReceived(from, to, nftIds, values, "");
         }
     }
 
@@ -645,7 +752,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                     nfCollectionCount = 1;
                 } else {
                     if (nextCollectionId != nfCollectionId) {
-                        // transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
                         _balances[nfCollectionId][from] -= nfCollectionCount;
                         _supplies[nfCollectionId] -= nfCollectionCount;
 

@@ -31,6 +31,8 @@ function shouldBehaveLikeERC1155721MintableInventory(
         supplies: [new BN(1), new BN(1), new BN(1), new BN(1), new BN(2), new BN(3)]
     }
 
+    // TODO add the behavior for ERC721-specific mint(address,uint256), batchMint(address,uint256[]) and safeMint(address,uint256,bytes)
+
     describe('like a mintable ERC1155721Inventory', function () {
         beforeEach(async function () {
             await this.token.addMinter(minter, { from: creator });

@@ -2,7 +2,6 @@
 
 pragma solidity 0.6.8;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./ERC1155InventoryBase.sol";
 
