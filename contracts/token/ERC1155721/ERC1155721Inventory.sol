@@ -44,7 +44,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 value,
         bytes memory data
     ) public virtual override {
-        _safeTransferFrom(from, to, id, value, data, /* isBatch */false, /* operatable */false);
+        _safeTransferFrom(from, to, id, value, data);
     }
 
     /**
@@ -58,17 +58,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         bytes memory data
     ) public virtual override {
         _safeBatchTransferFrom(from, to, ids, values, data);
-    }
-
-    //========================== ERC1155Inventory (Optimised Transfer) ================================/
-
-    function safeBatchTransferFromNFTs(
-        address from,
-        address to,
-        uint256[] memory nftIds,
-        bytes memory data
-    ) public virtual {
-        _safeBatchTransferFromNFTs(from, to, nftIds, data);
     }
 
     //===================================== ERC721 ==========================================/
@@ -154,33 +143,27 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address to,
         uint256 id,
         uint256 value,
-        bool isSameNFTCollectionOperation,
-        bool isBatchOperation
+        bool isBatch
     ) internal {
         require(value == 1, "Inventory: wrong NFT value");
         require(_owners[id] == 0, "Inventory: existing/burnt NFT");
 
         _owners[id] = uint256(to);
 
-        if (!isSameNFTCollectionOperation) {
+        if (!isBatch) {
             uint256 collectionId = id & _NF_COLLECTION_MASK;
             // it is virtually impossible that a non-fungible collection supply
             // overflows due to the cost of minting individual tokens
-            _supplies[collectionId] += 1;
-            // cannot overflow as sßupply cannot overflow
-            _balances[collectionId][to] += 1;
-
-            if (!isBatchOperation) {
-                // cannot overflow
-                _nftBalances[to] += 1;
-            }
+            ++_supplies[collectionId];
+            ++_balances[collectionId][to];
+            ++_nftBalances[to];
         }
     }
 
     //================================== Minting Internal Functions =======================================/
 
     /**
-     * Mints an NFT.
+     * Mints an NFT using ERC721 logic.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if `id` does not represent a non-fungible token.
      * @dev Reverts if `safe` is true, the receiver is a contract and the receiver call fails or is refused.
@@ -200,7 +183,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         require(to != address(0), "Inventory: transfer to zero");
         require(isNFT(nftId), "Inventory: not an NFT");
 
-        _mintNFT(to, nftId, 1, false, false);
+        _mintNFT(to, nftId, 1, false);
 
         emit Transfer(address(0), to, nftId);
         emit TransferSingle(_msgSender(), address(0), to, nftId, 1);
@@ -227,33 +210,27 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
      * @param data Optional data to send along to a receiver contract.
-     * @param isBatch Whether this function is called by `_batchMint`.
      */
     function _safeMint(
         address to,
         uint256 id,
         uint256 value,
-        bytes memory data,
-        bool isBatch
+        bytes memory data
     ) internal virtual {
-        if (!isBatch) {
-            require(to != address(0), "Inventory: transfer to zero");
-        }
+        require(to != address(0), "Inventory: transfer to zero");
         address sender = _msgSender();
         if (isFungible(id)) {
             _mintFungible(to, id, value);
         } else if (id & _NF_TOKEN_MASK != 0) {
-            _mintNFT(to, id, value, false, isBatch);
+            _mintNFT(to, id, value, false);
             emit Transfer(address(0), to, id);
         } else {
             revert("Inventory: not a token id");
         }
 
-        if (!isBatch) {
-            emit TransferSingle(sender, address(0), to, id, value);
-            if (to.isContract()) {
-                _callOnERC1155Received(address(0), to, id, value, data);
-            }
+        emit TransferSingle(sender, address(0), to, id, value);
+        if (to.isContract()) {
+            _callOnERC1155Received(address(0), to, id, value, data);
         }
     }
 
@@ -283,71 +260,47 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 
-        uint256 mintedNFTs = 0;
+        uint256 nfCollectionId = 0;
+        uint256 nfCollectionCount = 0;
+        uint256 nftsCount = 0;
         for (uint256 i = 0; i < length; i++) {
             uint256 id = ids[i];
-            _safeMint(to, id, values[i], data, true);
-            if (isNFT(id)) {
-                mintedNFTs += 1;
+            uint256 value = values[i];
+            if (isFungible(id)) {
+                _mintFungible(to, id, value); 
+            } else if (id & _NF_TOKEN_MASK != 0) {
+                _mintNFT(to, id, value, true);
+                emit Transfer(address(0), to, id);
+                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                if (nfCollectionId == 0) {
+                    nfCollectionId = nextCollectionId;
+                    nfCollectionCount = 1;
+                } else {
+                    if (nextCollectionId != nfCollectionId) {
+                        _balances[nfCollectionId][to] += nfCollectionCount;
+                        _supplies[nfCollectionId] += nfCollectionCount;
+                        nfCollectionId = nextCollectionId;
+                        nftsCount += nfCollectionCount;
+                        nfCollectionCount = 1;
+                    } else {
+                        nfCollectionCount++;
+                    }
+                }
+            } else {
+                revert("Inventory: not a token id");
             }
         }
 
-        if (mintedNFTs != 0) {
-            // cannot overflow
-            _nftBalances[to] += mintedNFTs;
+        if (nfCollectionId != 0) {
+            _balances[nfCollectionId][to] += nfCollectionCount;
+            _supplies[nfCollectionId] += nfCollectionCount;
+            nftsCount += nfCollectionCount;
+            _nftBalances[to] += nftsCount;
         }
 
         emit TransferBatch(_msgSender(), address(0), to, ids, values);
         if (to.isContract()) {
             _callOnERC1155BatchReceived(address(0), to, ids, values, data);
-        }
-    }
-
-    /**
-     * Mints a batch of non-fungible tokens belonging to the same collection.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if two of `nftIds` have a different collection.
-     * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param to Address of the new tokens owner.
-     * @param nftIds Identifiers of the tokens to mint.
-     * @param data Optional data to send along to a receiver contract.
-     */
-    function _safeBatchMintNFTs(
-        address to,
-        uint256[] memory nftIds,
-        bytes memory data
-    ) internal virtual {
-        require(to != address(0), "Inventory: transfer to zero");
-        uint256 length = nftIds.length;
-        uint256[] memory values = new uint256[](length);
-        address sender = _msgSender();
-
-        uint256 collectionId;
-        for (uint256 i = 0; i < length; i++) {
-            uint256 nftId = nftIds[i];
-            require(isNFT(nftId), "Inventory: not an NFT");
-            if (i == 0) {
-                collectionId = nftId & _NF_COLLECTION_MASK;
-            } else {
-                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
-            }
-            values[i] = 1;
-            _mintNFT(to, nftId, 1, true, true);
-            emit Transfer(address(0), to, nftId);
-        }
-
-        // it is virtually impossible that a non-fungible collection supply (and therefore balance)
-        // overflows due to the cost of minting unique tokens
-        _supplies[collectionId] += length;
-        _balances[collectionId][to] += length;
-        _nftBalances[to] += length;
-
-        emit TransferBatch(sender, address(0), to, nftIds, values);
-        if (to.isContract()) {
-            _callOnERC1155BatchReceived(address(0), to, nftIds, values, data);
         }
     }
 
@@ -374,9 +327,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address to,
         uint256 id,
         uint256 value,
-        bool isSameNFTCollectionOperation,
-        bool isBatchOperation,
-        bool operatable
+        bool operatable,
+        bool isBatch
     ) internal virtual {
         require(value == 1, "Inventory: wrong NFT value");
         uint256 owner = _owners[id];
@@ -388,20 +340,33 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
             );
         }
         _owners[id] = uint256(to);
-        if (!isSameNFTCollectionOperation) {
-            uint256 collectionId = id & _NF_COLLECTION_MASK;
-            // cannot underflow as balance is verified through ownership
-            _balances[collectionId][from] -= 1;
-            // cannot overflow as supply cannot overflow
-            _balances[collectionId][to] += 1;
-
-            if (!isBatchOperation) {
-                // Cannot underflow, balance confirmed through ownership
-                _nftBalances[from] -= 1;
-                // Cannot overflow
-                _nftBalances[to] += 1;
-            }
+        if (!isBatch) {
+            transferNFTUpdateBalances(from, to, 1);
+            transferNFTUpdateCollectionBalances(from, to, id & _NF_COLLECTION_MASK, 1);
         }
+    }
+
+    function transferNFTUpdateBalances(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {
+        // cannot underflow as balance is verified through ownership
+        _nftBalances[from] -= amount;
+        //  cannot overflow as supply cannot overflow
+        _nftBalances[to] += amount;
+    }
+
+    function transferNFTUpdateCollectionBalances(
+        address from,
+        address to,
+        uint256 collectionId,
+        uint256 amount
+    ) internal virtual {
+        // cannot underflow as balance is verified through ownership
+        _balances[collectionId][from] -= amount;
+        // cannot overflow as supply cannot overflow
+        _balances[collectionId][to] += amount;
     }
 
     //============================== Transfer Internal Functions =======================================/
@@ -433,7 +398,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        _transferNFT(from, to, nftId, 1, false, false, operatable);
+        _transferNFT(from, to, nftId, 1, operatable, false);
 
         emit Transfer(from, to, nftId);
         emit TransferSingle(sender, from, to, nftId, 1);
@@ -461,38 +426,30 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param id Identifier of the token to transfer.
      * @param value Amount of token to transfer.
      * @param data Optional data to pass to the receiver contract.
-     * @param isBatch Whether this function is called by `_safeBatchTransferFrom`.
-     * @param operatable Whether the sender has an operator-level approval.
      */
     function _safeTransferFrom(
         address from,
         address to,
         uint256 id,
         uint256 value,
-        bytes memory data,
-        bool isBatch,
-        bool operatable
+        bytes memory data
     ) internal virtual {
         address sender = _msgSender();
-        if (!isBatch) {
-            require(to != address(0), "Inventory: transfer to zero");
-            operatable = _isOperatable(from, sender);
-        }
+        require(to != address(0), "Inventory: transfer to zero");
+        bool operatable = _isOperatable(from, sender);
 
         if (isFungible(id)) {
             _transferFungible(from, to, id, value, operatable);
         } else if (id & _NF_TOKEN_MASK != 0) {
-            _transferNFT(from, to, id, value, false, isBatch, operatable);
+            _transferNFT(from, to, id, value, operatable, false);
             emit Transfer(from, to, id);
         } else {
             revert("Inventory: not a token id");
         }
 
-        if (!isBatch) {
-            emit TransferSingle(sender, from, to, id, value);
-            if (to.isContract()) {
-                _callOnERC1155Received(from, to, id, value, data);
-            }
+        emit TransferSingle(sender, from, to, id, value);
+        if (to.isContract()) {
+            _callOnERC1155Received(from, to, id, value, data);
         }
     }
 
@@ -526,20 +483,39 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        uint256 transferredNFTs = 0;
+        uint256 nfCollectionId = 0;
+        uint256 nfCollectionCount = 0;
+        uint256 nftsCount = 0;
         for (uint256 i = 0; i < length; i++) {
             uint256 id = ids[i];
-            _safeTransferFrom(from, to, id, values[i], data, true, operatable);
-            if (isNFT(id)) {
-                transferredNFTs++;
+            if (isFungible(id)) {
+                _transferFungible(from, to, id, values[i], operatable); 
+            } else if (id & _NF_TOKEN_MASK != 0) {
+                _transferNFT(from, to, id, values[i], operatable, true);
+                emit Transfer(from, to, id);
+                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                if (nfCollectionId == 0) {
+                    nfCollectionId = nextCollectionId;
+                    nfCollectionCount = 1;
+                } else {
+                    if (nextCollectionId != nfCollectionId) {
+                        transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                        nfCollectionId = nextCollectionId;
+                        nftsCount += nfCollectionCount;
+                        nfCollectionCount = 1;
+                    } else {
+                        nfCollectionCount++;
+                    }
+                }
+            } else {
+                revert("Inventory: not a token id");
             }
         }
 
-        if (transferredNFTs != 0) {
-            // cannot underflow as balance is verified through ownership
-            _nftBalances[from] -= transferredNFTs;
-            // cannot overflow
-            _nftBalances[to] += transferredNFTs;
+        if (nfCollectionId != 0) {
+            transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+            nftsCount += nfCollectionCount;
+            transferNFTUpdateBalances(from, to, nftsCount);
         }
 
         emit TransferBatch(_msgSender(), from, to, ids, values);
@@ -548,59 +524,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
-    /**
-     * @dev Transfers multiple non-fungible tokens belonging to the same collection.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` represents a non-fungible token which is not owned by `from`.
-     * @dev Reverts if two of `nftIds` have a different collection.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param to Address of the new tokens owner.
-     * @param nftIds Identifiers of the non-fungible tokens to transfer.
-     * @param data Optional data to send along to a receiver contract.
-     */
-    function _safeBatchTransferFromNFTs(
-        address from,
-        address to,
-        uint256[] memory nftIds,
-        bytes memory data
-    ) internal virtual {
-        require(to != address(0), "Inventory: transfer to zero");
-        address sender = _msgSender();
-        bool operatable = _isOperatable(from, sender);
-
-        uint256 length = nftIds.length;
-        uint256[] memory values = new uint256[](length);
-
-        uint256 collectionId;
-        for (uint256 i = 0; i < length; i++) {
-            uint256 nftId = nftIds[i];
-            require(isNFT(nftId), "Inventory: not an NFT");
-            if (i == 0) {
-                collectionId = nftId & _NF_COLLECTION_MASK;
-            } else {
-                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
-            }
-            values[i] = 1;
-            _transferNFT(from, to, nftId, 1, true, true, operatable);
-            emit Transfer(from, to, nftId);
-        }
-
-        // cannot underflow as balance is verified through ownership
-        _balances[collectionId][from] -= length;
-        // cannot overflow as supply cannot overflow
-        _balances[collectionId][to] += length;
-
-        // cannot underflow as balance is verified through ownership
-        _nftBalances[from] -= length;
-        // cannot overflow
-        _nftBalances[to] += length;
-
-        emit TransferBatch(sender, from, to, nftIds, values);
-        if (to.isContract()) {
-            _callOnERC1155BatchReceived(sender, to, nftIds, values, data);
-        }
-    }
 
     //================================ Burning Internal Functions ======================================/
 
@@ -623,9 +546,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address from,
         uint256 id,
         uint256 value,
-        bool isSameNFTCollectionOperation,
-        bool isBatchOperation,
-        bool operatable
+        bool operatable,
+        bool isBatch
     ) internal virtual {
         require(value == 1, "Inventory: wrong NFT value");
         uint256 owner = _owners[id];
@@ -638,17 +560,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
         _owners[id] = _BURNT_NFT_OWNER;
 
-        if (!isSameNFTCollectionOperation) {
+        if (!isBatch) {
             uint256 collectionId = id & _NF_COLLECTION_MASK;
             // cannot underflow as balance is confirmed through ownership
-            _balances[collectionId][from] -= 1;
+            --_balances[collectionId][from];
             // Cannot underflow
-            _supplies[collectionId] -= 1;
-
-            if (!isBatchOperation) {
-                // Cannot underflow
-                _nftBalances[from] -= 1;
-            }
+            --_supplies[collectionId];
+            // Cannot underflow
+            --_nftBalances[from];
         }
     }
 
@@ -664,32 +583,25 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param from Address of the current token owner.
      * @param id Identifier of the token to burn.
      * @param value Amount of token to burn.
-     * @param isBatch Whether this function is called by `_batchBurnFrom`.
      */
     function _burnFrom(
         address from,
         uint256 id,
-        uint256 value,
-        bool isBatch,
-        bool operatable
+        uint256 value
     ) internal virtual {
         address sender = _msgSender();
-        if (!isBatch) {
-            operatable = _isOperatable(from, sender);
-        }
+        bool operatable = _isOperatable(from, sender);
 
         if (isFungible(id)) {
             _burnFungible(from, id, value, operatable);
         } else if (id & _NF_TOKEN_MASK != 0) {
-            _burnNFT(from, id, value, false, isBatch, operatable);
+            _burnNFT(from, id, value, operatable, false);
             emit Transfer(from, address(0), id);
         } else {
             revert("Inventory: not a token id");
         }
 
-        if (!isBatch) {
-            emit TransferSingle(sender, from, address(0), id, value);
-        }
+        emit TransferSingle(sender, from, address(0), id, value);
     }
 
     /**
@@ -717,61 +629,47 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        uint256 burntNFTs = 0;
-        for (uint256 i = 0; i < length; ++i) {
+        uint256 nfCollectionId = 0;
+        uint256 nfCollectionCount = 0;
+        uint256 nftsCount = 0;
+        for (uint256 i = 0; i < length; i++) {
             uint256 id = ids[i];
-            _burnFrom(from, id, values[i], true, operatable);
-            if (isNFT(id)) {
-                burntNFTs++;
+            if (isFungible(id)) {
+                _burnFungible(from, id, values[i], operatable); 
+            } else if (id & _NF_TOKEN_MASK != 0) {
+                _burnNFT(from, id, values[i], operatable, true);
+                emit Transfer(from, address(0), id);
+                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                if (nfCollectionId == 0) {
+                    nfCollectionId = nextCollectionId;
+                    nfCollectionCount = 1;
+                } else {
+                    if (nextCollectionId != nfCollectionId) {
+                        // transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                        _balances[nfCollectionId][from] -= nfCollectionCount;
+                        _supplies[nfCollectionId] -= nfCollectionCount;
+
+                        nfCollectionId = nextCollectionId;
+                        nftsCount += nfCollectionCount;
+                        nfCollectionCount = 1;
+                    } else {
+                        nfCollectionCount++;
+                    }
+                }
+            } else {
+                revert("Inventory: not a token id");
             }
         }
 
-        if (burntNFTs != 0) {
-            _nftBalances[from] -= burntNFTs;
+        if (nfCollectionId != 0) {
+            // cannot underflow as balance is verified through ownership
+            _balances[nfCollectionId][from] -= nfCollectionCount;
+            _supplies[nfCollectionId] -= nfCollectionCount;
+            nftsCount += nfCollectionCount;
+            _nftBalances[from] -= nftsCount;
         }
 
         emit TransferBatch(sender, from, address(0), ids, values);
-    }
-
-    /**
-     * Burns multiple non-fungible tokens belonging to the same collection.
-     * @dev Reverts if the sender is not approved.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` is not owned by `from`.
-     * @dev Reverts if there are different collections for `nftIds`.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param from address address that will own the tokens to burn.
-     * @param nftIds uint256[] identifiers of the tokens to burn.
-     */
-    function _batchBurnFromNFTs(address from, uint256[] memory nftIds) internal virtual {
-        address sender = _msgSender();
-        bool operatable = _isOperatable(from, sender);
-
-        uint256 length = nftIds.length;
-        uint256[] memory values = new uint256[](length);
-
-        uint256 collectionId;
-        for (uint256 i = 0; i < length; i++) {
-            uint256 nftId = nftIds[i];
-            require(isNFT(nftId), "Inventory: not an NFT");
-            if (i == 0) {
-                collectionId = nftId & _NF_COLLECTION_MASK;
-            } else {
-                require(collectionId == nftId & _NF_COLLECTION_MASK, "Inventory: not same collection");
-            }
-            values[i] = 1;
-            _burnNFT(from, nftId, 1, true, true, operatable);
-            emit Transfer(from, address(0), nftId);
-        }
-
-        // cannot underflow as balance is confirmed through ownership
-        _balances[collectionId][from] -= length;
-        // cannot underflow
-        _supplies[collectionId] -= length;
-        // cannot underflow
-        _nftBalances[from] -= length;
-
-        emit TransferBatch(sender, from, address(0), nftIds, values);
     }
 
     ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////

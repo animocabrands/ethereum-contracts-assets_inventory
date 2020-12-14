@@ -92,7 +92,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, Minter
         uint256 value,
         bytes calldata data
     ) external onlyMinter {
-        _safeMint(to, id, value, data, false);
+        _safeMint(to, id, value, data);
     }
 
     /**
@@ -120,26 +120,6 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, Minter
         _safeBatchMint(to, ids, values, data);
     }
 
-    /**
-     * Mints a batch of non-fungible tokens belonging to the same collection and calls the receiver function if the receiver is a contract.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if two of `nftIds` have a different collection.
-     * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param to Address of the new tokens owner.
-     * @param nftIds Identifiers of the tokens to mint.
-     * @param data Optional data to send along to a receiver contract.
-     */
-    function safeBatchMintNFTs(
-        address to,
-        uint256[] calldata nftIds,
-        bytes calldata data
-    ) external onlyMinter {
-        _safeBatchMintNFTs(to, nftIds, data);
-    }
-
     // ===================================================================================================
     //                                 User Public Functions
     // ===================================================================================================
@@ -162,7 +142,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, Minter
         uint256 id,
         uint256 value
     ) external {
-        _burnFrom(from, id, value, /* isBatch */false, /* operatable */false);
+        _burnFrom(from, id, value);
     }
 
     /**
@@ -185,20 +165,6 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, Minter
         uint256[] calldata values
     ) external {
         _batchBurnFrom(from, ids, values);
-    }
-
-    /**
-     * Burns multiple non-fungible tokens belonging to the same collection.
-     * @dev Reverts if the sender is not approved.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` is not owned by `from`.
-     * @dev Reverts if there are different collections for `nftIds`.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param from address address that will own the minted tokens
-     * @param nftIds uint256[] identifiers of the tokens to be minted
-     */
-    function batchBurnFromNFTs(address from, uint256[] calldata nftIds) external {
-        _batchBurnFromNFTs(from, nftIds);
     }
 
     // ===================================================================================================
