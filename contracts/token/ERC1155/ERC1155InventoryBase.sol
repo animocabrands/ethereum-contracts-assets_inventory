@@ -27,11 +27,20 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     uint256 internal constant _NF_COLLECTION_MASK = uint256(type(uint32).max) << 224;
     uint256 internal constant _NF_TOKEN_MASK = ~_NF_COLLECTION_MASK;
 
+    /* owner => operator => approved */
     mapping(address => mapping(address => bool)) internal _operators;
+
+    /* collection ID => owner => balance */
     mapping(uint256 => mapping(address => uint256)) internal _balances;
+
+    /* collection ID => supply */
     mapping(uint256 => uint256) internal _supplies;
+
+    /* NFT ID => owner */
     mapping(uint256 => uint256) internal _owners;
-    mapping(uint256 => address) public creator;
+
+    /* collection ID => creator */
+    mapping(uint256 => address) public creators;
 
     /**
      * @dev Constructor function
@@ -71,16 +80,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
 
         uint256[] memory balances = new uint256[](owners.length);
 
-        for (uint256 i = 0; i < owners.length; ++i) {
-            require(owners[i] != address(0), "Inventory: zero address");
-
-            uint256 id = ids[i];
-
-            if (isNFT(id)) {
-                balances[i] = _owners[id] == uint256(owners[i]) ? 1 : 0;
-            } else {
-                balances[i] = _balances[id][owners[i]];
-            }
+        for (uint256 i = 0; i != owners.length; ++i) {
+            balances[i] = balanceOf(owners[i], ids[i]);
         }
 
         return balances;
@@ -171,8 +172,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      */
     function _createCollection(uint256 collectionId) internal virtual {
         require(!isNFT(collectionId), "Inventory: not a collection");
-        require(creator[collectionId] == address(0), "Inventory: existing collection");
-        creator[collectionId] = _msgSender();
+        require(creators[collectionId] == address(0), "Inventory: existing collection");
+        creators[collectionId] = _msgSender();
         emit CollectionCreated(collectionId, isFungible(collectionId));
     }
 
@@ -187,7 +188,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      * Returns whether `sender` is authorised to make a transfer on behalf of `from`.
      * @param from The address to check operatibility upon.
      * @param sender The sender address.
-     * @return True if sender is `from` or an operator for `from`, else otherwise.
+     * @return True if sender is `from` or an operator for `from`, false otherwise.
      */
     function _isOperatable(address from, address sender) internal virtual view returns (bool) {
         return (from == sender) || _operators[from][sender];
