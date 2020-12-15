@@ -3,7 +3,7 @@
 pragma solidity 0.6.8;
 
 /**
- * @title ERC-1155 Multi Token Standard, additional minting interface
+ * @title ERC-1155 Inventory, additional minting interface
  * @dev See https://eips.ethereum.org/EIPS/eip-1155
  */
 interface IERC1155InventoryMintable {

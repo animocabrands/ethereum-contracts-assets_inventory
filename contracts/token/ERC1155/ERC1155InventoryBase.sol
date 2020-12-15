@@ -40,7 +40,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     mapping(uint256 => uint256) internal _owners;
 
     /* collection ID => creator */
-    mapping(uint256 => address) public creators;
+    mapping(uint256 => address) internal _creators;
 
     /**
      * @dev Constructor function
@@ -172,8 +172,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      */
     function _createCollection(uint256 collectionId) internal virtual {
         require(!isNFT(collectionId), "Inventory: not a collection");
-        require(creators[collectionId] == address(0), "Inventory: existing collection");
-        creators[collectionId] = _msgSender();
+        require(_creators[collectionId] == address(0), "Inventory: existing collection");
+        _creators[collectionId] = _msgSender();
         emit CollectionCreated(collectionId, isFungible(collectionId));
     }
 

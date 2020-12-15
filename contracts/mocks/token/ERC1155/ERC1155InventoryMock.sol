@@ -5,10 +5,11 @@ pragma solidity 0.6.8;
 import "../../../token/ERC1155/ERC1155Inventory.sol";
 import "../../../token/ERC1155/IERC1155InventoryMintable.sol";
 import "../../../token/ERC1155/IERC1155InventoryBurnable.sol";
+import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IERC1155InventoryBurnable, BaseMetadataURI, MinterRole {
+contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IERC1155InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================
@@ -51,6 +52,14 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     // ===================================================================================================
     //                                 User Public Functions
     // ===================================================================================================
+
+    /**
+     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
+     */
+    function creator(uint256 collectionId) external override returns(address) {
+        require(!isNFT(collectionId), "Inventory: not a collection");
+        return _creators[collectionId];
+    }
 
     /**
      * @dev See {IERC1155InventoryBurnable-burnFrom(address,uint256,uint256)}.

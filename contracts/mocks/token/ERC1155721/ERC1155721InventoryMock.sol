@@ -6,10 +6,11 @@ import "../../../token/ERC1155721/ERC1155721Inventory.sol";
 import "../../../token/ERC1155721/IERC1155721BatchTransfer.sol";
 import "../../../token/ERC1155721/IERC1155721InventoryMintable.sol";
 import "../../../token/ERC1155721/IERC1155721InventoryBurnable.sol";
+import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfer, IERC1155721InventoryMintable, IERC1155721InventoryBurnable, BaseMetadataURI, MinterRole {
+contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfer, IERC1155721InventoryMintable, IERC1155721InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
 
     string public override constant name = "ERC1155721InventoryMock";
     string public override constant symbol = "INV";
@@ -87,6 +88,14 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfe
     // ===================================================================================================
     //                                 User Public Functions
     // ===================================================================================================
+
+    /**
+     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
+     */
+    function creator(uint256 collectionId) external override returns(address) {
+        require(!isNFT(collectionId), "Inventory: not a collection");
+        return _creators[collectionId];
+    }
 
     /**
      * @dev See {IERC1155721BatchTransfer-batchTransferFrom(address,address,uint256[])}.

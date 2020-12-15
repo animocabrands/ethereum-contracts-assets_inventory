@@ -3,7 +3,7 @@
 pragma solidity 0.6.8;
 
 /**
- * @title ERC-1155 Multi Token Standard, additional burning interface
+ * @title ERC-1155 Inventory additional burning interface
  * @dev See https://eips.ethereum.org/EIPS/eip-1155
  */
 interface IERC1155InventoryBurnable {
