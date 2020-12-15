@@ -1,18 +1,17 @@
 const { contract } = require('@openzeppelin/test-environment');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { behaviors, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
+const { constants } = require('@animoca/ethereum-contracts-core_library');
 const { ZeroAddress } = constants;
-const interfaces1155 = require('../../../../../src/interfaces/ERC165/ERC1155');
+const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ERC1155TokenReceiverMock = contract.fromArtifact('ERC1155TokenReceiverMock');
 
 function shouldBehaveLikeERC1155Inventory(
-  nfMaskLength,
-  creator,
-  [owner, operator, other]
+  {nfMaskLength, mint},
+  [creator, owner, operator, other]
 ) {
   const fCollection1 = {
     id: makeFungibleCollectionId(1),
@@ -38,15 +37,16 @@ function shouldBehaveLikeERC1155Inventory(
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
   const unknownNft = makeNonFungibleTokenId(99, 99, nfMaskLength);
 
+
+  // TODO, checks for totalSupply if new ABI
   describe('like an ERC1155Inventory', function () {
     beforeEach(async function () {
-      await this.token.mint(owner, fCollection1.id, fCollection1.supply, { from: creator });
-      await this.token.mint(owner, fCollection2.id, fCollection2.supply, { from: creator });
-      await this.token.mint(owner, fCollection3.id, fCollection3.supply, { from: creator });
-      await this.token.mint(owner, nft1, 1, { from: creator });
-      await this.token.mint(owner, nft2, 1, { from: creator });
-      await this.token.mint(owner, nft3, 1, { from: creator });
-
+      await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+      await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
+      await mint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', { from: creator });
+      await mint(this.token, owner, nft1, 1, '0x', { from: creator });
+      await mint(this.token, owner, nft2, 1, '0x', { from: creator });
+      await mint(this.token, owner, nft3, 1, '0x', { from: creator }); 
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 
@@ -79,7 +79,7 @@ function shouldBehaveLikeERC1155Inventory(
 
 
     describe('isFungible()', function () {
-      context("when id is a Fungible Collection", function () {
+      context("when id is a Fungible Token", function () {
         it("returns true", async function () {
           (await this.token.isFungible(fCollection1.id)).should.be.equal(true);
         });
@@ -102,7 +102,7 @@ function shouldBehaveLikeERC1155Inventory(
     });
 
     describe('collectionOf()', function () {
-      context("when id is a Fungible Collection", function () {
+      context("when id is a Fungible Token", function () {
         it("throws", async function () {
           await expectRevert.unspecified(this.token.collectionOf(fCollection1.id));
         });
@@ -125,7 +125,7 @@ function shouldBehaveLikeERC1155Inventory(
     });
 
     describe('ownerOf()', function () {
-      context("when id is a Fungible Collection", function () {
+      context("when id is a Fungible Token", function () {
         it("throws", async function () {
           await expectRevert.unspecified(this.token.ownerOf(fCollection1.id));
         });
@@ -182,17 +182,18 @@ function shouldBehaveLikeERC1155Inventory(
       });
 
       context('when querying the zero address', function () {
-        const revertMessage = "Inventory: zero address";
+        // const revertMessage = "Inventory: zero address";
         it('throws when query nf token id', async function () {
-          await expectRevert(this.token.balanceOf(ZeroAddress, nft1), revertMessage);
+          await expectRevert.unspecified(this.token.balanceOf(ZeroAddress, nft1));
+        //   await expectRevert(this.token.balanceOf(ZeroAddress, nft1), revertMessage);
         });
 
         it('throws when query nft collection id', async function () {
-          await expectRevert(this.token.balanceOf(ZeroAddress, nfCollection1), revertMessage);
+          await expectRevert.unspecified(this.token.balanceOf(ZeroAddress, nfCollection1));
         });
 
         it('throws when query ft collection id', async function () {
-          await expectRevert(this.token.balanceOf(ZeroAddress, fCollection1.id), revertMessage);
+          await expectRevert.unspecified(this.token.balanceOf(ZeroAddress, fCollection1.id));
         });
       });
     });
@@ -273,6 +274,7 @@ function shouldBehaveLikeERC1155Inventory(
         const data = '0x42';
 
         beforeEach(async function () {
+          // TODO move to ERC1155721 behaviour
           // await this.token.approve(approved, nft1, { from: owner });
           await this.token.setApprovalForAll(operator, true, { from: owner });
         });
@@ -281,6 +283,8 @@ function shouldBehaveLikeERC1155Inventory(
           it('transfers the ownership of the given token ID to the given address', async function () {
             (await this.token.ownerOf(tokenId)).should.be.equal(this.toWhom);
           });
+
+        // TODO move to ERC1155721 behaviour
 
           // it('clears the approval for the token ID', async function () {
           //   (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
@@ -323,6 +327,8 @@ function shouldBehaveLikeERC1155Inventory(
             transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: null });
           });
 
+        // TODO move to ERC1155721 behaviour
+
           // context('when called by the approved individual', function () {
           //   beforeEach(async function () {
           //     receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: approved });
@@ -337,13 +343,15 @@ function shouldBehaveLikeERC1155Inventory(
             transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: operator });
           });
 
-          // context('when called by the owner without an approved user', function () {
-          //   beforeEach(async function () {
-          //     // await this.token.approve(ZeroAddress, tokenId, { from: owner });
-          //     receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: operator });
-          //   });
-          //   transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: operator });
-          // });
+        // TODO move to ERC1155721 behaviour
+
+        //   context('when called by the owner without an approved user', function () {
+        //     beforeEach(async function () {
+        //       // await this.token.approve(ZeroAddress, tokenId, { from: owner });
+        //       receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, { from: operator });
+        //     });
+        //     transferWasSuccessful({ owner, tokenId, collectionId, approvedAccount: operator });
+        //   });
 
           context('when sent to the owner', function () {
             beforeEach(async function () {
@@ -354,6 +362,7 @@ function shouldBehaveLikeERC1155Inventory(
               (await this.token.ownerOf(tokenId)).should.be.equal(owner);
             });
 
+            // TODO move to ERC1155721 behaviour
             // it('clears the approval for the token ID', async function () {
             //   (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
             // });
@@ -368,6 +377,7 @@ function shouldBehaveLikeERC1155Inventory(
               });
             });
 
+            // TODO move to ERC1155721 behaviour
             // it('keeps the owner balance', async function () {
             //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
             // });
@@ -450,12 +460,13 @@ function shouldBehaveLikeERC1155Inventory(
                 await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                   operator: owner,
                   from: owner,
-                  tokenId: tokenId,
-                  supply: supply,
+                  id: tokenId,
+                  value: supply,
                   data: data,
                 });
               });
 
+                // TODO move to ERC1155721 behaviour
               // it('should call onERC1155Received from approved', async function () {
               //   const receipt = await transferFun.call(this, owner, this.toWhom, tokenId, supply, data, { from: approved });
 
@@ -516,6 +527,7 @@ function shouldBehaveLikeERC1155Inventory(
             await expectRevert.unspecified(this.token.ownerOf(collectionId));
           });
 
+          // TODO move to ERC1155721 behaviour
           // it('not effects ft collection id approval', async function () {
           //   await expectRevert.unspecified(this.token.getApproved(collectionId));
           // });
@@ -540,10 +552,12 @@ function shouldBehaveLikeERC1155Inventory(
             }
           });
 
+          // TODO move to ERC1155721 behaviour
           // it('not effets owner nft balance', async function () {
           //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
           // });
 
+          // TODO move to ERC1155721 behaviour
           // it('not effetc recipient nft balance', async function () {
           //   (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal('0');
           // });
@@ -581,6 +595,7 @@ function shouldBehaveLikeERC1155Inventory(
               await expectRevert.unspecified(this.token.ownerOf(collectionId));
             });
 
+            // TODO move to ERC1155721 behaviour
             // it('not effects approval for the ft collection id', async function () {
             //   await expectRevert.unspecified(this.token.getApproved(collectionId));
             // });
@@ -595,6 +610,7 @@ function shouldBehaveLikeERC1155Inventory(
               });
             });
 
+            // TODO move to ERC1155721 behaviour
             // it('keeps the owner nft balance', async function () {
             //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
             // });
@@ -672,8 +688,8 @@ function shouldBehaveLikeERC1155Inventory(
                 await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                   operator: owner,
                   from: owner,
-                  tokenId: collectionId,
-                  supply: supply,
+                  id: collectionId,
+                  value: supply,
                   data: data,
                 });
               });
@@ -684,8 +700,8 @@ function shouldBehaveLikeERC1155Inventory(
                 await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                   operator: operator,
                   from: owner,
-                  tokenId: collectionId,
-                  supply: supply,
+                  id: collectionId,
+                  value: supply,
                   data: data,
                 });
               });
@@ -730,6 +746,7 @@ function shouldBehaveLikeERC1155Inventory(
       const data = '0x42';
 
       beforeEach(async function () {
+        // TODO move to ERC1155721 behaviour
         // await this.token.approve(approved, nft1, { from: owner });
         // await this.token.approve(approved, nft2, { from: owner });
         // await this.token.approve(approved, nft3, { from: owner });
@@ -747,6 +764,7 @@ function shouldBehaveLikeERC1155Inventory(
           }
         });
 
+        // TODO move to ERC1155721 behaviour
         // it('clears the approval for the nft ID, not effects ft items', async function () {
         //   for (let id of ids) {
         //     try {
@@ -763,25 +781,17 @@ function shouldBehaveLikeERC1155Inventory(
               _operator: operatorAccount,
               _from: owner,
               _to: this.toWhom,
-              // ids: ids,
-              // values: supplies,
+              _ids: ids,
+              _values: supplies,
             });
           } else {
             expectEvent(receipt, 'TransferBatch', {
               _operator: owner,
               _from: owner,
               _to: this.toWhom,
-              // ids: ids,
-              // values: supplies,
+              _ids: ids,
+              _values: supplies,
             });
-          }
-
-          for (let log of receipt.logs) {
-            if (log.event === 'TransferBatch') {
-              log.args._ids.map(t => t.toString(10)).should.have.members(ids.map(t => t.toString(10)));
-              log.args._values.map(t => t.toString(10)).should.have.members(supplies.map(t => t.toString(10)));
-              break;
-            }
           }
         });
 
@@ -815,6 +825,7 @@ function shouldBehaveLikeERC1155Inventory(
 
         context('when called by the owner without an approved user', function () {
           beforeEach(async function () {
+          // TODO move to ERC1155721 behaviour
             // await this.token.approve(ZeroAddress, nft1, { from: owner });
             // await this.token.approve(ZeroAddress, nft1, { from: owner });
             // await this.token.approve(ZeroAddress, nft1, { from: owner });
@@ -839,6 +850,7 @@ function shouldBehaveLikeERC1155Inventory(
             }
           });
 
+          // TODO move to ERC1155721 behaviour
           // it('clears the approval for the nft ID', async function () {
           //   for (let id of ids) {
           //     try {
@@ -855,19 +867,12 @@ function shouldBehaveLikeERC1155Inventory(
               _operator: owner,
               _from: owner,
               _to: owner,
-              // ids: ids,
-              // values: supplies
+              _ids: ids,
+              _values: supplies
             });
-
-            for (let log of receipt.logs) {
-              if (log.event === 'TransferBatch') {
-                log.args._ids.map(t => t.toString(10)).should.have.members(ids.map(t => t.toString(10)));
-                log.args._values.map(t => t.toString(10)).should.have.members(supplies.map(t => t.toString(10)));
-                break;
-              }
-            }
           });
 
+          // TODO move to ERC1155721 behaviour
           // it('keeps the owner balance', async function () {
           //   (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
           // });
@@ -894,6 +899,7 @@ function shouldBehaveLikeERC1155Inventory(
           });
         });
 
+        // TODO Move to ERC11557221
         // context('when the sender is only authorized for the nft, not for ft', function () {
         //   it('reverts', async function () {
         //     await expectRevert.unspecified(transferFunction.call(this, owner, other, ids, supplies, data, { from: approved })
@@ -983,18 +989,10 @@ function shouldBehaveLikeERC1155Inventory(
               await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedBatch', {
                 operator: owner,
                 from: owner,
-                // tokenIds: ids,
-                // supplies: supplies,
+                ids,
+                values: supplies,
                 data: data,
               });
-
-              for (let log of receipt.logs) {
-                if (log.event === 'ReceivedBatch') {
-                  log.argss.map(t => t.toString(10)).should.have.members(ids.map(t => t.toString(10)));
-                  log.args.supplies.map(t => t.toString(10)).should.have.members(supplies.map(t => t.toString(10)));
-                  break;
-                }
-              }
             });
 
             it('should call onERC1155Received from operator', async function () {
@@ -1003,18 +1001,10 @@ function shouldBehaveLikeERC1155Inventory(
               await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedBatch', {
                 operator: operator,
                 from: owner,
-                // tokenIds: ids,
-                // supplies: supplies,
+                ids,
+                values: supplies,
                 data: data,
               });
-
-              for (let log of receipt.logs) {
-                if (log.event === 'ReceivedBatch') {
-                  log.argss.map(t => t.toString(10)).should.have.members(ids.map(t => t.toString(10)));
-                  log.args.supplies.map(t => t.toString(10)).should.have.members(supplies.map(t => t.toString(10)));
-                  break;
-                }
-              }
             });
 
             describe('with an invalid token id', function () {
@@ -1053,14 +1043,6 @@ function shouldBehaveLikeERC1155Inventory(
           });
         });
       });
-    });
-
-    describe('ERC165 interfaces support', function () {
-      behaviors.shouldSupportInterfaces([
-        interfaces.ERC165,
-        interfaces1155.ERC1155,
-        interfaces1155.ERC1155Inventory_Experimental
-      ]);
     });
   });
 }

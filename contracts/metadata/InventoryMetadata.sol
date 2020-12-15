@@ -5,7 +5,7 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/utils/types/UInt256Extract.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/algo/EnumMap.sol";
-import "./../token/ERC1155/IERC1155AssetCollections.sol";
+import "./../token/ERC1155/IERC1155Inventory.sol";
 import "./ICoreMetadata.sol";
 import "./IInventoryMetadata.sol";
 
@@ -74,8 +74,8 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
 
     function _setInventoryMetadataDelegator(address delegator) internal {
         require(
-            IERC165(delegator).supportsInterface(type(IERC1155AssetCollections).interfaceId),
-            "InventoryMetadata: delegator does not implement IERC1155AssetCollections"
+            IERC165(delegator).supportsInterface(type(IERC1155Inventory).interfaceId),
+            "InventoryMetadata: delegator not IERC1155Inventory"
         );
         inventoryMetadataDelegator = delegator;
     }
@@ -89,7 +89,7 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         bytes32 name
     ) virtual override public view returns (uint256)
     {
-        IERC1155AssetCollections delegator = IERC1155AssetCollections(inventoryMetadataDelegator);
+        IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
 
         EnumMap.Map storage layout =
             delegator.isFungible(id)?
@@ -112,7 +112,7 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         bytes32[] memory names
     ) virtual override public view returns (uint256[] memory values)
     {
-        IERC1155AssetCollections delegator = IERC1155AssetCollections(inventoryMetadataDelegator);
+        IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
         EnumMap.Map storage layout =
             delegator.isFungible(id)?
             _defaultFungibleLayout:
@@ -141,7 +141,7 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         bytes32[] memory names,
         uint256[] memory values
     ) {
-        IERC1155AssetCollections delegator = IERC1155AssetCollections(inventoryMetadataDelegator);
+        IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
 
         EnumMap.Map storage defaultLayout =
             delegator.isFungible(id)?
@@ -236,7 +236,7 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         EnumMap.Map storage layout = _layouts[collectionId];
         _clearLayout(layout);
 
-        IERC1155AssetCollections delegator = IERC1155AssetCollections(inventoryMetadataDelegator);
+        IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
         EnumMap.Map storage defaultLayout =
             delegator.isFungible(collectionId)?
             _defaultFungibleLayout:

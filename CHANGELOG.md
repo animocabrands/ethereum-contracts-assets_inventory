@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.0.0
+
+### Breaking changes
+ * Removed `ERC721`, `ERC1155AssetsInventory`, `AssetsInventory`, and their derived contracts.
+
+### New features
+ * Added an ERC721-compliant, NFTs only `_batchMint` function for `ERC1155721Inventory`.
+
 ## 5.0.0
 
 ### Breaking changes
