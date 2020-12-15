@@ -63,15 +63,24 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     //===================================== ERC721 ==========================================/
 
+    /**
+     * @dev See {IERC721-balanceOf(address)}.
+     */
     function balanceOf(address tokenOwner) public virtual override view returns (uint256) {
         require(tokenOwner != address(0), "Inventory: zero address");
         return _nftBalances[tokenOwner];
     }
 
+    /**
+     * @dev See {IERC721-ownerOf(uint256)}.
+     */
     function ownerOf(uint256 nftId) public virtual override(IERC721, ERC1155InventoryBase) view returns (address) {
         return ERC1155InventoryBase.ownerOf(nftId);
     }
 
+    /**
+     * @dev See {IERC721-approve(address,uint256)}.
+     */
     function approve(address to, uint256 nftId) public virtual override {
         address tokenOwner = address(ownerOf(nftId));
         require(to != tokenOwner, "Inventory: self-approval");
@@ -83,6 +92,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         emit Approval(tokenOwner, to, nftId);
     }
 
+    /**
+     * @dev See {IERC721-getApproved(uint256)}.
+     */
     function getApproved(uint256 nftId) public virtual override view returns (address) {
         uint256 tokenOwner = _owners[nftId];
         require(isNFT(nftId) && (address(tokenOwner) != address(0)), "Inventory: non-existing NFT");
@@ -93,6 +105,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
+    /**
+     * @dev See {IERC721-isApprovedForAll(address,address)}.
+     */
     function isApprovedForAll(address tokenOwner, address operator)
         public
         virtual
@@ -103,22 +118,37 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         return ERC1155InventoryBase.isApprovedForAll(tokenOwner, operator);
     }
 
+    /**
+     * @dev See {IERC721-isApprovedForAll(address,address)} / {IERC1155-isApprovedForAll(address,address)}
+     */
     function setApprovalForAll(address operator, bool approved) public virtual override(IERC721, ERC1155InventoryBase) {
         return ERC1155InventoryBase.setApprovalForAll(operator, approved);
     }
 
+    /**
+     * @dev See {IERC721-transferFrom(address,address,uint256)}.
+     */
     function transferFrom(address from, address to, uint256 nftId) public virtual override {
         _transferFrom_ERC721(from, to, nftId, "", /* safe */false);
     }
 
+    /**
+     * @dev See {IERC721-safeTransferFrom(address,address,uint256)}.
+     */
     function safeTransferFrom(address from, address to, uint256 nftId) public virtual override {
         _transferFrom_ERC721(from, to, nftId, "", /* safe */true);
     }
 
+    /**
+     * @dev See {IERC721-safeTransferFrom(address,address,uint256,bytes)}.
+     */
     function safeTransferFrom(address from, address to, uint256 nftId, bytes memory data) public virtual override {
         _transferFrom_ERC721(from, to, nftId, data, /* safe */true);
     }
 
+    /**
+     * @dev See {IERC721-tokenURI(uint256)}.
+     */
     function tokenURI(uint256 nftId) external virtual override view returns (string memory) {
         require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
         return _uri(nftId);
@@ -682,17 +712,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     }
 
     /**
-     * Burns some token.
-     * @dev Reverts if `id` represents a non-fungible collection.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and `from` doesn't have enough balance.
-     * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
-     * @dev Reverts if `id` represents a non-fungible token which is not owned by `from`.
-     * @dev Emits an {IERC1155-TransferSingle} event.
-     * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
-     * @param from Address of the current token owner.
-     * @param id Identifier of the token to burn.
-     * @param value Amount of token to burn.
+     * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
      */
     function _burnFrom(
         address from,

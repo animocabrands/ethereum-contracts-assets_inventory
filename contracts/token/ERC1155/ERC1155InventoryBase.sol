@@ -116,14 +116,14 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     //================================== ERC1155Inventory =======================================/
 
     /**
-     * @dev See {IERC1155AssetCollections-isFungible}.
+     * @dev See {IERC1155Inventory-isFungible}.
      */
     function isFungible(uint256 id) public virtual override pure returns (bool) {
         return id & _NF_BIT == 0;
     }
 
     /**
-     * @dev See {IERC1155AssetCollections-collectionOf}.
+     * @dev See {IERC1155Inventory-collectionOf}.
      */
     function collectionOf(uint256 nftId) public virtual override pure returns (uint256) {
         require(isNFT(nftId), "Inventory: not an NFT");
@@ -131,7 +131,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
-     * @dev See {IERC1155AssetCollections-ownerOf}.
+     * @dev See {IERC1155Inventory-ownerOf}.
      */
     function ownerOf(uint256 nftId) public virtual override view returns (address) {
         address owner = address(_owners[nftId]);
@@ -140,7 +140,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
-     * @dev See {IERC1155AssetCollections-totalSupply}.
+     * @dev See {IERC1155Inventory-totalSupply}.
      */
     function totalSupply(uint256 id) public virtual override view returns (uint256) {
         if (isNFT(id)) {

@@ -47,7 +47,7 @@ While ERC1155 is capable of supporting both fungible and non-fungible tokens, it
 ```solidity
 pragma solidity 0.6.8;
 
-interface IERC1155AssetCollections {
+interface IERC1155Inventory {
     /**
      * @dev Returns whether or not an ID represents a Fungible Collection.
      * @param id The ID to query.

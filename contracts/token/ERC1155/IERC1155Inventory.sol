@@ -99,8 +99,5 @@ interface IERC1155Inventory {
      * @param ids The identifiers to retrieve the balance of.
      * @return The balances of `ids` owned by accounts `owners`.
      */
-    // function balanceOfBatch(
-    //     address[] calldata owners,
-    //     uint256[] calldata ids
-    // ) external view returns (uint256[] memory);
+    // function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view returns (uint256[] memory);
 }

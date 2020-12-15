@@ -17,7 +17,7 @@ interface IInventoryMetadata {
     /**
      * @dev Get the address of the inventory contracts which delegated
      * core metadata implementation to this contract.
-     * MUST return a valid IERC1155AssetCollections implementer address.
+     * MUST return a valid IERC1155Inventory implementer address.
      */
     function inventoryMetadataDelegator() external view returns (address);
 }
