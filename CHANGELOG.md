@@ -1,6 +1,6 @@
 # Changelog
 
-## 5.0.0
+## 6.0.0
 
 ### Breaking changes
  * Removed `ERC721`, `ERC1155AssetsInventory`, `AssetsInventory`, and their derived contracts.
