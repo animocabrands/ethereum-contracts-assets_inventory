@@ -128,7 +128,7 @@ function shouldBehaveLikeERC1155MintableInventory(
                     this.receipt = await mint(this.token, owner, fCollection1, supply, '0x', { from: minter });
                 });
 
-                it('should increase the fungible collection balance of the owner', async function () {
+                it('should increase thefungible token balance of the owner', async function () {
                     (await this.token.balanceOf(owner, fCollection1)).toNumber().should.be.equal(supply.toNumber());
                 });
 
@@ -241,7 +241,7 @@ function shouldBehaveLikeERC1155MintableInventory(
                     );
                 });
 
-                it('should increase the fungible collection balances of the owner', async function () {
+                it('should increase thefungible token balances of the owner', async function () {
                     (await this.token.balanceOf(owner, fCollection1)).toNumber().should.be.equal(1);
                     (await this.token.balanceOf(owner, fCollection2)).toNumber().should.be.equal(2);
                     (await this.token.balanceOf(owner, fCollection3)).toNumber().should.be.equal(3);

@@ -4,24 +4,28 @@ pragma solidity 0.6.8;
 
 
 /**
- * @title ERC-1155 Multi Token Standard, optional Asset Collections extension
+ * @title ERC-1155 Multi Token Standard, optional Inventory extension
  * @dev See https://eips.ethereum.org/EIPS/eip-xxxx
- * Interface for fungible/non-fungible collections management on a 1155-compliant contract.
- * This proposal attempts to rationalize the co-existence of fungible and non-fungible tokens
- * within the same contract. We consider that there 3 types of identifiers:
- * (a) Fungible Collections identifiers, each representing a set of Fungible Tokens,
- * (b) Non-Fungible Collections identifiers, each representing a set of Non-Fungible Tokens,
- * (c) Non-Fungible Tokens identifiers. 
+ * Interface for fungible/non-fungible tokens management on a 1155-compliant contract.
+ *
+ * This interface rationalizes the co-existence of fungible and non-fungible tokens
+ * within the same contract. As several kinds of fungible tokens can be managed under
+ * the Multi-Token standard, we consider that non-fungible tokens can be classified
+ * under their own specific type. We introduce the concept of non-fungible collection
+ * and consider the usage of 3 types of identifiers:
+ * (a) Fungible Token identifiers, each representing a set of Fungible Tokens,
+ * (b) Non-Fungible Collection identifiers, each representing a set of Non-Fungible Tokens (this is not a token),
+ * (c) Non-Fungible Token identifiers. 
 
  * Identifiers nature
  * |       Type                | isFungible  | isCollection | isToken |
- * |  Fungible Collection      |   true      |     true     |  true   |
+ * |  Fungible Token           |   true      |     true     |  true   |
  * |  Non-Fungible Collection  |   false     |     true     |  false  |
  * |  Non-Fungible Token       |   false     |     false    |  true   |
  *
- * Identifiers capabilities
+ * Identifiers compatibilities
  * |       Type                |  transfer  |   balance    |   supply    |  owner  |
- * |  Fungible Collection      |    OK      |     OK       |     OK      |   NOK   |
+ * |  Fungible Token           |    OK      |     OK       |     OK      |   NOK   |
  * |  Non-Fungible Collection  |    NOK     |     OK       |     OK      |   NOK   |
  * |  Non-Fungible Token       |    OK      |   0 or 1     |   0 or 1    |   OK    |
  *
@@ -62,10 +66,10 @@ interface IERC1155Inventory {
     function totalSupply(uint256 id) external view returns (uint256);
 
     /**
-     * Introspects whether or not `id` represents a fungible collection.
-     *  This function MUST return true even for a fungible collections which is not-yet created.
+     * Introspects whether or not `id` represents afungible token.
+     *  This function MUST return true even for afungible tokens which is not-yet created.
      * @param id The identifier to query.
-     * @return bool True if `id` represents a fungible collection, false otherwise.
+     * @return bool True if `id` represents afungible token, false otherwise.
      */
     function isFungible(uint256 id) external pure returns (bool);
 
@@ -99,8 +103,5 @@ interface IERC1155Inventory {
      * @param ids The identifiers to retrieve the balance of.
      * @return The balances of `ids` owned by accounts `owners`.
      */
-    // function balanceOfBatch(
-    //     address[] calldata owners,
-    //     uint256[] calldata ids
-    // ) external view returns (uint256[] memory);
+    // function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view returns (uint256[] memory);
 }

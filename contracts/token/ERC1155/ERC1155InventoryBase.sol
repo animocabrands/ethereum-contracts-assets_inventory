@@ -40,7 +40,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     mapping(uint256 => uint256) internal _owners;
 
     /* collection ID => creator */
-    mapping(uint256 => address) public creators;
+    mapping(uint256 => address) internal _creators;
 
     /**
      * @dev Constructor function
@@ -116,14 +116,14 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     //================================== ERC1155Inventory =======================================/
 
     /**
-     * @dev See {IERC1155AssetCollections-isFungible}.
+     * @dev See {IERC1155Inventory-isFungible}.
      */
     function isFungible(uint256 id) public virtual override pure returns (bool) {
         return id & _NF_BIT == 0;
     }
 
     /**
-     * @dev See {IERC1155AssetCollections-collectionOf}.
+     * @dev See {IERC1155Inventory-collectionOf}.
      */
     function collectionOf(uint256 nftId) public virtual override pure returns (uint256) {
         require(isNFT(nftId), "Inventory: not an NFT");
@@ -131,7 +131,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
-     * @dev See {IERC1155AssetCollections-ownerOf}.
+     * @dev See {IERC1155Inventory-ownerOf}.
      */
     function ownerOf(uint256 nftId) public virtual override view returns (address) {
         address owner = address(_owners[nftId]);
@@ -140,7 +140,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
-     * @dev See {IERC1155AssetCollections-totalSupply}.
+     * @dev See {IERC1155Inventory-totalSupply}.
      */
     function totalSupply(uint256 id) public virtual override view returns (uint256) {
         if (isNFT(id)) {
@@ -172,8 +172,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      */
     function _createCollection(uint256 collectionId) internal virtual {
         require(!isNFT(collectionId), "Inventory: not a collection");
-        require(creators[collectionId] == address(0), "Inventory: existing collection");
-        creators[collectionId] = _msgSender();
+        require(_creators[collectionId] == address(0), "Inventory: existing collection");
+        _creators[collectionId] = _msgSender();
         emit CollectionCreated(collectionId, isFungible(collectionId));
     }
 
@@ -197,8 +197,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     //================================== Token Receiver Calls Internal =======================================/
 
     /**
-     * Calls {IERC1155TokenReceiver-onERC1155Received} on a target address.
-     *  The call is not executed if the target address is not a contract.
+     * Calls {IERC1155TokenReceiver-onERC1155Received} on a target contract.
+     * @dev Reverts if `to` is not a contract.
      * @dev Reverts if the call to the target fails or is refused.
      * @param from Previous token owner.
      * @param to New token owner.
@@ -220,8 +220,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
-     * Calls {IERC1155TokenReceiver-onERC1155BatchReceived} on a target address.
-     *  The call is not executed if the target address is not a contract.
+     * Calls {IERC1155TokenReceiver-onERC1155batchReceived} on a target contract.
+     * @dev Reverts if `to` is not a contract.
      * @dev Reverts if the call to the target fails or is refused.
      * @param from Previous tokens owner.
      * @param to New tokens owner.

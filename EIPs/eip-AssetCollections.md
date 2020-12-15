@@ -21,9 +21,9 @@ This proposal attempts to rationalize the co-existence of fungible and non-fungi
 
 
 We consider that there 3 types of identifiers:
- * Fungible Collections identifiers, each representing a set of Fungible Tokens,
- * Non-Fungible Collections identifiers, each representing a set of Non-Fungible Tokens,
- * (c) Non-Fungible Tokens identifiers.
+ * Fungible Token identifiers, each representing a set of Fungible Tokens,
+ * Non-Fungible Collection identifiers, each representing a set of Non-Fungible Tokens,
+ * (c) Non-Fungible Token identifiers.
 
 [EIP-721]
 [EIP-1155]
@@ -47,17 +47,17 @@ While ERC1155 is capable of supporting both fungible and non-fungible tokens, it
 ```solidity
 pragma solidity 0.6.8;
 
-interface IERC1155AssetCollections {
+interface IERC1155Inventory {
     /**
-     * @dev Returns whether or not an ID represents a Fungible Collection.
+     * @dev Returns whether or not an ID represents a Fungible Token.
      * @param id The ID to query.
-     * @return bool true if id represents a Fungible Collection, false otherwise.
+     * @return bool true if id represents a Fungible Token, false otherwise.
      */
     function isFungible(uint256 id) external view returns (bool);
 
     /**
      * @dev Returns the parent collection ID of a Non-Fungible Token ID.
-     * This function returns either a Fungible Collection ID or a Non-Fungible Collection ID.
+     * This function returns either a Fungible Token ID or a Non-Fungible Collection ID.
      * This function SHOULD NOT be used to check the existence of a Non-Fungible Token.
      * This function MAY return a value for a non-existing Non-Fungible Token.
      * @param id The ID to query. id must represent an existing/non-existing Non-Fungible Token, else it throws.

@@ -41,7 +41,7 @@ function shouldBehaveLikeERC1155PausableInventory(
         });
         
         describe('PausableCollections', function () {
-            context("fungible collection 1 paused", function () {
+            context("fungible token 1 paused", function () {
                 beforeEach(async function () {
                     await this.token.pauseCollections([fCollection1.id], { from: creator });
                 });
@@ -90,7 +90,7 @@ function shouldBehaveLikeERC1155PausableInventory(
                 });
             });
 
-            context("fungible collection 2 & non-fungible collection 2 paused", function () {
+            context("fungible token 2 & non-fungible collection 2 paused", function () {
                 beforeEach(async function () {
                     await this.token.pauseCollections([nfCollection2, fCollection2.id], { from: creator });
                 });
@@ -115,7 +115,7 @@ function shouldBehaveLikeERC1155PausableInventory(
                     );
                 });
 
-                it("should allow fungible collection 2 again after unpausing", async function () {
+                it("should allowfungible token 2 again after unpausing", async function () {
                     await this.token.unpauseCollections([fCollection2.id], { from: creator });
 
                     await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, recipient, fCollection2.id, "1", mockData, { from: owner });

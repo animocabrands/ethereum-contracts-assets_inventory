@@ -123,7 +123,7 @@ function shouldBehaveLikeERC1155721Inventory(
       // });
 
       describe('ownerOf', function () {
-        context('applied on a fungible collection id', function () {
+        context('applied on afungible token id', function () {
           it('reverts', async function () {
             await expectRevert.unspecified(this.token.ownerOf(fCollection1.id));
           });

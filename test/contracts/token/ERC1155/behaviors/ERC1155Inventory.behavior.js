@@ -79,7 +79,7 @@ function shouldBehaveLikeERC1155Inventory(
 
 
     describe('isFungible()', function () {
-      context("when id is a Fungible Collection", function () {
+      context("when id is a Fungible Token", function () {
         it("returns true", async function () {
           (await this.token.isFungible(fCollection1.id)).should.be.equal(true);
         });
@@ -102,7 +102,7 @@ function shouldBehaveLikeERC1155Inventory(
     });
 
     describe('collectionOf()', function () {
-      context("when id is a Fungible Collection", function () {
+      context("when id is a Fungible Token", function () {
         it("throws", async function () {
           await expectRevert.unspecified(this.token.collectionOf(fCollection1.id));
         });
@@ -125,7 +125,7 @@ function shouldBehaveLikeERC1155Inventory(
     });
 
     describe('ownerOf()', function () {
-      context("when id is a Fungible Collection", function () {
+      context("when id is a Fungible Token", function () {
         it("throws", async function () {
           await expectRevert.unspecified(this.token.ownerOf(fCollection1.id));
         });

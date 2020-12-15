@@ -3,10 +3,13 @@
 pragma solidity 0.6.8;
 
 import "../../../token/ERC1155/ERC1155Inventory.sol";
+import "../../../token/ERC1155/IERC1155InventoryMintable.sol";
+import "../../../token/ERC1155/IERC1155InventoryBurnable.sol";
+import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
+contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IERC1155InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================
@@ -15,7 +18,6 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * Creates a collection.
      * @dev Reverts if `collectionId` does not represent a collection.
      * @dev Reverts if `collectionId` has already been created.
-     * @dev Emits a {IERC1155-URI} event.
      * @dev Emits a {IERC1155Inventory-CollectionCreated} event.
      * @param collectionId Identifier of the collection.
      */
@@ -24,49 +26,26 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
     }
 
     /**
-     * Mints some token.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if `id` represents a non-fungible collection.
-     * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
-     * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
-     * @dev Emits an {IERC1155-TransferSingle} event.
-     * @param to Address of the new token owner.
-     * @param id Identifier of the token to mint.
-     * @param value Amount of token to mint.
-     * @param data Optional data to send along to a receiver contract.
+     * @dev See {IERC1155InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
      */
     function safeMint(
         address to,
         uint256 id,
         uint256 value,
         bytes calldata data
-    ) external onlyMinter {
+    ) external override onlyMinter {
         _safeMint(to, id, value, data);
     }
 
     /**
-     * Mints a batch of tokens.
-     * @dev Reverts if `ids` and `values` have different lengths.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents a non-fungible token and its paired value is not 1.
-     * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param to Address of the new tokens owner.
-     * @param ids Identifiers of the tokens to mint.
-     * @param values Amounts of tokens to mint.
-     * @param data Optional data to send along to a receiver contract.
+     * @dev See {IERC1155721InventoryMintable-safeBatchMint(address,uint256[],uint256[],bytes)}.
      */
     function safeBatchMint(
         address to,
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external onlyMinter {
+    ) external override onlyMinter {
         _safeBatchMint(to, ids, values, data);
     }
 
@@ -75,45 +54,32 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
     // ===================================================================================================
 
     /**
-     * Burns some token.
-     * @dev Reverts if the sender is not approved.
-     * @dev Reverts if `id` represents a non-fungible collection.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and `value` is higher than `from`'s balance.
-     * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
-     * @dev Reverts if `id` represents a non-fungible token which is not owned by `from`.
-     * @dev Emits an {IERC1155-TransferSingle} event.
-     * @param from Address of the current token owner.
-     * @param id Identifier of the token to burn.
-     * @param value Amount of token to burn.
+     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
+     */
+    function creator(uint256 collectionId) external override view returns(address) {
+        require(!isNFT(collectionId), "Inventory: not a collection");
+        return _creators[collectionId];
+    }
+
+    /**
+     * @dev See {IERC1155InventoryBurnable-burnFrom(address,uint256,uint256)}.
      */
     function burnFrom(
         address from,
         uint256 id,
         uint256 value
-    ) external {
+    ) external override {
         _burnFrom(from, id, value);
     }
 
     /**
-     * Burns multiple tokens.
-     * @dev Reverts if `ids` and `values` have different lengths.
-     * @dev Reverts if the sender is not approved.
-     * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is higher than `from`'s balance.
-     * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
-     * @dev Reverts if one of `ids` represents a non-fungible token which is not owned by `from`.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param from Address of the current tokens owner.
-     * @param ids Identifiers of the tokens to burn.
-     * @param values Amounts of tokens to burn.
+     * @dev See {IERC1155InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
      */
     function batchBurnFrom(
         address from,
         uint256[] calldata ids,
         uint256[] calldata values
-    ) external {
+    ) external override {
         _batchBurnFrom(from, ids, values);
     }
 
