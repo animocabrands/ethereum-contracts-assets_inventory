@@ -2,17 +2,16 @@ const { contract } = require('@openzeppelin/test-environment');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 const { behaviors, constants, interfaces } = require('@animoca/ethereum-contracts-core_library');
-const { ZeroAddress, } = constants;
+const { ZeroAddress, EmptyByte} = constants;
 const interfaces721 = require('../../../../../src/interfaces/ERC165/ERC721');
 
-// const { ERC721Received_MagicValue } = require('../../../../../src/constants');
 const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
 
 function shouldBehaveLikeERC721(
-  nfMaskLength,
-  creator, [owner, approved, anotherApproved, operator, other]
+  {nfMaskLength, safeMint_ERC721},
+  [creator, owner, approved, anotherApproved, operator, other]
 ) {
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);
@@ -20,8 +19,8 @@ function shouldBehaveLikeERC721(
 
   describe('like an ERC721', function () {
     beforeEach(async function () {
-      await this.token.mintNonFungible(owner, nft1, { from: creator });
-      await this.token.mintNonFungible(owner, nft2, { from: creator });
+      await safeMint_ERC721(this.token, owner, nft1, '0x', { from: creator });
+      await safeMint_ERC721(this.token, owner, nft2, '0x', { from: creator });
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 
@@ -513,7 +512,6 @@ function shouldBehaveLikeERC721(
       behaviors.shouldSupportInterfaces([
         interfaces.ERC165,
         interfaces721.ERC721,
-        interfaces721.ERC721Exists_Experimental,
       ]);
     });
   });

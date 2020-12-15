@@ -2,14 +2,19 @@
 
 pragma solidity 0.6.8;
 
-import "../../../token/ERC1155/ERC1155Inventory.sol";
-import "../../../token/ERC1155/IERC1155InventoryMintable.sol";
-import "../../../token/ERC1155/IERC1155InventoryBurnable.sol";
+import "../../../token/ERC1155721/ERC1155721Inventory.sol";
+import "../../../token/ERC1155721/IERC1155721BatchTransfer.sol";
+import "../../../token/ERC1155721/IERC1155721InventoryMintable.sol";
+import "../../../token/ERC1155721/IERC1155721InventoryBurnable.sol";
 import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IERC1155InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfer, IERC1155721InventoryMintable, IERC1155721InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+
+    string public override constant name = "ERC1155721InventoryMock";
+    string public override constant symbol = "INV";
+
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================
@@ -26,7 +31,38 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     }
 
     /**
-     * @dev See {IERC1155InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
+     * @dev See {IERC1155721InventoryMintable-mint(address,uint256)}.
+     */
+    function mint(
+        address to,
+        uint256 nftId
+    ) external override onlyMinter {
+        _mint_ERC721(to, nftId, "", false);
+    }
+
+    /**
+     * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
+     */
+    function batchMint(
+        address to,
+        uint256[] calldata nftIds
+    ) external override onlyMinter {
+        _batchMint_ERC721(to, nftIds);
+    }
+
+    /**
+     * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,bytes)}.
+     */
+    function safeMint(
+        address to,
+        uint256 nftId,
+        bytes calldata data
+    ) external override onlyMinter {
+        _mint_ERC721(to, nftId, data, true);
+    }
+
+    /**
+     * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
      */
     function safeMint(
         address to,
@@ -62,7 +98,18 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     }
 
     /**
-     * @dev See {IERC1155InventoryBurnable-burnFrom(address,uint256,uint256)}.
+     * @dev See {IERC1155721BatchTransfer-batchTransferFrom(address,address,uint256[])}.
+     */
+    function batchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata nftIds
+    ) external override {
+        _batchTransferFrom_ERC721(from, to, nftIds);
+    }
+
+    /**
+     * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
      */
     function burnFrom(
         address from,
@@ -73,7 +120,7 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     }
 
     /**
-     * @dev See {IERC1155InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
+     * @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
      */
     function batchBurnFrom(
         address from,

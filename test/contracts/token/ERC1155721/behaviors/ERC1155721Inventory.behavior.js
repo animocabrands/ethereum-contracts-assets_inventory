@@ -2,16 +2,15 @@ const { contract } = require('@openzeppelin/test-environment');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 const { constants } = require('@animoca/ethereum-contracts-core_library');
-const { ZeroAddress } = constants;
+const { ZeroAddress, EmptyByte } = constants;
 
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
 
-function shouldBehaveLikeAssetsInventory(
-  nfMaskLength,
-  creator,
-  [owner, approved, operator, other]
+function shouldBehaveLikeERC1155721Inventory(
+  {nfMaskLength, mint},
+  [creator, owner, approved, operator, other]
 ) {
 
   const fCollection1 = {
@@ -33,14 +32,15 @@ function shouldBehaveLikeAssetsInventory(
   const nft2 = makeNonFungibleTokenId(1, 2, nfMaskLength);
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
-  describe('like an AssetsInventory', function () {
+  describe('like an ERC1155721Inventory', function () {
     beforeEach(async function () {
-      await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
-      await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
-      await this.token.mintFungible(owner, fCollection3.id, fCollection3.supply, { from: creator });
-      await this.token.mintNonFungible(owner, nft1, { from: creator });
-      await this.token.mintNonFungible(owner, nft2, { from: creator });
-      await this.token.mintNonFungible(owner, nft3, { from: creator });
+
+    await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+    await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
+    await mint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', { from: creator });
+    await mint(this.token, owner, nft1, 1, '0x', { from: creator });
+    await mint(this.token, owner, nft2, 1, '0x', { from: creator });
+    await mint(this.token, owner, nft3, 1, '0x', { from: creator });
 
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
@@ -97,8 +97,8 @@ function shouldBehaveLikeAssetsInventory(
 
     describe('721 functions on non-NFT ids', function () {
       beforeEach(async function () {
-        await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
-        await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
+        await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+        await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
         this.toWhom = other; // default to anyone for toWhom in context-dependent tests
       });
 
@@ -123,7 +123,7 @@ function shouldBehaveLikeAssetsInventory(
       // });
 
       describe('ownerOf', function () {
-        context('applied on a fungible collection id', function () {
+        context('applied on afungible token id', function () {
           it('reverts', async function () {
             await expectRevert.unspecified(this.token.ownerOf(fCollection1.id));
           });
@@ -308,5 +308,5 @@ function shouldBehaveLikeAssetsInventory(
 }
 
 module.exports = {
-  shouldBehaveLikeAssetsInventory,
+    shouldBehaveLikeERC1155721Inventory,
 };

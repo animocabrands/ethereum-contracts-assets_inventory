@@ -7,13 +7,13 @@ const interfacesMetadata = require('../../../src/interfaces/ERC165/Metadata');
 const { DefaultNFMaskLength, DefaultNonFungibleLayout } = require('../../../src/constants');
 const { fromBytes32Attribute, toBytes32Attribute } = require('../../../src/helpers/bytes32Attributes');
 
-const AssetsInventory = contract.fromArtifact('AssetsInventoryMock');
+const Inventory = contract.fromArtifact('ERC1155721InventoryMock');
 const InventoryMetadata = contract.fromArtifact('InventoryMetadataMock');
 
 describe('InventoryMetadata', function () {
 
     beforeEach(async function () {
-        const inventory = await AssetsInventory.new(DefaultNFMaskLength);
+        const inventory = await Inventory.new(DefaultNFMaskLength);
         this.contract = await InventoryMetadata.new(DefaultNFMaskLength, inventory.address);
     });
 
@@ -149,7 +149,7 @@ describe('InventoryMetadata', function () {
                 indices: [0, 16, 24, 0, 32, 64, 128, 192, 32]
             };
 
-            itSetsTheLayout('0xF00000000000000000000000000000000000000000000000000000000000000000', layout);
+            itSetsTheLayout('0xF000000000000000000000000000000000000000000000000000000000000000', layout);
         });
     });
 
