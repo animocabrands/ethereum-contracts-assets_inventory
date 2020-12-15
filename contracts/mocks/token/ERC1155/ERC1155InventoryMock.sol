@@ -56,7 +56,7 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     /**
      * @dev See {IERC1155InventoryCreator-creator(uint256)}.
      */
-    function creator(uint256 collectionId) external override returns(address) {
+    function creator(uint256 collectionId) external override view returns(address) {
         require(!isNFT(collectionId), "Inventory: not a collection");
         return _creators[collectionId];
     }

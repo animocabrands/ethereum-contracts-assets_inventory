@@ -13,5 +13,5 @@ interface IERC1155InventoryCreator {
      * @param collectionId Identifier of the collection.
      * @return The creator of a collection, or the zero address if the collection has not been created.
      */
-    function creator(uint256 collectionId) external returns (address);
+    function creator(uint256 collectionId) external view returns (address);
 }
