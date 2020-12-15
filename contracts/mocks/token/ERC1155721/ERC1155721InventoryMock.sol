@@ -2,11 +2,15 @@
 
 pragma solidity 0.6.8;
 
-import "../../../token/ERC1155/ERC1155Inventory.sol";
+import "../../../token/ERC1155721/ERC1155721Inventory.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
+contract ERC1155721InventoryMock is ERC1155721Inventory, BaseMetadataURI, MinterRole {
+
+    string public override constant name = "ERC1155721InventoryMock";
+    string public override constant symbol = "INV";
+
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================
@@ -23,6 +27,64 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
         _createCollection(collectionId);
     }
 
+    // ERC721
+
+    /**
+     * Unsafely mints an NFT using ERC721 logic.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if `nftId` does not represent a non-fungible token.
+     * @dev Reverts if `nftId` has already ben minted.
+     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @dev If `to` is a contract and supports ERC1155TokenReceiver, calls {IERC1155TokenReceiver-onERC1155Received} with empty data.
+     * @param to Address of the new token owner.
+     * @param nftId Identifier of the token to mint.
+     */
+    function mint(
+        address to,
+        uint256 nftId
+    ) external onlyMinter {
+        _mint_ERC721(to, nftId, "", false);
+    }
+
+    /**
+     * Unsafely mints a batch of NFTs using ERC721 logic.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if `id` does not represent a non-fungible token.
+     * @dev Reverts if `safe` is true, the receiver is a contract and the receiver call fails or is refused.
+     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @param to Address of the new token owner.
+     * @param nftIds Identifiers of the tokens to transfer.
+     */
+    function batchMint(
+        address to,
+        uint256[] calldata nftIds
+    ) external onlyMinter {
+        _batchMint_ERC721(to, nftIds);
+    }
+
+    /**
+     * Safely mints an NFT through ERC721 logic.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if `id` does not represent a non-fungible token.
+     * @dev Reverts if `nftId` has already ben minted.
+     * @dev Reverts if the call to the receiver contract (either {IERC1155TokenReceiver-onERC1155Received} or {IERC721TokenReceiver-onERC721Received}) fails or is refused.
+     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @param to Address of the new token owner.
+     * @param nftId Identifier of the token to mint.
+     */
+    function safeMint(
+        address to,
+        uint256 nftId,
+        bytes calldata data
+    ) external onlyMinter {
+        _mint_ERC721(to, nftId, data, true);
+    }
+
+    // ERC1155
+
     /**
      * Mints some token.
      * @dev Reverts if `to` is the zero address.
@@ -31,11 +93,13 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
      * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if the call to the receiver contract fails or is refused.
+     * @dev Emits an {IERC721-Transfer} event.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @param to Address of the new token owner.
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
-     * @param data Optional data to send along to a receiver contract.
+     * @param data If `safe` is true, optional data to send along to a receiver contract.
      */
     function safeMint(
         address to,
@@ -52,9 +116,11 @@ contract ERC1155InventoryMock is ERC1155Inventory, BaseMetadataURI, MinterRole {
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if one of `ids` represents a non-fungible collection.
      * @dev Reverts if one of `ids` represents a non-fungible token and its paired value is not 1.
-     * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
+     * @dev Reverts if one of `ids` represents a non-fungible token which has already been minted.
      * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
      * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if the call to the receiver contract fails or is refused.
+     * @dev Emits up to several {IERC721-Transfer} events.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new tokens owner.
      * @param ids Identifiers of the tokens to mint.

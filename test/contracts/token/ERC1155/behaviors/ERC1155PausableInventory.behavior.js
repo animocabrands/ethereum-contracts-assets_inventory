@@ -5,7 +5,8 @@ const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
 function shouldBehaveLikeERC1155PausableInventory(
-    nfMaskLength, creator, [owner, recipient, operator]
+    {nfMaskLength, mint},
+    [creator, owner, recipient, operator]
 ) {
 
     const mockData = '0x42';
@@ -25,18 +26,18 @@ function shouldBehaveLikeERC1155PausableInventory(
     const nft2 = makeNonFungibleTokenId(1, 2, nfMaskLength);
     const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
-    describe('like an ERC1155PausableInventory', function () {
+    describe('like a pausable ERC1155Inventory', function () {
         beforeEach(async function () {
             await this.token.createCollection(fCollection1.id, { from: creator });
             await this.token.createCollection(fCollection2.id, { from: creator });
             await this.token.createCollection(nfCollection1, { from: creator });
             await this.token.createCollection(nfCollection2, { from: creator });
 
-            await this.token.mintFungible(owner, fCollection1.id, fCollection1.supply, { from: creator });
-            await this.token.mintFungible(owner, fCollection2.id, fCollection2.supply, { from: creator });
-            await this.token.mintNonFungible(owner, nft1, { from: creator });
-            await this.token.mintNonFungible(owner, nft2, { from: creator });
-            await this.token.mintNonFungible(owner, nft3, { from: creator });
+            await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+            await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
+            await mint(this.token, owner, nft1, 1, '0x', { from: creator });
+            await mint(this.token, owner, nft2, 1, '0x', { from: creator });
+            await mint(this.token, owner, nft3, 1, '0x', { from: creator });
         });
         
         describe('PausableCollections', function () {

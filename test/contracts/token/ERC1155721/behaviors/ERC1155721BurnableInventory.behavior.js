@@ -1,16 +1,14 @@
+const { EmptyByte } = require('@animoca/ethereum-contracts-core_library/src/constants');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').constants;
 
-const NonOwned_RevertMessage = 'ERC1155: transfer of a non-owned NFT';
-const NonApproved_RevertMessage = 'ERC1155: transfer by a non-approved sender';
-
-function shouldBehaveLikeBurnableInventory(
-    nfMaskLength,
-    creator,
-    [owner, operator, other]
+// TODO check for totalSupply
+function shouldBehaveLikeERC1155721BurnableInventory(
+    {nfMaskLength, revertMessages, mint},
+    [creator, owner, operator, other],
 ) {
-    describe('like a burnable AssetsInventory', function () {
+    describe('like a burnable ERC1155721Inventory', function () {
 
         const fCollection = {
             id: makeFungibleCollectionId(1),
@@ -21,9 +19,9 @@ function shouldBehaveLikeBurnableInventory(
 
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
-            await this.token.mintFungible(owner, fCollection.id, fCollection.supply, { from: creator });
             await this.token.createCollection(nfCollection, { from: creator });
-            await this.token.mintNonFungible(owner, nft, { from: creator });
+            await mint(this.token, owner, fCollection.id, fCollection.supply, '0x', { from: creator });
+            await mint(this.token, owner, nft, 1, '0x', { from: creator });
         });
 
         describe('burnFrom', function () {
@@ -40,10 +38,6 @@ function shouldBehaveLikeBurnableInventory(
                         receipt = await this.token.burnFrom(from, nft, '1', { from: sender });
                         balanceAfter = await this.token.balanceOf(owner, nfCollection);
                         nftBalanceAfter = await this.token.balanceOf(owner);
-                    });
-
-                    it('updates the collection balance', function () {
-                        balanceAfter.should.be.bignumber.equal(balanceBefore.subn(1));
                     });
 
                     it('updates the collection balance', function () {
@@ -68,7 +62,7 @@ function shouldBehaveLikeBurnableInventory(
                         ownerOf.should.equal(owner);
                         await expectRevert(
                             this.token.ownerOf(nft),
-                            "ERC1155: owner of non-existing NFT"
+                            revertMessages.NonExistingNFT
                         );
                     });
                 }
@@ -76,8 +70,8 @@ function shouldBehaveLikeBurnableInventory(
                 context('from is not the owner', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(other, nft, 1, { from: owner }),
-                            NonOwned_RevertMessage
+                            this.token.burnFrom(other, nft, 1, { from: other }),
+                            revertMessages.NonOwnedNFT
                         );
                     });
                 });
@@ -88,7 +82,7 @@ function shouldBehaveLikeBurnableInventory(
 
                 context('sent by an approved operator', function () {
                     beforeEach(async function () {
-                        this.token.setApprovalForAll(operator, true, { from: owner });
+                        await this.token.setApprovalForAll(operator, true, { from: owner });
                     });
 
                     burnNft.bind(this, owner, operator, nft)();
@@ -98,7 +92,7 @@ function shouldBehaveLikeBurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, nft, 1, { from: other }),
-                            NonOwned_RevertMessage
+                            revertMessages.NonApproved
                         );
                     });
                 });
@@ -136,7 +130,7 @@ function shouldBehaveLikeBurnableInventory(
 
                 context('sent by an approved operator', function () {
                     beforeEach(async function () {
-                        this.token.setApprovalForAll(operator, true, { from: owner });
+                        await this.token.setApprovalForAll(operator, true, { from: owner });
                     });
 
                     burnFungible.bind(this, owner, operator, fCollection.id, 3)();
@@ -146,7 +140,7 @@ function shouldBehaveLikeBurnableInventory(
                     it('reverts', async function () {
                         await expectRevert(
                             this.token.burnFrom(owner, fCollection.id, 4, { from: other }),
-                            NonApproved_RevertMessage
+                            revertMessages.NonApproved
                         );
                     });
                 });
@@ -154,8 +148,8 @@ function shouldBehaveLikeBurnableInventory(
                 context('sent more than owned', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(owner, fCollection.id, 11, { from: other }),
-                            NonApproved_RevertMessage
+                            this.token.burnFrom(owner, fCollection.id, 11, { from: owner }),
+                            revertMessages.InsufficientBalance
                         );
                     });
                 });
@@ -165,5 +159,5 @@ function shouldBehaveLikeBurnableInventory(
 }
 
 module.exports = {
-    shouldBehaveLikeBurnableInventory,
+    shouldBehaveLikeERC1155721BurnableInventory,
 };

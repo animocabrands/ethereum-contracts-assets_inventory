@@ -9,8 +9,8 @@ contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
     event ReceivedSingle(
         address operator,
         address from,
-        uint256 tokenId,
-        uint256 supply,
+        uint256 id,
+        uint256 value,
         bytes data,
         uint256 gas
     );
@@ -18,8 +18,8 @@ contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
     event ReceivedBatch(
         address operator,
         address from,
-        uint256[] tokenIds,
-        uint256[] supplies,
+        uint256[] ids,
+        uint256[] values,
         bytes data,
         uint256 gas
     );
