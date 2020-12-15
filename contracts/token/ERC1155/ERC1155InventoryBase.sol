@@ -197,8 +197,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     //================================== Token Receiver Calls Internal =======================================/
 
     /**
-     * Calls {IERC1155TokenReceiver-onERC1155Received} on a target address.
-     *  The call is not executed if the target address is not a contract.
+     * Calls {IERC1155TokenReceiver-onERC1155Received} on a target contract.
+     * @dev Reverts if `to` is not a contract.
      * @dev Reverts if the call to the target fails or is refused.
      * @param from Previous token owner.
      * @param to New token owner.
@@ -220,8 +220,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
-     * Calls {IERC1155TokenReceiver-onERC1155BatchReceived} on a target address.
-     *  The call is not executed if the target address is not a contract.
+     * Calls {IERC1155TokenReceiver-onERC1155batchReceived} on a target contract.
+     * @dev Reverts if `to` is not a contract.
      * @dev Reverts if the call to the target fails or is refused.
      * @param from Previous tokens owner.
      * @param to New tokens owner.

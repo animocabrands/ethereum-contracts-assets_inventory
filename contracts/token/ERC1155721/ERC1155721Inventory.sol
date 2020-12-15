@@ -14,8 +14,7 @@ import "./../ERC1155/ERC1155InventoryBase.sol";
 abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155InventoryBase {
     using Address for address;
 
-    //bytes4(keccak256("supportsInterface(byte4)"))
-    bytes4 internal constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
+    bytes4 internal constant _INTERFACE_ID_ERC165 = type(IERC165).interfaceId;
     bytes4 internal constant _INTERFACE_ID_ERC1155TokenReceiver = type(IERC1155TokenReceiver).interfaceId;
 
     bytes4 internal constant _ERC721_RECEIVED = type(IERC721Receiver).interfaceId;
@@ -82,7 +81,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev See {IERC721-approve(address,uint256)}.
      */
     function approve(address to, uint256 nftId) public virtual override {
-        address tokenOwner = address(ownerOf(nftId));
+        address tokenOwner = ownerOf(nftId);
         require(to != tokenOwner, "Inventory: self-approval");
 
         address sender = _msgSender();
@@ -97,7 +96,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      */
     function getApproved(uint256 nftId) public virtual override view returns (address) {
         uint256 tokenOwner = _owners[nftId];
-        require(isNFT(nftId) && (address(tokenOwner) != address(0)), "Inventory: non-existing NFT");
+        require(address(tokenOwner) != address(0), "Inventory: non-existing NFT");
         if (tokenOwner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) {
             return _nftApprovals[nftId];
         } else {
@@ -285,8 +284,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if `id` represents afungible token and `value` is 0.
+     * @dev Reverts if `id` represents afungible token and there is an overflow of supply.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
      * @param to Address of the new token owner.
@@ -324,8 +323,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if one of `ids` represents a non-fungible collection.
      * @dev Reverts if one of `ids` represents a non-fungible token and its paired value is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if one of `ids` represents afungible token and its paired value is 0.
+     * @dev Reverts if one of `ids` represents afungible token and there is an overflow of supply.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @dev Emits up to several {IERC721-Transfer} events for each one of `ids` that represents a non-fungible token.
      * @param to Address of the new tokens owner.
@@ -556,8 +555,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and `from` doesn't have enough balance.
+     * @dev Reverts if `id` represents afungible token and `value` is 0.
+     * @dev Reverts if `id` represents afungible token and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
      * @param from Current token owner.
@@ -600,8 +599,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if one of `ids` represents a non-fungible collection.
      * @dev Reverts if one of `ids` represents a non-fungible token and its paired `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token and is not owned by `from`.
-     * @dev Reverts if one of `ids` represents a fungible collection and its paired `value` is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and `from` doesn't have enough balance.
+     * @dev Reverts if one of `ids` represents afungible token and its paired `value` is 0.
+     * @dev Reverts if one of `ids` represents afungible token and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @dev Emits up to several {IERC721-Transfer} events for each one of `ids` that represents a non-fungible token.
      * @param from Current token owner.
@@ -739,8 +738,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if `ids` and `values` have different lengths.
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and `from` doesn't have enough balance.
+     * @dev Reverts if one of `ids` represents afungible token and `value` is 0.
+     * @dev Reverts if one of `ids` represents afungible token and `from` doesn't have enough balance.
      * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token which is not owned by `from`.
      * @dev Emits an {IERC1155-TransferBatch} event.
@@ -805,9 +804,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////
 
     /**
-     * @dev internal function to tell whether a contract is an ERC1155 Receiver contract
-     * @param _contract address query contract addrss
-     * @return wheter the given contract is an ERC1155 Receiver contract
+     * Queries whether a contract implements ERC1155TokenReceiver.
+     * @param _contract address of the contract.
+     * @return wheter the given contract implements ERC1155TokenReceiver.
      */
     function _isERC1155TokenReceiver(address _contract) internal view returns (bool) {
         bool success;
@@ -827,13 +826,13 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     }
 
     /**
-     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
-     * The call is not executed if the target address is not a contract.
-     *
-     * @param from address representing the previous owner of the given token ID
-     * @param to target address that will receive the tokens
-     * @param nftId uint256 identifiers to be transferred
-     * @param data bytes optional data to send along with the call
+     * Calls {IERC721Receiver-onERC721Received} on a target contract.
+     * @dev Reverts if `to` is not a contract.
+     * @dev Reverts if the call to the target fails or is refused.
+     * @param from Previous token owner.
+     * @param to New token owner.
+     * @param nftId Identifier of the token transferred.
+     * @param data Optional data to send along with the receiver contract call.
      */
     function _callOnERC721Received(
         address from,

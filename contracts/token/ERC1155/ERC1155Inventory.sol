@@ -8,7 +8,7 @@ import "./ERC1155InventoryBase.sol";
 /**
  * @title ERC1155Inventory, a contract which manages up to multiple Collections of Fungible and Non-Fungible Tokens
  * @dev In this implementation, with N representing the Non-Fungible Collection mask length, identifiers can represent either:
- * (a) a Fungible Collection:
+ * (a) a Fungible Token:
  *     - most significant bit == 0
  * (b) a Non-Fungible Collection:
  *     - most significant bit == 1
@@ -95,8 +95,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if `id` represents afungible token and `value` is 0.
+     * @dev Reverts if `id` represents afungible token and there is an overflow of supply.
      * @dev Reverts if `isBatch` is false, `safe` is true and the call to the receiver contract fails or is refused.
      * @dev Emits an {IERC1155-TransferSingle} event if `isBatch` is false.
      * @param to Address of the new token owner.
@@ -133,8 +133,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
      * @dev Reverts if one of `ids` represents a non-fungible collection.
      * @dev Reverts if one of `ids` represents a non-fungible token and its paired value is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
-     * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
+     * @dev Reverts if one of `ids` represents afungible token and its paired value is 0.
+     * @dev Reverts if one of `ids` represents afungible token and there is an overflow of supply.
      * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new tokens owner.
@@ -235,8 +235,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and `from` doesn't have enough balance.
+     * @dev Reverts if `id` represents afungible token and `value` is 0.
+     * @dev Reverts if `id` represents afungible token and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @param from Current token owner.
      * @param to Address of the new token owner.
@@ -277,8 +277,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
      * @dev Reverts if one of `ids` does not represent a token.
      * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token and is not owned by `from`.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and `from` doesn't have enough balance.
+     * @dev Reverts if one of `ids` represents afungible token and `value` is 0.
+     * @dev Reverts if one of `ids` represents afungible token and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param from Current token owner.
      * @param to Address of the new token owner.
@@ -378,8 +378,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
      * Burns some token.
      * @dev Reverts if `isBatch` is false and the sender is not approved.
      * @dev Reverts if `id` represents a non-fungible collection.
-     * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and `value` is higher than `from`'s balance.
+     * @dev Reverts if `id` represents afungible token and `value` is 0.
+     * @dev Reverts if `id` represents afungible token and `value` is higher than `from`'s balance.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is not owned by `from`.
      * @dev Emits an {IERC1155-TransferSingle} event if `isBatch` is false.
@@ -411,8 +411,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
      * @dev Reverts if `ids` and `values` have different lengths.
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is higher than `from`'s balance.
+     * @dev Reverts if one of `ids` represents afungible token and `value` is 0.
+     * @dev Reverts if one of `ids` represents afungible token and `value` is higher than `from`'s balance.
      * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token which is not owned by `from`.
      * @dev Emits an {IERC1155-TransferBatch} event.
