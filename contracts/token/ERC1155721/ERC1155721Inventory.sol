@@ -22,7 +22,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     uint256 internal constant _APPROVAL_BIT_TOKEN_OWNER_ = 1 << 160;
 
+    /* owner => NFT balance */
     mapping(address => uint256) internal _nftBalances;
+
+    /* NFT ID => operator */
     mapping(uint256 => address) internal _nftApprovals;
 
     constructor() internal ERC1155InventoryBase() {
@@ -197,10 +200,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /**
      * Unsafely mints a batch of NFTs using ERC721 logic.
      * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if `id` does not represent a non-fungible token.
-     * @dev Reverts if `safe` is true, the receiver is a contract and the receiver call fails or is refused.
-     * @dev Emits an {IERC721-Transfer} event.
-     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @dev Reverts if any of `nftIds` do not represent a non-fungible token.
+     * @dev Emits up to several {IERC721-Transfer} events.
+     * @dev Emits an {IERC1155-TransferBatch} event.
      * @param to Address of the new token owner.
      * @param nftIds Identifiers of the tokens to transfer.
      */
@@ -215,7 +217,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 nftId = nftIds[i];
             require(isNFT(nftId), "Inventory: not an NFT");
             values[i] = 1;
@@ -232,7 +234,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
                 } else {
-                    nfCollectionCount++;
+                    ++nfCollectionCount;
                 }
             }
         }
@@ -249,14 +251,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     /**
      * Mints some token.
-     * @dev Reverts if `isBatch` is false and `to` is the zero address.
+     * @dev Reverts if `to` is the zero address.
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
      * @dev Reverts if `id` represents a fungible collection and there is an overflow of supply.
-     * @dev Reverts if `isBatch` is false, `safe` is true and the call to the receiver contract fails or is refused.
-     * @dev Emits an {IERC1155-TransferSingle} event if `isBatch` is false.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
      * @param to Address of the new token owner.
      * @param id Identifier of the token to mint.
      * @param value Amount of token to mint.
@@ -294,8 +296,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if one of `ids` represents a non-fungible token which is owned by a non-zero address.
      * @dev Reverts if one of `ids` represents a fungible collection and its paired value is 0.
      * @dev Reverts if one of `ids` represents a fungible collection and there is an overflow of supply.
-     * @dev Reverts if `safe` is true and the call to the receiver contract fails or is refused.
      * @dev Emits an {IERC1155-TransferBatch} event.
+     * @dev Emits up to several {IERC721-Transfer} events for each one of `ids` that represents a non-fungible token.
      * @param to Address of the new tokens owner.
      * @param ids Identifiers of the tokens to mint.
      * @param values Amounts of tokens to mint.
@@ -314,7 +316,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
         uint256 nftsCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
@@ -334,7 +336,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                         nftsCount += nfCollectionCount;
                         nfCollectionCount = 1;
                     } else {
-                        nfCollectionCount++;
+                        ++nfCollectionCount;
                     }
                 }
             } else {
@@ -428,7 +430,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if `nftId` does not represent a non-fungible token.
      * @dev Reverts if `nftId` is not owned by `from`.
-     * @dev Reverts if `safe` is true and .
+     * @dev Reverts if `safe` is true, the receiver is a contract and the receiver call fails or is refused.
      * @dev Emits an {IERC721-Transfer} event.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @param from Current token owner.
@@ -468,7 +470,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
      * @dev Reverts if one of `nftIds` is not owned by `from`.
-     * @dev Emits up to sevral {IERC721-Transfer} events.
+     * @dev Emits up to several {IERC721-Transfer} events.
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param from Current token owner.
      * @param to Address of the new token owner.
@@ -488,7 +490,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 nftId = nftIds[i];
             require(isNFT(nftId), "Inventory: not an NFT");
             values[i] = 1;
@@ -504,7 +506,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
                 } else {
-                    nfCollectionCount++;
+                    ++nfCollectionCount;
                 }
             }
         }
@@ -520,14 +522,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     /**
      * Transfers tokens to another address.
-     * @dev Reverts if `isBatch` is false and `to` is the zero address.
-     * @dev Reverts if `isBatch` is false the sender is not approved.
+     * @dev Reverts if `to` is the zero address.
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
      * @dev Reverts if `id` represents a fungible collection and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferSingle} event.
+     * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
      * @param from Current token owner.
      * @param to Address of the new token owner.
      * @param id Identifier of the token to transfer.
@@ -566,11 +568,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
+     * @dev Reverts if one of `ids` represents a non-fungible token and its paired `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token and is not owned by `from`.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is 0.
+     * @dev Reverts if one of `ids` represents a fungible collection and its paired `value` is 0.
      * @dev Reverts if one of `ids` represents a fungible collection and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferBatch} event.
+     * @dev Emits up to several {IERC721-Transfer} events for each one of `ids` that represents a non-fungible token.
      * @param from Current token owner.
      * @param to Address of the new token owner.
      * @param ids Identifiers of the tokens to transfer.
@@ -593,7 +596,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
         uint256 nftsCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             if (isFungible(id)) {
                 _transferFungible(from, to, id, values[i], operatable); 
@@ -611,7 +614,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                         nftsCount += nfCollectionCount;
                         nfCollectionCount = 1;
                     } else {
-                        nfCollectionCount++;
+                        ++nfCollectionCount;
                     }
                 }
             } else {
@@ -680,13 +683,13 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
 
     /**
      * Burns some token.
-     * @dev Reverts if `isBatch` is false and the sender is not approved.
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a fungible collection and `value` is 0.
-     * @dev Reverts if `id` represents a fungible collection and `value` is higher than `from`'s balance.
+     * @dev Reverts if `id` represents a fungible collection and `from` doesn't have enough balance.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token which is not owned by `from`.
-     * @dev Emits an {IERC1155-TransferSingle} event if `isBatch` is false.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
      * @param from Address of the current token owner.
      * @param id Identifier of the token to burn.
      * @param value Amount of token to burn.
@@ -717,10 +720,11 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if one of `ids` represents a non-fungible collection.
      * @dev Reverts if one of `ids` represents a fungible collection and `value` is 0.
-     * @dev Reverts if one of `ids` represents a fungible collection and `value` is higher than `from`'s balance.
+     * @dev Reverts if one of `ids` represents a fungible collection and `from` doesn't have enough balance.
      * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token which is not owned by `from`.
      * @dev Emits an {IERC1155-TransferBatch} event.
+     * @dev Emits up to several {IERC721-Transfer} events for each one of `ids` that represents a non-fungible token.
      * @param from Address of the current tokens owner.
      * @param ids Identifiers of the tokens to burn.
      * @param values Amounts of tokens to burn.
@@ -739,7 +743,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
         uint256 nftsCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             if (isFungible(id)) {
                 _burnFungible(from, id, values[i], operatable); 
@@ -759,7 +763,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                         nftsCount += nfCollectionCount;
                         nfCollectionCount = 1;
                     } else {
-                        nfCollectionCount++;
+                        ++nfCollectionCount;
                     }
                 }
             } else {
