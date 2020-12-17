@@ -38,7 +38,6 @@ function shouldBehaveLikeERC1155Inventory(
   const unknownNft = makeNonFungibleTokenId(99, 99, nfMaskLength);
 
 
-  // TODO, checks for totalSupply if new ABI
   describe('like an ERC1155Inventory', function () {
     beforeEach(async function () {
       await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
@@ -147,6 +146,25 @@ function shouldBehaveLikeERC1155Inventory(
       });
     });
 
+    describe('totalSupply()', function () {
+      context('for a non-fungible token', function () {
+        it('returns the non-fungible token total supply', async function () {
+          (await this.token.totalSupply(nft1)).should.be.bignumber.equal('1');
+        });
+      });
+
+      context('for a non-fungible collection', function () {
+        it('returns the non-fungible collection total supply', async function () {
+          (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal('1');
+        });
+      });
+
+      context('for a fungible collection', function () {
+        it('returns the fungible collection total supply', async function () {
+          (await this.token.totalSupply(fCollection1.id)).should.be.bignumber.equal(fCollection1.supply.toString());
+        });
+      });
+    });
 
     describe('balanceOf', function () {
       context('when the given address owns some tokens', function () {

@@ -42,11 +42,21 @@ function shouldBehaveLikeERC1155721MintableInventory(
         context('mintNonFungible', function () {
             beforeEach(async function () {
                 this.nftBalance = await this.token.balanceOf(owner);
+                this.supply = await this.token.totalSupply(nfCollection1);
+                this.nftSupply = await this.token.totalSupply(nft1);
                 this.receipt = await mint(this.token, owner, nft1, 1, '0x', { from: minter });
             });
 
             it('should increase the non-fungible token balance of the owner', async function () {
                 (await this.token.balanceOf(owner)).should.be.bignumber.equal(this.nftBalance.add(One));
+            });
+
+            it('should increase the non-fungible token supply', async function () {
+                (await this.token.totalSupply(nft1)).should.be.bignumber.equal(this.nftSupply.addn(1));
+            });
+
+            it('should increase the non-fungible collection supply', async function () {
+                (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal(this.supply.addn(1));
             });
 
             it('should emit the Transfer event', async function () {
@@ -126,6 +136,16 @@ function shouldBehaveLikeERC1155721MintableInventory(
             context('when successful', function () {
                 beforeEach(async function () {
                     this.nftBalance = await this.token.balanceOf(owner);
+                    this.supplies = {
+                        fCollection1: await this.token.totalSupply(fCollection1),
+                        fCollection2: await this.token.totalSupply(fCollection2),
+                        fCollection3: await this.token.totalSupply(fCollection3),
+                        nfCollection1: await this.token.totalSupply(nfCollection1),
+                        nfCollection2: await this.token.totalSupply(nfCollection2),
+                        nft1: await this.token.totalSupply(nft1),
+                        nft2: await this.token.totalSupply(nft2),
+                        nft3: await this.token.totalSupply(nft3),
+                    };
                     this.receipt = await batchMint(
                         this.token,
                         owner,
@@ -138,6 +158,23 @@ function shouldBehaveLikeERC1155721MintableInventory(
 
                 it('should increase the non-fungible token balance of the owner', async function () {
                     (await this.token.balanceOf(owner)).should.be.bignumber.equal(this.nftBalance.add(Three));
+                });
+
+                it('should increase the non-fungible token supply', async function () {
+                    (await this.token.totalSupply(nft1)).should.be.bignumber.equal(this.supplies.nft1.addn(1));
+                    (await this.token.totalSupply(nft2)).should.be.bignumber.equal(this.supplies.nft2.addn(1));
+                    (await this.token.totalSupply(nft3)).should.be.bignumber.equal(this.supplies.nft3.addn(1));
+                });
+
+                it('should increase the non-fungible collection supply', async function () {
+                    (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal(this.supplies.nfCollection1.addn(1));
+                    (await this.token.totalSupply(nfCollection2)).should.be.bignumber.equal(this.supplies.nfCollection2.addn(2));
+                });
+
+                it('should increase the fungible collection supply', async function () {
+                    (await this.token.totalSupply(fCollection1)).should.be.bignumber.equal(this.supplies.fCollection1.addn(1));
+                    (await this.token.totalSupply(fCollection2)).should.be.bignumber.equal(this.supplies.fCollection2.addn(2));
+                    (await this.token.totalSupply(fCollection3)).should.be.bignumber.equal(this.supplies.fCollection3.addn(3));
                 });
 
                 it('should emit Transfer events', async function () {

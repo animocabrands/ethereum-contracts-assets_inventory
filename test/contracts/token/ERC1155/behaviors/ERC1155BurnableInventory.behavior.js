@@ -3,7 +3,6 @@ const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTo
 const { ZeroAddress, EmptyByte } = require('@animoca/ethereum-contracts-core_library').constants;
 
 
-// TODO, checks for totalSupply if new ABI
 function shouldBehaveLikeERC1155BurnableInventory(
     {nfMaskLength, revertMessages, mint},
     [creator, owner, operator, other],
@@ -29,15 +28,19 @@ function shouldBehaveLikeERC1155BurnableInventory(
             context('with a non-fungible token', function () {
 
                 const burnNft = function (from, sender, nft) {
-                    let ownerOf, balanceBefore, nftBalanceBefore, receipt, balanceAfter, nftBalanceAfter;
+                    let ownerOf, balanceBefore, nftBalanceBefore, supplyBefore, nftSupplyBefore, receipt, balanceAfter, nftBalanceAfter, supplyAfter, nftSupplyAfter;
 
                     beforeEach(async function () {
                         ownerOf = await this.token.ownerOf(nft);
                         balanceBefore = await this.token.balanceOf(from, nfCollection);
                         nftBalanceBefore = await this.token.balanceOf(owner, nft);
+                        supplyBefore = await this.token.totalSupply(nfCollection);
+                        nftSupplyBefore = await this.token.totalSupply(nft);
                         receipt = await this.token.burnFrom(from, nft, '1', { from: sender });
                         balanceAfter = await this.token.balanceOf(owner, nfCollection);
                         nftBalanceAfter = await this.token.balanceOf(owner, nft);
+                        supplyAfter = await this.token.totalSupply(nfCollection);
+                        nftSupplyAfter = await this.token.totalSupply(nft);
                     });
 
                     it('updates the collection balance', function () {
@@ -46,6 +49,14 @@ function shouldBehaveLikeERC1155BurnableInventory(
 
                     it('updates the nft balance', function () {
                         nftBalanceAfter.should.be.bignumber.equal(nftBalanceBefore.subn(1));
+                    });
+
+                    it('updates the collection supply', function () {
+                        supplyAfter.should.be.bignumber.equal(supplyBefore.subn(1));
+                    });
+
+                    it('updates the nft supply', function () {
+                        nftSupplyAfter.should.be.bignumber.equal(nftSupplyBefore.subn(1));
                     });
 
                     it('emits a TransferSingle', function () {
@@ -111,16 +122,22 @@ function shouldBehaveLikeERC1155BurnableInventory(
             context('with fungible tokens', function () {
 
                 const burnFungible = function (from, sender, collection, amount) {
-                    let balanceBefore, receipt, balanceAfter;
+                    let balanceBefore, supplyBefore, receipt, balanceAfter, supplyAfter;
 
                     beforeEach(async function () {
                         balanceBefore = await this.token.balanceOf(from, collection);
+                        supplyBefore = await this.token.totalSupply(collection);
                         receipt = await this.token.burnFrom(from, collection, amount, { from: sender });
                         balanceAfter = await this.token.balanceOf(owner, collection);
+                        supplyAfter = await this.token.totalSupply(collection);
                     });
 
                     it('updates the collection balance', function () {
                         balanceAfter.should.be.bignumber.equal(balanceBefore.subn(amount));
+                    });
+
+                    it('updates the collection supply', function () {
+                        supplyAfter.should.be.bignumber.equal(supplyBefore.subn(amount));
                     });
 
                     it('emits a TransferSingle event', function () {
