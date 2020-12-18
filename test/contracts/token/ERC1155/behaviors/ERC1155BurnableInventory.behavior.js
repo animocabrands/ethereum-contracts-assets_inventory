@@ -188,7 +188,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
 
         });
 
-        describe.only('batchBurnFrom', function () {
+        describe('batchBurnFrom', function () {
 
             it('should revert if `ids` and `values` have different lengths', async function () {
                 await expectRevert(
