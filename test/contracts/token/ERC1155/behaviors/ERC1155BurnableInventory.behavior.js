@@ -186,7 +186,202 @@ function shouldBehaveLikeERC1155BurnableInventory(
                 });
             });
 
-            // TODO batchBurnFrom
+        });
+
+        describe.only('batchBurnFrom', function () {
+
+            it('should revert if `ids` and `values` have different lengths', async function () {
+                await expectRevert(
+                    this.token.batchBurnFrom(owner, [nft, fCollection.id], [1], { from:  owner}),
+                    revertMessages.InconsistentArrays,
+                );           
+            });
+
+            it('should revert if the token is a non-fungible collection ID', async function () {
+                await expectRevert(
+                    this.token.batchBurnFrom(owner, [nfCollection], [1], { from: owner }),
+                    revertMessages.NonTokenId,
+                );           
+            });
+
+            context('with non-fungible tokens', function () {
+
+                it('should revert if the sender is not approved', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [nft], [1], { from: operator }),
+                        revertMessages.NonApproved_Batch,
+                    );           
+                });
+    
+                it('should revert if the token has already been burned', async function () {
+                    await this.token.batchBurnFrom(owner, [nft], [1], { from: owner });
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [nft], [1], { from: owner }),
+                        revertMessages.NonOwnedNFT,
+                    );           
+                });
+    
+                it('should revert if the token is not owned by `from`', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(operator, [nft], [1], { from: operator }),
+                        revertMessages.NonOwnedNFT,
+                    );           
+                });
+    
+                it('should revert if `value` is greater than 1', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [nft], [2], { from: owner }),
+                        revertMessages.WrongNFTValue,
+                    );           
+                });
+    
+                it('should revert if `value` is less than 1', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [nft], [0], { from: owner }),
+                        revertMessages.WrongNFTValue,
+                    );           
+                });
+    
+                context('when successful', function () {
+
+                    const batchBurnNftFrom = async function (from, ids, values, sender) {
+
+                        beforeEach(async function () {
+                            this.nftBalance = await this.token.balanceOf(from, nft);
+                            this.balance = await this.token.balanceOf(from, nfCollection);
+                            this.nftSupply = await this.token.totalSupply(nft);
+                            this.supply = await this.token.totalSupply(nfCollection);
+                            this.receipt = await this.token.batchBurnFrom(from, ids, values, { from: sender });
+                        });
+
+                        it('should decrease the token balance of the owner', async function () {
+                            (await this.token.balanceOf(from, nft)).should.be.bignumber.equal(this.nftBalance.subn(1));
+                        });
+    
+                        it('should decrease the token collection balance of the owner', async function () {
+                            (await this.token.balanceOf(from, nfCollection)).should.be.bignumber.equal(this.balance.subn(1));
+                        });
+        
+                        it('should decrease the token supply', async function () {
+                            (await this.token.totalSupply(nft)).should.be.bignumber.equal(this.nftSupply.subn(1));
+                        });
+        
+                        it('should decrease the token collection supply', async function () {
+                            (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(this.supply.subn(1));
+                        });
+        
+                        it('emits the TransferBatch event', async function () {
+                            expectEvent(
+                                this.receipt,
+                                'TransferBatch',
+                                {
+                                    _operator: sender,
+                                    _from: from,
+                                    _to: ZeroAddress,
+                                    _ids: ids,
+                                    _values: values,
+                                }
+                            );
+                        });
+        
+                    };
+
+                    context('sent from the owner', function () {
+                        batchBurnNftFrom.bind(this)(owner, [nft], [1], owner);
+                    });
+
+                    context('sent from an approved operator', function () {
+                        beforeEach(async function () {
+                            await this.token.setApprovalForAll(operator, true, { from: owner });
+                        });
+    
+                        batchBurnNftFrom.bind(this)(owner, [nft], [1], operator);
+                    });
+    
+                });
+    
+            });
+
+            context('with fungible tokens', function () {
+
+                it('should revert if the sender is not approved', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [fCollection.id], [1], { from: operator }),
+                        revertMessages.NonApproved_Batch,
+                    );           
+                });
+    
+                it('should revert if the token is not owned by `from`', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(operator, [fCollection.id], [1], { from: operator }),
+                        revertMessages.InsufficientBalance,
+                    );           
+                });
+    
+                it('should revert if `value` is 0', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [fCollection.id], [0], { from: owner }),
+                        revertMessages.ZeroValue,
+                    );           
+                });
+    
+                it('should revert if burning more than the balance of `from`', async function () {
+                    await expectRevert(
+                        this.token.batchBurnFrom(owner, [fCollection.id], [fCollection.supply + 1], { from: owner }),
+                        revertMessages.InsufficientBalance,
+                    );           
+                });
+    
+                context('when successful', function () {
+
+                    const batchBurnFungibleFrom = async function (from, ids, values, sender) {
+
+                        beforeEach(async function () {
+                            this.balance = await this.token.balanceOf(from, fCollection.id);
+                            this.supply = await this.token.totalSupply(fCollection.id);
+                            this.receipt = await this.token.batchBurnFrom(from, ids, values, { from: sender });
+                        });
+
+                        it('should decrease the token collection balance of the owner', async function () {
+                            (await this.token.balanceOf(from, fCollection.id)).should.be.bignumber.equal(this.balance.subn(values[0]));
+                        });
+    
+                        it('should decrease the token collection supply', async function () {
+                            (await this.token.totalSupply(fCollection.id)).should.be.bignumber.equal(this.supply.subn(values[0]));
+                        });
+        
+                        it('emits the TransferBatch event', async function () {
+                            expectEvent(
+                                this.receipt,
+                                'TransferBatch',
+                                {
+                                    _operator: sender,
+                                    _from: from,
+                                    _to: ZeroAddress,
+                                    _ids: ids,
+                                    _values: values,
+                                }
+                            );
+                        });
+
+                    };
+
+                    context('sent from the owner', function () {
+                        batchBurnFungibleFrom.bind(this)(owner, [fCollection.id], [3], owner);
+                    });
+
+                    context('sent from an approved operator', function () {
+                        beforeEach(async function () {
+                            await this.token.setApprovalForAll(operator, true, { from: owner });
+                        });
+    
+                        batchBurnFungibleFrom.bind(this)(owner, [fCollection.id], [3], operator);
+                    });
+    
+                });
+    
+            });
+
         });
     });
 }
