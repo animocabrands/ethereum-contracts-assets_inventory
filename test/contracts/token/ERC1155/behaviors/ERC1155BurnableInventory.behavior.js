@@ -200,7 +200,7 @@ function shouldBehaveLikeERC1155BurnableInventory(
             it('should revert if the token is a non-fungible collection ID', async function () {
                 await expectRevert(
                     this.token.batchBurnFrom(owner, [nfCollection], [1], { from: owner }),
-                    revertMessages.NonTokenId,
+                    revertMessages.NotTokenId,
                 );           
             });
 
