@@ -531,7 +531,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
                 nfCollectionCount = 1;
             } else {
                 if (nextCollectionId != nfCollectionId) {
-                    transferNFTUpdateCollectionBalances(from, to, nextCollectionId, nfCollectionCount);
+                    transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
                 } else {
