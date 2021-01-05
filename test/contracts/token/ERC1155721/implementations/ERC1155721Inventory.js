@@ -18,6 +18,27 @@ const safeBatchMint = async function(contract, to, ids, values, data, overrides)
     return contract.safeBatchMint(to, ids, values, data, overrides);
 };
 
+const transferFrom_ERC721 = async function (contract, from, to, nftId, overrides) {
+    return contract.transferFrom(from, to, nftId, overrides);
+};
+
+const safeTransferFrom_ERC721 = async function (contract, from, to, nftId, data, overrides) {
+    return contract.methods['safeTransferFrom(address,address,uint256,bytes)'](from, to, nftId, data, overrides);
+}
+
+const batchTransferFrom_ERC721 = async function (contract, from, to, nftIds, overrides) {
+    return contract.batchTransferFrom(from, to, nftIds, overrides);
+};
+
+const safeTransferFrom = async function (contract, from, to, id, value, data, overrides) {
+    return contract.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](from, to, id, value, data, overrides);
+
+};
+
+const safeBatchTransferFrom = async function (contract, from, to, ids, values, data, overrides) {
+    return contract.safeBatchTransferFrom(from, to, ids, values, data, overrides);
+};
+
 module.exports = {
     contract: "ERC1155721InventoryMock",
     nfMaskLength: 32,
@@ -49,4 +70,11 @@ module.exports = {
     safeBatchMint,
     mint: safeMint,
     batchMint: safeBatchMint,
+    transferFrom_ERC721,
+    safeTransferFrom_ERC721,
+    batchTransferFrom_ERC721,
+    safeTransferFrom,
+    safeBatchTransferFrom,
+    transferFrom: safeTransferFrom,
+    batchTransferFrom: safeBatchTransferFrom,
 };

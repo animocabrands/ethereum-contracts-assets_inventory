@@ -7,9 +7,10 @@ const { ZeroAddress, EmptyByte } = constants;
 const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ReceiverMock = contract.fromArtifact('ERC1155721ReceiverMock');
+const ReceiverMock721 = contract.fromArtifact('ERC721ReceiverMock');
 
 function shouldBehaveLikeERC1155721Inventory(
-  {nfMaskLength, mint},
+  {nfMaskLength, mint, transferFrom_ERC721, safeTransferFrom_ERC721, batchTransferFrom_ERC721, safeTransferFrom, safeBatchTransferFrom, revertMessages},
   [creator, owner, approved, operator, other]
 ) {
 
@@ -27,6 +28,8 @@ function shouldBehaveLikeERC1155721Inventory(
   };
 
   const nfCollection = makeNonFungibleCollectionId(1, nfMaskLength);
+  const nfCollection2 = makeNonFungibleCollectionId(2, nfMaskLength);
+
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(1, 2, nfMaskLength);
@@ -35,12 +38,15 @@ function shouldBehaveLikeERC1155721Inventory(
   describe('like an ERC1155721Inventory', function () {
     beforeEach(async function () {
 
-    await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
-    await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
-    await mint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', { from: creator });
-    await mint(this.token, owner, nft1, 1, '0x', { from: creator });
-    await mint(this.token, owner, nft2, 1, '0x', { from: creator });
-    await mint(this.token, owner, nft3, 1, '0x', { from: creator });
+      await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
+      await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', { from: creator });
+      await mint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', { from: creator });
+      await mint(this.token, owner, nft1, 1, '0x', { from: creator });
+      await mint(this.token, owner, nft2, 1, '0x', { from: creator });
+      await mint(this.token, owner, nft3, 1, '0x', { from: creator });
+
+      this.receiver = await ReceiverMock.new(true, true);
+      this.receiver721 = await ReceiverMock721.new(true);
 
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
@@ -123,7 +129,7 @@ function shouldBehaveLikeERC1155721Inventory(
       // });
 
       describe('ownerOf', function () {
-        context('applied on afungible token id', function () {
+        context('applied on a fungible token id', function () {
           it('reverts', async function () {
             await expectRevert.unspecified(this.token.ownerOf(fCollection1.id));
           });
@@ -302,11 +308,510 @@ function shouldBehaveLikeERC1155721Inventory(
       });
     });
 
-    // TODO add receiver checks
+    describe('721 transfer functions', function () {
+      context('transferFrom', function () {
+        it('should revert if `to` is the zero address', async function () {
+          await expectRevert(
+            transferFrom_ERC721(this.token, owner, ZeroAddress, nft1, {from: operator}),
+            revertMessages.TransferToZero
+          );
+        });
 
+        it('should revert if the sender is not approved', async function () {
+          await expectRevert(
+            transferFrom_ERC721(this.token, owner, other, nft1, {from: operator}),
+            revertMessages.NonApproved
+          );
+        });
+
+        it('should revert if `nftId` is a fungible collection', async function () {
+          await expectRevert(
+            transferFrom_ERC721(this.token, owner, other, fCollection1.id, {from: operator}),
+            revertMessages.NotNFT
+          );
+        });
+
+        it('should revert if `nftId` is a non-fungible collection', async function () {
+          await expectRevert(
+            transferFrom_ERC721(this.token, owner, other, nfCollection, {from: operator}),
+            revertMessages.NotNFT
+          );
+        });
+
+        it('should revert if `nftId` is not owned by `from`', async function () {
+          await expectRevert(
+            transferFrom_ERC721(this.token, other, owner, nft1, {from: operator}),
+            revertMessages.NonOwnedNFT
+          );
+        });
+
+        context('when successful', function () {
+          const transferFrom = function () {
+            beforeEach(async function () {
+              await this.token.setApprovalForAll(operator, true, { from: owner });
+              this.nftBalanceOwner = await this.token.balanceOf(owner, nft1);
+              this.nftBalanceToWhom = await this.token.balanceOf(this.toWhom, nft1);
+              this.balanceOwner = await this.token.balanceOf(owner, nfCollection);
+              this.balanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
+              this.receipt = await transferFrom_ERC721(this.token, owner, this.toWhom, nft1, {from: operator});
+            });
+  
+            it('should transfer the token to the new owner', async function () {
+              const newOwner = await this.token.ownerOf(nft1);
+              newOwner.should.not.equal(owner);
+              newOwner.should.equal(this.toWhom);
+            });
+  
+            it('should increase the non-fungible token balance of the new owner', async function () {
+              (await this.token.balanceOf(this.toWhom, nft1)).should.be.bignumber.equal(this.nftBalanceToWhom.addn(1));
+            });
+  
+            it('should decrease the non-fungible token balance of the previous owner', async function () {
+              (await this.token.balanceOf(owner, nft1)).should.be.bignumber.equal(this.nftBalanceOwner.subn(1));
+            });
+  
+            it('should increase the non-fungible collection balance of the new owner', async function () {
+              (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(this.balanceToWhom.addn(1));
+            });
+  
+            it('should decrease the non-fungible collection balance of the previous owner', async function () {
+              (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.balanceOwner.subn(1));
+            });
+  
+            it('should emit the Transfer event', async function () {
+              expectEvent(
+                this.receipt,
+                'Transfer',
+                {
+                  _from: owner,
+                  _to: this.toWhom,
+                  _tokenId: nft1
+                }
+              );
+            });
+  
+            it('should emit the TransferSingle event', async function () {
+              expectEvent(
+                this.receipt,
+                'TransferSingle',
+                {
+                  _operator: operator,
+                  _from: owner,
+                  _to: this.toWhom,
+                  _id: nft1,
+                  _value: '1',
+                }
+              );
+            });
+          };
+
+          context('transferred to a user account', function () {
+              beforeEach(async function () {
+                  this.toWhom = other;
+              });
+
+              transferFrom();
+          });
+
+          context('transferred to an ERC-1155 receiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver.address;
+            })
+
+            transferFrom();
+
+            it('should safely receive', async function () {
+              await expectEvent.inTransaction(
+                this.receipt.tx,
+                this.receiver,
+                'ReceivedSingle',
+                {
+                  operator: operator,
+                  from: owner,
+                  id: nft1,
+                  value: 1,
+                  data: null,
+                }
+              );
+            });
+          });
+
+          context('transferred to an ERC-721 receiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver721.address;
+            })
+
+            transferFrom();
+
+            it('should NOT safely receive', async function () {
+              await expectEvent.notEmitted.inTransaction(
+                this.receipt.tx,
+                this.receiver721,
+                'Received'
+              );
+            });
+          });
+        });
+      });
+
+      context('safeTransferFrom', function () {
+        it('should revert if `to` is the zero address', async function () {
+          await expectRevert(
+            safeTransferFrom_ERC721(this.token, owner, ZeroAddress, nft1, data, {from: owner}),
+            revertMessages.TransferToZero
+          );
+        });
+
+        it('should revert if the sender is not approved', async function () {
+          await expectRevert(
+            safeTransferFrom_ERC721(this.token, owner, other, nft1, data, {from: operator}),
+            revertMessages.NonApproved
+          );
+        });
+
+        it('should revert if `nftId` is a fungible collection', async function () {
+          await expectRevert(
+            safeTransferFrom_ERC721(this.token, owner, other, fCollection1.id, data, {from: operator}),
+            revertMessages.NotNFT
+          );
+        });
+
+        it('should revert if `nftId` is a non-fungible collection', async function () {
+          await expectRevert(
+            safeTransferFrom_ERC721(this.token, owner, other, nfCollection, data, {from: operator}),
+            revertMessages.NotNFT
+          );
+        });
+
+        it('should revert if `nftId` is not owned by `from`', async function () {
+          await expectRevert(
+            safeTransferFrom_ERC721(this.token, other, owner, nft1, data, {from: operator}),
+            revertMessages.NonOwnedNFT
+          );
+        });
+
+        context('when successful', function () {
+          const transferFrom = function () {
+            beforeEach(async function () {
+              await this.token.setApprovalForAll(operator, true, { from: owner });
+              this.nftBalanceOwner = await this.token.balanceOf(owner, nft1);
+              this.nftBalanceToWhom = await this.token.balanceOf(this.toWhom, nft1);
+              this.balanceOwner = await this.token.balanceOf(owner, nfCollection);
+              this.balanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
+              this.receipt = await safeTransferFrom_ERC721(this.token, owner, this.toWhom, nft1, data, {from: operator});
+            });
+  
+            it('should transfer the token to the new owner', async function () {
+              const newOwner = await this.token.ownerOf(nft1);
+              newOwner.should.not.equal(owner);
+              newOwner.should.equal(this.toWhom);
+            });
+  
+            it('should increase the non-fungible token balance of the new owner', async function () {
+              (await this.token.balanceOf(this.toWhom, nft1)).should.be.bignumber.equal(this.nftBalanceToWhom.addn(1));
+            });
+  
+            it('should decrease the non-fungible token balance of the previous owner', async function () {
+              (await this.token.balanceOf(owner, nft1)).should.be.bignumber.equal(this.nftBalanceOwner.subn(1));
+            });
+  
+            it('should increase the non-fungible collection balance of the new owner', async function () {
+              (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(this.balanceToWhom.addn(1));
+            });
+  
+            it('should decrease the non-fungible collection balance of the previous owner', async function () {
+              (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.balanceOwner.subn(1));
+            });
+  
+            it('should emit the Transfer event', async function () {
+              expectEvent(
+                this.receipt,
+                'Transfer',
+                {
+                  _from: owner,
+                  _to: this.toWhom,
+                  _tokenId: nft1
+                }
+              );
+            });
+  
+            it('should emit the TransferSingle event', async function () {
+              expectEvent(
+                this.receipt,
+                'TransferSingle',
+                {
+                  _operator: operator,
+                  _from: owner,
+                  _to: this.toWhom,
+                  _id: nft1,
+                  _value: '1',
+                }
+              );
+            });
+          };
+
+          context('transferred to a user account', function () {
+              beforeEach(async function () {
+                  this.toWhom = other;
+              });
+
+              transferFrom();
+          });
+
+          context('transferred to an ERC-1155 receiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver.address;
+            })
+
+            transferFrom();
+
+            it('should safely receive', async function () {
+              await expectEvent.inTransaction(
+                this.receipt.tx,
+                this.receiver,
+                'ReceivedSingle',
+                {
+                  operator: operator,
+                  from: owner,
+                  id: nft1,
+                  value: 1,
+                  data: data,
+                }
+              );
+            });
+          });
+
+          context('transferred to an ERC-721 receiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver721.address;
+            })
+
+            transferFrom();
+
+            it('should safely receive', async function () {
+              await expectEvent.inTransaction(
+                this.receipt.tx,
+                this.receiver721,
+                'Received',
+                {
+                  operator: operator,
+                  from: owner,
+                  tokenId: nft1,
+                  data: data,
+                }
+              );
+            });
+          });
+        });
+      });
+
+      context('batchTransferFrom', function () {
+        it('should revert if `to` is the zero address', async function () {
+          await expectRevert(
+            batchTransferFrom_ERC721(this.token, owner, ZeroAddress, [nft1], {from: owner}),
+            revertMessages.TransferToZero
+          );
+        });
+
+        it('should revert if the sender is not approved', async function () {
+          await expectRevert(
+            batchTransferFrom_ERC721(this.token, owner, other, [nft1], {from: operator}),
+            revertMessages.NonApproved
+          );
+        });
+
+        it('should revert if one of `nftId` is a fungible collection', async function () {
+          await expectRevert(
+            batchTransferFrom_ERC721(this.token, owner, other, [nft1, fCollection1.id], {from: owner}),
+            revertMessages.NotNFT
+          );
+        });
+
+        it('should revert if one of `nftId` is a non-fungible collection', async function () {
+          await expectRevert(
+            batchTransferFrom_ERC721(this.token, owner, other, [nft1, nfCollection], {from: owner}),
+            revertMessages.NotNFT
+          );
+        });
+
+        it('should revert if one of `nftId` is not owned by `from`', async function () {
+          await expectRevert(
+            batchTransferFrom_ERC721(this.token, other, owner, [nft1], {from: owner}),
+            revertMessages.NonOwnedNFT
+          );
+        });
+
+        context('when successful', function () {
+          const collection1Nfts = [nft1];
+          const collection2Nfts = [nft2, nft3];
+          const nfts = collection1Nfts.concat(collection2Nfts);
+
+          const transferFrom = function () {
+            beforeEach(async function () {
+              await this.token.setApprovalForAll(operator, true, { from: owner });
+              this.nftBalanceOwner = [];
+              this.nftBalanceToWhom = [];
+              for (const nft of nfts) {
+                this.nftBalanceOwner.push(await this.token.balanceOf(owner, nft));
+                this.nftBalanceToWhom.push(await this.token.balanceOf(this.toWhom, nft));
+              }
+              this.collection1BalanceOwner = await this.token.balanceOf(owner, nfCollection);
+              this.collection1BalanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
+              this.collection2BalanceOwner = await this.token.balanceOf(owner, nfCollection2);
+              this.collection2BalanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection2);
+              this.receipt = await batchTransferFrom_ERC721(this.token, owner, this.toWhom, nfts, {from: operator});
+            });
+  
+            it('should transfer the tokens to the new owner', async function () {
+              for (const nft of nfts) {
+                const newOwner = await this.token.ownerOf(nft);
+                newOwner.should.not.equal(owner);
+                newOwner.should.equal(this.toWhom);
+              }
+            });
+  
+            it('should increase the non-fungible token balance of the new owner', async function () {
+              for (let index = 0; index != nfts.length; ++index) {
+                const nft = nfts[index];
+                (await this.token.balanceOf(this.toWhom, nft)).should.be.bignumber.equal(this.nftBalanceToWhom[index].addn(1));
+              }
+            });
+  
+            it('should decrease the non-fungible token balance of the previous owner', async function () {
+              for (let index = 0; index != nfts.length; ++index) {
+                const nft = nfts[index];
+                (await this.token.balanceOf(owner, nft)).should.be.bignumber.equal(this.nftBalanceOwner[index].subn(1));
+              }
+            });
+  
+            it('should increase the non-fungible collection balance of the new owner', async function () {
+              (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(this.collection1BalanceToWhom.addn(collection1Nfts.length));
+              (await this.token.balanceOf(this.toWhom, nfCollection2)).should.be.bignumber.equal(this.collection2BalanceToWhom.addn(collection2Nfts.length));
+            });
+  
+            it('should decrease the non-fungible collection balance of the previous owner', async function () {
+              (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.collection1BalanceOwner.subn(collection1Nfts.length));
+              (await this.token.balanceOf(owner, nfCollection2)).should.be.bignumber.equal(this.collection2BalanceOwner.subn(collection2Nfts.length));
+            });
+  
+            it('should emit the Transfer event', async function () {
+              for (let index = 0; index != nfts.length; ++index) {
+                const nft = nfts[index];
+                expectEvent(
+                  this.receipt,
+                  'Transfer',
+                  {
+                    _from: owner,
+                    _to: this.toWhom,
+                    _tokenId: nft
+                  }
+                );
+              }
+            });
+  
+            it('should emit the TransferBatch event', async function () {
+              expectEvent(
+                this.receipt,
+                'TransferBatch',
+                {
+                  _operator: operator,
+                  _from: owner,
+                  _to: this.toWhom,
+                  _ids: nfts,
+                  _values: Array(nfts.length).fill(1),
+                }
+              );
+            });
+          };
+
+          context('transferred to a user account', function () {
+              beforeEach(async function () {
+                  this.toWhom = other;
+              });
+
+              transferFrom();
+          });
+
+          context('transferred to an ERC-1155 receiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver.address;
+            })
+
+            transferFrom();
+
+            it('should safely receive', async function () {
+              await expectEvent.inTransaction(
+                this.receipt.tx,
+                this.receiver,
+                'ReceivedBatch',
+                {
+                  operator: operator,
+                  from: owner,
+                  ids: nfts,
+                  values: Array(nfts.length).fill(1),
+                  data: null,
+                }
+              );
+            });
+          });
+        });
+      });
+    });
+
+    describe('transfer functions', function () {
+      context('safeTransferFrom', function () {
+        it('should revert if `to` is the zero address', async function () {
+          await expectRevert(
+            safeTransferFrom(this.token, owner, ZeroAddress, nft1, 1, data, {from: owner}),
+            revertMessages.TransferToZero
+          );
+        });
+
+        // TODO: write missing tests
+      });
+
+      context('safeBatchTransferFrom', function () {
+        it('should revert if `to` is the zero address', async function () {
+          safeBatchTransferFrom(this.token, owner, ZeroAddress, [nft1], [1], data, {from: owner}),
+          revertMessages.TransferToZero
+        });
+
+        // TODO: write missing tests
+      });
+    });
+
+    // TODO add receiver checks
+    /*
+    _transferFrom_ERC721(address from, address to, uint256 nftId, bytes memory data, bool safe)
+        event Transfer(address _from, address _to, uint256 _tokenId)
+        event TransferSingle(address _operator, address _from, address _to, uint256 _id, uint256 _value)
+        // if `to` is a contract
+            // if `to` is ERC1155TokenReceiver
+                event ReceivedSingle(address operator, address from, uint256 id, uint256 value, bytes data, uint256 gas)
+            // else
+                event Received(address operator, address from, uint256 tokenId, bytes data, uint256 gas)
+    _batchTransferFrom_ERC721(address from, address to, uint256[] memory nftIds)
+        // foreach `nftId` in the batch
+            event Transfer(address _from, address _to, uint256 _tokenId)
+        event TransferBatch(address _operator, address _from, address _to, uint256[] _ids, uint256[] _values)
+        // if `to` is a contract and is ERC1155TokenReceiver
+            event ReceivedBatch(address operator, address from, uint256[] ids, uint256[] values, bytes data, uint256 gas);
+    _safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes memory data)
+        // if `id` is an NFT ID
+            event Transfer(address _from, address _to, uint256 _tokenId)
+        event TransferSingle(address _operator, address _from, address _to, uint256 _id, uint256 _value)
+        // if `to` is a contract
+            event ReceivedSingle(address operator, address from, uint256 id, uint256 value, bytes data, uint256 gas)
+    _safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory values, bytes memory data)
+        // foreach `id` in the batch
+            // if `id` is an NFT ID
+                event Transfer(address _from, address _to, uint256 _tokenId)
+        event TransferBatch(address _operator, address _from, address _to, uint256[] _ids, uint256[] _values)
+        // if `to` is a contract
+            event ReceivedBatch(address operator, address from, uint256[] ids, uint256[] values, bytes data, uint256 gas);
+    */
   });
 }
-
 module.exports = {
     shouldBehaveLikeERC1155721Inventory,
 };
