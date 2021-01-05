@@ -503,7 +503,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Emits an {IERC1155-TransferBatch} event.
      * @param from Current token owner.
      * @param to Address of the new token owner.
-     * @param nftIds Identifiers of the token sto transfer.
+     * @param nftIds Identifiers of the tokens to transfer.
      */
     function _batchTransferFrom_ERC721(
         address from,
@@ -555,8 +555,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev Reverts if `id` represents a non-fungible collection.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
-     * @dev Reverts if `id` represents afungible token and `value` is 0.
-     * @dev Reverts if `id` represents afungible token and `from` doesn't have enough balance.
+     * @dev Reverts if `id` represents a fungible token and `value` is 0.
+     * @dev Reverts if `id` represents a fungible token and `from` doesn't have enough balance.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @dev Emits an {IERC721-Transfer} event if `id` represents a non-fungible token.
      * @param from Current token owner.
