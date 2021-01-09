@@ -346,14 +346,13 @@ function shouldBehaveLikeERC1155721Inventory(
         });
 
         context('when successful', function () {
-          const transferFrom = function () {
+          const transferFrom = function (from) {
             beforeEach(async function () {
-              await this.token.setApprovalForAll(operator, true, { from: owner });
               this.nftBalanceOwner = await this.token.balanceOf(owner, nft1);
               this.nftBalanceToWhom = await this.token.balanceOf(this.toWhom, nft1);
               this.balanceOwner = await this.token.balanceOf(owner, nfCollection);
               this.balanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
-              this.receipt = await transferFrom_ERC721(this.token, owner, this.toWhom, nft1, {from: operator});
+              this.receipt = await transferFrom_ERC721(this.token, owner, this.toWhom, nft1, {from: from});
             });
   
             it('should transfer the token to the new owner', async function () {
@@ -395,7 +394,7 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receipt,
                 'TransferSingle',
                 {
-                  _operator: operator,
+                  _operator: from,
                   _from: owner,
                   _to: this.toWhom,
                   _id: nft1,
@@ -410,7 +409,25 @@ function shouldBehaveLikeERC1155721Inventory(
                   this.toWhom = other;
               });
 
-              transferFrom();
+            context('when called by the owner', function () {
+              transferFrom(owner);
+          });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              transferFrom(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                await this.token.approve(approved, nft1, { from: owner });
+              });
+
+              transferFrom(approved);
+            });
           });
 
           context('transferred to an ERC-1155 receiver contract', function () {
@@ -418,7 +435,8 @@ function shouldBehaveLikeERC1155721Inventory(
               this.toWhom = this.receiver.address;
             })
 
-            transferFrom();
+            const transferFromToReceiver = function (from) {
+              transferFrom(from);
 
             it('should safely receive', async function () {
               await expectEvent.inTransaction(
@@ -426,13 +444,34 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receiver,
                 'ReceivedSingle',
                 {
-                  operator: operator,
+                    operator: from,
                   from: owner,
                   id: nft1,
                   value: 1,
                   data: null,
                 }
               );
+            });
+            };
+
+            context('when called by the owner', function () {
+              transferFromToReceiver(owner);
+          });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              transferFromToReceiver(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                await this.token.approve(approved, nft1, { from: owner });
+              });
+
+              transferFrom(approved);
             });
           });
 
@@ -441,7 +480,8 @@ function shouldBehaveLikeERC1155721Inventory(
               this.toWhom = this.receiver721.address;
             })
 
-            transferFrom();
+            const transferFromToReceiver = function (from) {
+              transferFrom(from);
 
             it('should NOT safely receive', async function () {
               await expectEvent.notEmitted.inTransaction(
@@ -449,6 +489,27 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receiver721,
                 'Received'
               );
+            });
+            };
+
+            context('when called by the owner', function () {
+              transferFromToReceiver(owner);
+          });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+        });
+
+              transferFromToReceiver(operator);
+      });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                await this.token.approve(approved, nft1, { from: owner });
+              });
+
+              transferFrom(approved);
             });
           });
         });
@@ -491,14 +552,13 @@ function shouldBehaveLikeERC1155721Inventory(
         });
 
         context('when successful', function () {
-          const transferFrom = function () {
+          const transferFrom = function (from) {
             beforeEach(async function () {
-              await this.token.setApprovalForAll(operator, true, { from: owner });
               this.nftBalanceOwner = await this.token.balanceOf(owner, nft1);
               this.nftBalanceToWhom = await this.token.balanceOf(this.toWhom, nft1);
               this.balanceOwner = await this.token.balanceOf(owner, nfCollection);
               this.balanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
-              this.receipt = await safeTransferFrom_ERC721(this.token, owner, this.toWhom, nft1, data, {from: operator});
+              this.receipt = await safeTransferFrom_ERC721(this.token, owner, this.toWhom, nft1, data, {from: from});
             });
   
             it('should transfer the token to the new owner', async function () {
@@ -540,7 +600,7 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receipt,
                 'TransferSingle',
                 {
-                  _operator: operator,
+                  _operator: from,
                   _from: owner,
                   _to: this.toWhom,
                   _id: nft1,
@@ -555,7 +615,25 @@ function shouldBehaveLikeERC1155721Inventory(
                   this.toWhom = other;
               });
 
-              transferFrom();
+            context('when called by the owner', function () {
+              transferFrom(owner);
+            });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              transferFrom(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                await this.token.approve(approved, nft1, { from: owner });
+              });
+
+              transferFrom(approved);
+            });
           });
 
           context('transferred to an ERC-1155 receiver contract', function () {
@@ -563,7 +641,8 @@ function shouldBehaveLikeERC1155721Inventory(
               this.toWhom = this.receiver.address;
             })
 
-            transferFrom();
+            const transferFromToReceiver = function (from) {
+              transferFrom(from);
 
             it('should safely receive', async function () {
               await expectEvent.inTransaction(
@@ -571,13 +650,34 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receiver,
                 'ReceivedSingle',
                 {
-                  operator: operator,
+                    operator: from,
                   from: owner,
                   id: nft1,
                   value: 1,
                   data: data,
                 }
               );
+            });
+            };
+
+            context('when called by the owner', function () {
+              transferFromToReceiver(owner);
+            });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              transferFromToReceiver(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                await this.token.approve(approved, nft1, { from: owner });
+              });
+
+              transferFrom(approved);
             });
           });
 
@@ -586,7 +686,8 @@ function shouldBehaveLikeERC1155721Inventory(
               this.toWhom = this.receiver721.address;
             })
 
-            transferFrom();
+            const transferFromToReceiver = function (from) {
+              transferFrom(from);
 
             it('should safely receive', async function () {
               await expectEvent.inTransaction(
@@ -594,12 +695,33 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receiver721,
                 'Received',
                 {
-                  operator: operator,
+                    operator: from,
                   from: owner,
                   tokenId: nft1,
                   data: data,
                 }
               );
+            });
+            };
+
+            context('when called by the owner', function () {
+              transferFromToReceiver(owner);
+            });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              transferFromToReceiver(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                await this.token.approve(approved, nft1, { from: owner });
+              });
+
+              transferFrom(approved);
             });
           });
         });
@@ -646,9 +768,8 @@ function shouldBehaveLikeERC1155721Inventory(
           const collection2Nfts = [nft2, nft3];
           const nfts = collection1Nfts.concat(collection2Nfts);
 
-          const transferFrom = function () {
+          const transferFrom = function (from) {
             beforeEach(async function () {
-              await this.token.setApprovalForAll(operator, true, { from: owner });
               this.nftBalanceOwner = [];
               this.nftBalanceToWhom = [];
               for (const nft of nfts) {
@@ -659,7 +780,7 @@ function shouldBehaveLikeERC1155721Inventory(
               this.collection1BalanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
               this.collection2BalanceOwner = await this.token.balanceOf(owner, nfCollection2);
               this.collection2BalanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection2);
-              this.receipt = await batchTransferFrom_ERC721(this.token, owner, this.toWhom, nfts, {from: operator});
+              this.receipt = await batchTransferFrom_ERC721(this.token, owner, this.toWhom, nfts, {from: from});
             });
   
             it('should transfer the tokens to the new owner', async function () {
@@ -714,7 +835,7 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receipt,
                 'TransferBatch',
                 {
-                  _operator: operator,
+                  _operator: from,
                   _from: owner,
                   _to: this.toWhom,
                   _ids: nfts,
@@ -729,15 +850,36 @@ function shouldBehaveLikeERC1155721Inventory(
                   this.toWhom = other;
               });
 
-              transferFrom();
+              context('when called by the owner', function () {
+                transferFrom(owner);
+              });
+  
+              context('when called by an operator', function () {
+                beforeEach(async function () {
+                  await this.token.setApprovalForAll(operator, true, { from: owner });
+                });
+  
+                transferFrom(operator);
           });
+
+              context('when called by an approved sender', function () {
+                beforeEach(async function () {
+                  for (const nft of nfts) {
+                    await this.token.approve(approved, nft, { from: owner });
+                  }
+                });
+  
+                transferFrom(approved);
+              });
+            });
 
           context('transferred to an ERC-1155 receiver contract', function () {
             beforeEach(async function () {
               this.toWhom = this.receiver.address;
             })
 
-            transferFrom();
+            const transferFromToReceiver = function (from) {
+              transferFrom(from);
 
             it('should safely receive', async function () {
               await expectEvent.inTransaction(
@@ -745,13 +887,36 @@ function shouldBehaveLikeERC1155721Inventory(
                 this.receiver,
                 'ReceivedBatch',
                 {
-                  operator: operator,
+                    operator: from,
                   from: owner,
                   ids: nfts,
                   values: Array(nfts.length).fill(1),
                   data: null,
                 }
               );
+            });
+            };
+
+            context('when called by the owner', function () {
+              transferFromToReceiver(owner);
+            });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              transferFromToReceiver(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                for (const nft of nfts) {
+                  await this.token.approve(approved, nft, { from: owner });
+                }
+              });
+
+              transferFromToReceiver(approved);
             });
           });
         });
