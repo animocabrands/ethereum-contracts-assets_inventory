@@ -312,35 +312,35 @@ function shouldBehaveLikeERC1155721Inventory(
       context('transferFrom', function () {
         it('should revert if `to` is the zero address', async function () {
           await expectRevert(
-            transferFrom_ERC721(this.token, owner, ZeroAddress, nft1, {from: operator}),
+            transferFrom_ERC721(this.token, owner, ZeroAddress, nft1, {from: owner}),
             revertMessages.TransferToZero
           );
         });
 
         it('should revert if the sender is not approved', async function () {
           await expectRevert(
-            transferFrom_ERC721(this.token, owner, other, nft1, {from: operator}),
+            transferFrom_ERC721(this.token, owner, other, nft1, {from: other}),
             revertMessages.NonApproved
           );
         });
 
         it('should revert if `nftId` is a fungible collection', async function () {
           await expectRevert(
-            transferFrom_ERC721(this.token, owner, other, fCollection1.id, {from: operator}),
+            transferFrom_ERC721(this.token, owner, other, fCollection1.id, {from: owner}),
             revertMessages.NotNFT
           );
         });
 
         it('should revert if `nftId` is a non-fungible collection', async function () {
           await expectRevert(
-            transferFrom_ERC721(this.token, owner, other, nfCollection, {from: operator}),
+            transferFrom_ERC721(this.token, owner, other, nfCollection, {from: owner}),
             revertMessages.NotNFT
           );
         });
 
         it('should revert if `nftId` is not owned by `from`', async function () {
           await expectRevert(
-            transferFrom_ERC721(this.token, other, owner, nft1, {from: operator}),
+            transferFrom_ERC721(this.token, other, owner, nft1, {from: owner}),
             revertMessages.NonOwnedNFT
           );
         });
@@ -464,28 +464,28 @@ function shouldBehaveLikeERC1155721Inventory(
 
         it('should revert if the sender is not approved', async function () {
           await expectRevert(
-            safeTransferFrom_ERC721(this.token, owner, other, nft1, data, {from: operator}),
+            safeTransferFrom_ERC721(this.token, owner, other, nft1, data, {from: other}),
             revertMessages.NonApproved
           );
         });
 
         it('should revert if `nftId` is a fungible collection', async function () {
           await expectRevert(
-            safeTransferFrom_ERC721(this.token, owner, other, fCollection1.id, data, {from: operator}),
+            safeTransferFrom_ERC721(this.token, owner, other, fCollection1.id, data, {from: owner}),
             revertMessages.NotNFT
           );
         });
 
         it('should revert if `nftId` is a non-fungible collection', async function () {
           await expectRevert(
-            safeTransferFrom_ERC721(this.token, owner, other, nfCollection, data, {from: operator}),
+            safeTransferFrom_ERC721(this.token, owner, other, nfCollection, data, {from: owner}),
             revertMessages.NotNFT
           );
         });
 
         it('should revert if `nftId` is not owned by `from`', async function () {
           await expectRevert(
-            safeTransferFrom_ERC721(this.token, other, owner, nft1, data, {from: operator}),
+            safeTransferFrom_ERC721(this.token, other, owner, nft1, data, {from: owner}),
             revertMessages.NonOwnedNFT
           );
         });
@@ -615,7 +615,7 @@ function shouldBehaveLikeERC1155721Inventory(
 
         it('should revert if the sender is not approved', async function () {
           await expectRevert(
-            batchTransferFrom_ERC721(this.token, owner, other, [nft1], {from: operator}),
+            batchTransferFrom_ERC721(this.token, owner, other, [nft1], {from: other}),
             revertMessages.NonApproved
           );
         });
