@@ -60,7 +60,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         require(owner != address(0), "Inventory: zero address");
 
         if (isNFT(id)) {
-            return _owners[id] == uint256(owner) ? 1 : 0;
+            return address(_owners[id]) == owner ? 1 : 0;
         }
 
         return _balances[id][owner];
