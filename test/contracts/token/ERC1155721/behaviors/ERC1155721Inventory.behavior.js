@@ -932,7 +932,276 @@ function shouldBehaveLikeERC1155721Inventory(
           );
         });
 
-        // TODO: write missing tests
+        it('should revert if `id` is a non-fungible collection', async function () {
+          await expectRevert(
+            safeTransferFrom(this.token, owner, other, nfCollection, 1, data, {from: owner}),
+            revertMessages.NotTokenId
+          );
+        });
+
+        context('when transferring a non-fungible token', function () {
+          it('should revert if the sender is non-approved', async function () {
+            await expectRevert(
+              safeTransferFrom(this.token, owner, other, nft1, 1, data, {from: other}),
+              revertMessages.NonApproved
+            );
+          });
+
+          it('should revert if `value` is not 1', async function () {
+            await expectRevert(
+              safeTransferFrom(this.token, owner, other, nft1, 0, data, {from: owner}),
+              revertMessages.WrongNFTValue
+            );
+          });
+
+          it('should revert if `from` is not the owner of `id`', async function () {
+            await expectRevert(
+              safeTransferFrom(this.token, other, owner, nft1, 1, data, {from: other}),
+              revertMessages.NonOwnedNFT
+            );
+          });
+
+          context('when successful', function () {
+            const transferFrom = function (from) {
+              beforeEach(async function () {
+                this.nftBalanceOwner = await this.token.balanceOf(owner, nft1);
+                this.nftBalanceToWhom = await this.token.balanceOf(this.toWhom, nft1);
+                this.balanceOwner = await this.token.balanceOf(owner, nfCollection);
+                this.balanceToWhom = await this.token.balanceOf(this.toWhom, nfCollection);
+                this.receipt = await safeTransferFrom(this.token, owner, this.toWhom, nft1, 1, data, {from: from});
+              });
+
+              it('should transfer the token to the new owner', async function () {
+                const newOwner = await this.token.ownerOf(nft1);
+                newOwner.should.not.equal(owner);
+                newOwner.should.equal(this.toWhom);
+              });
+    
+              it('should increase the non-fungible token balance of the new owner', async function () {
+                (await this.token.balanceOf(this.toWhom, nft1)).should.be.bignumber.equal(this.nftBalanceToWhom.addn(1));
+              });
+    
+              it('should decrease the non-fungible token balance of the previous owner', async function () {
+                (await this.token.balanceOf(owner, nft1)).should.be.bignumber.equal(this.nftBalanceOwner.subn(1));
+              });
+    
+              it('should increase the non-fungible collection balance of the new owner', async function () {
+                (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(this.balanceToWhom.addn(1));
+              });
+    
+              it('should decrease the non-fungible collection balance of the previous owner', async function () {
+                (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.balanceOwner.subn(1));
+              });
+    
+              it('should emit the Transfer event', async function () {
+                expectEvent(
+                  this.receipt,
+                  'Transfer',
+                  {
+                    _from: owner,
+                    _to: this.toWhom,
+                    _tokenId: nft1
+                  }
+                );
+              });
+
+              it('should emit the TransferSingle event', async function () {
+                expectEvent(
+                  this.receipt,
+                  'TransferSingle',
+                  {
+                    _operator: from,
+                    _from: owner,
+                    _to: this.toWhom,
+                    _id: nft1,
+                    _value: '1',
+                  }
+                );
+              });
+            }
+
+            context('transferred to a user account', function () {
+              beforeEach(async function () {
+                this.toWhom = other;
+              });
+
+              context('when called by the owner', function () {
+                transferFrom(owner);
+              });
+  
+              context('when called by an operator', function () {
+                beforeEach(async function () {
+                  await this.token.setApprovalForAll(operator, true, { from: owner });
+                });
+  
+                transferFrom(operator);
+              });
+  
+              context('when called by an approved sender', function () {
+                beforeEach(async function () {
+                  await this.token.approve(approved, nft1, { from: owner });
+                });
+  
+                transferFrom(approved);
+              });
+            });
+
+            context('transferred to an ERC-1155 receiver contract', function () {
+              beforeEach(async function () {
+                this.toWhom = this.receiver.address;
+              })
+  
+              const transferFromToReceiver = function (from) {
+                transferFrom(from);
+
+                it('should safely receive', async function () {
+                  await expectEvent.inTransaction(
+                    this.receipt.tx,
+                    this.receiver,
+                    'ReceivedSingle',
+                    {
+                      operator: from,
+                      from: owner,
+                      id: nft1,
+                      value: 1,
+                      data: data,
+                    }
+                  );
+                });
+              };
+
+              context('when called by the owner', function () {
+                transferFromToReceiver(owner);
+              });
+  
+              context('when called by an operator', function () {
+                beforeEach(async function () {
+                  await this.token.setApprovalForAll(operator, true, { from: owner });
+                });
+  
+                transferFromToReceiver(operator);
+              });
+  
+              context('when called by an approved sender', function () {
+                beforeEach(async function () {
+                  await this.token.approve(approved, nft1, { from: owner });
+                });
+  
+                transferFrom(approved);
+              });
+            });
+          });
+        });
+
+        context('when transferring a fungible token', function () {
+          it('should revert if the sender is non-approved', async function () {
+            await expectRevert(
+              safeTransferFrom(this.token, owner, other, fCollection1.id, 1, data, {from: other}),
+              revertMessages.NonApproved
+            );
+          });
+
+          it('should revert if `value` is zero', async function () {
+            await expectRevert(
+              safeTransferFrom(this.token, owner, other, fCollection1.id, 0, data, {from: owner}),
+              revertMessages.ZeroValue
+            );
+          });
+  
+          it('should revert if `from` has an insufficient balance', async function () {
+            await expectRevert(
+              safeTransferFrom(this.token, other, owner, fCollection1.id, 1, data, {from: other}),
+              revertMessages.InsufficientBalance
+            );
+          });
+
+          context('when successful', function () {
+            const transferFrom = function (from) {
+              beforeEach(async function () {
+                this.balanceOwner = await this.token.balanceOf(owner, fCollection1.id);
+                this.balanceToWhom = await this.token.balanceOf(this.toWhom, fCollection1.id);
+                this.receipt = await safeTransferFrom(this.token, owner, this.toWhom, fCollection1.id, 1, data, {from: from});
+              });
+
+              it('should increase the fungible collection balance of the new owner', async function () {
+                (await this.token.balanceOf(this.toWhom, fCollection1.id)).should.be.bignumber.equal(this.balanceToWhom.addn(1));
+              });
+    
+              it('should decrease the fungible collection balance of the previous owner', async function () {
+                (await this.token.balanceOf(owner, fCollection1.id)).should.be.bignumber.equal(this.balanceOwner.subn(1));
+              });
+    
+              it('emits the TransferSingle event', async function () {
+                expectEvent(
+                  this.receipt,
+                  'TransferSingle',
+                  {
+                    _operator: from,
+                    _from: owner,
+                    _to: this.toWhom,
+                    _id: fCollection1.id,
+                    _value: '1',
+                  }
+                );
+              });
+            }
+
+            context('transferred to a user account', function () {
+              beforeEach(async function () {
+                this.toWhom = other;
+              });
+
+              context('when called by the owner', function () {
+                transferFrom(owner);
+              });
+  
+              context('when called by an operator', function () {
+                beforeEach(async function () {
+                  await this.token.setApprovalForAll(operator, true, { from: owner });
+                });
+  
+                transferFrom(operator);
+              });
+            });
+
+            context('transferred to an ERC-1155 receiver contract', function () {
+              beforeEach(async function () {
+                this.toWhom = this.receiver.address;
+              })
+  
+              const transferFromToReceiver = function (from) {
+                transferFrom(from);
+
+                it('should safely receive', async function () {
+                  await expectEvent.inTransaction(
+                    this.receipt.tx,
+                    this.receiver,
+                    'ReceivedSingle',
+                    {
+                      operator: from,
+                      from: owner,
+                      id: fCollection1.id,
+                      value: 1,
+                      data: data,
+                    }
+                  );
+                });
+              };
+
+              context('when called by the owner', function () {
+                transferFromToReceiver(owner);
+              });
+  
+              context('when called by an operator', function () {
+                beforeEach(async function () {
+                  await this.token.setApprovalForAll(operator, true, { from: owner });
+                });
+  
+                transferFromToReceiver(operator);
+              });
+            });
+          });
+        });
       });
 
       context('safeBatchTransferFrom', function () {
