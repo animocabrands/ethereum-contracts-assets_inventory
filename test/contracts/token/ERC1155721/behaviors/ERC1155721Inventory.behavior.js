@@ -36,6 +36,10 @@ function shouldBehaveLikeERC1155721Inventory(
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
   describe('like an ERC1155721Inventory', function () {
+
+    // workaround for test cases that throw with `Error: Timeout of 2000ms exceeded`
+    this.timeout(10000);
+
     beforeEach(async function () {
 
       await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', { from: creator });
@@ -405,13 +409,13 @@ function shouldBehaveLikeERC1155721Inventory(
           };
 
           context('transferred to a user account', function () {
-              beforeEach(async function () {
-                  this.toWhom = other;
-              });
+            beforeEach(async function () {
+              this.toWhom = other;
+            });
 
             context('when called by the owner', function () {
               transferFrom(owner);
-          });
+            });
 
             context('when called by an operator', function () {
               beforeEach(async function () {
@@ -438,25 +442,25 @@ function shouldBehaveLikeERC1155721Inventory(
             const transferFromToReceiver = function (from) {
               transferFrom(from);
 
-            it('should safely receive', async function () {
-              await expectEvent.inTransaction(
-                this.receipt.tx,
-                this.receiver,
-                'ReceivedSingle',
-                {
+              it('should safely receive', async function () {
+                await expectEvent.inTransaction(
+                  this.receipt.tx,
+                  this.receiver,
+                  'ReceivedSingle',
+                  {
                     operator: from,
-                  from: owner,
-                  id: nft1,
-                  value: 1,
-                  data: null,
-                }
-              );
-            });
+                    from: owner,
+                    id: nft1,
+                    value: 1,
+                    data: null,
+                  }
+                );
+              });
             };
 
             context('when called by the owner', function () {
               transferFromToReceiver(owner);
-          });
+            });
 
             context('when called by an operator', function () {
               beforeEach(async function () {
@@ -483,26 +487,26 @@ function shouldBehaveLikeERC1155721Inventory(
             const transferFromToReceiver = function (from) {
               transferFrom(from);
 
-            it('should NOT safely receive', async function () {
-              await expectEvent.notEmitted.inTransaction(
-                this.receipt.tx,
-                this.receiver721,
-                'Received'
-              );
-            });
+              it('should NOT safely receive', async function () {
+                await expectEvent.notEmitted.inTransaction(
+                  this.receipt.tx,
+                  this.receiver721,
+                  'Received'
+                );
+              });
             };
 
             context('when called by the owner', function () {
               transferFromToReceiver(owner);
-          });
+            });
 
             context('when called by an operator', function () {
               beforeEach(async function () {
                 await this.token.setApprovalForAll(operator, true, { from: owner });
-        });
+              });
 
               transferFromToReceiver(operator);
-      });
+            });
 
             context('when called by an approved sender', function () {
               beforeEach(async function () {
@@ -611,9 +615,9 @@ function shouldBehaveLikeERC1155721Inventory(
           };
 
           context('transferred to a user account', function () {
-              beforeEach(async function () {
-                  this.toWhom = other;
-              });
+            beforeEach(async function () {
+              this.toWhom = other;
+            });
 
             context('when called by the owner', function () {
               transferFrom(owner);
@@ -644,20 +648,20 @@ function shouldBehaveLikeERC1155721Inventory(
             const transferFromToReceiver = function (from) {
               transferFrom(from);
 
-            it('should safely receive', async function () {
-              await expectEvent.inTransaction(
-                this.receipt.tx,
-                this.receiver,
-                'ReceivedSingle',
-                {
+              it('should safely receive', async function () {
+                await expectEvent.inTransaction(
+                  this.receipt.tx,
+                  this.receiver,
+                  'ReceivedSingle',
+                  {
                     operator: from,
-                  from: owner,
-                  id: nft1,
-                  value: 1,
-                  data: data,
-                }
-              );
-            });
+                    from: owner,
+                    id: nft1,
+                    value: 1,
+                    data: data,
+                  }
+                );
+              });
             };
 
             context('when called by the owner', function () {
@@ -689,19 +693,19 @@ function shouldBehaveLikeERC1155721Inventory(
             const transferFromToReceiver = function (from) {
               transferFrom(from);
 
-            it('should safely receive', async function () {
-              await expectEvent.inTransaction(
-                this.receipt.tx,
-                this.receiver721,
-                'Received',
-                {
+              it('should safely receive', async function () {
+                await expectEvent.inTransaction(
+                  this.receipt.tx,
+                  this.receiver721,
+                  'Received',
+                  {
                     operator: from,
-                  from: owner,
-                  tokenId: nft1,
-                  data: data,
-                }
-              );
-            });
+                    from: owner,
+                    tokenId: nft1,
+                    data: data,
+                  }
+                );
+              });
             };
 
             context('when called by the owner', function () {
@@ -768,7 +772,7 @@ function shouldBehaveLikeERC1155721Inventory(
           const collection2Nfts = [nft2, nft3];
           const nfts = collection1Nfts.concat(collection2Nfts);
 
-          const transferFrom = function (from) {
+          const batchTransferFrom = function (from) {
             beforeEach(async function () {
               this.nftBalanceOwner = [];
               this.nftBalanceToWhom = [];
@@ -851,7 +855,7 @@ function shouldBehaveLikeERC1155721Inventory(
               });
 
               context('when called by the owner', function () {
-                transferFrom(owner);
+                batchTransferFrom(owner);
               });
   
               context('when called by an operator', function () {
@@ -859,9 +863,9 @@ function shouldBehaveLikeERC1155721Inventory(
                   await this.token.setApprovalForAll(operator, true, { from: owner });
                 });
   
-                transferFrom(operator);
-          });
-
+                batchTransferFrom(operator);
+              });
+  
               context('when called by an approved sender', function () {
                 beforeEach(async function () {
                   for (const nft of nfts) {
@@ -869,7 +873,7 @@ function shouldBehaveLikeERC1155721Inventory(
                   }
                 });
   
-                transferFrom(approved);
+                batchTransferFrom(approved);
               });
             });
 
@@ -878,27 +882,27 @@ function shouldBehaveLikeERC1155721Inventory(
               this.toWhom = this.receiver.address;
             })
 
-            const transferFromToReceiver = function (from) {
-              transferFrom(from);
+            const batchTransferFromToReceiver = function (from) {
+              batchTransferFrom(from);
 
-            it('should safely receive', async function () {
-              await expectEvent.inTransaction(
-                this.receipt.tx,
-                this.receiver,
-                'ReceivedBatch',
-                {
+              it('should safely receive', async function () {
+                await expectEvent.inTransaction(
+                  this.receipt.tx,
+                  this.receiver,
+                  'ReceivedBatch',
+                  {
                     operator: from,
-                  from: owner,
-                  ids: nfts,
-                  values: Array(nfts.length).fill(1),
-                  data: null,
-                }
-              );
-            });
+                    from: owner,
+                    ids: nfts,
+                    values: Array(nfts.length).fill(1),
+                    data: null,
+                  }
+                );
+              });
             };
 
             context('when called by the owner', function () {
-              transferFromToReceiver(owner);
+              batchTransferFromToReceiver(owner);
             });
 
             context('when called by an operator', function () {
@@ -906,7 +910,7 @@ function shouldBehaveLikeERC1155721Inventory(
                 await this.token.setApprovalForAll(operator, true, { from: owner });
               });
 
-              transferFromToReceiver(operator);
+              batchTransferFromToReceiver(operator);
             });
 
             context('when called by an approved sender', function () {
@@ -916,7 +920,7 @@ function shouldBehaveLikeERC1155721Inventory(
                 }
               });
 
-              transferFromToReceiver(approved);
+              batchTransferFromToReceiver(approved);
             });
           });
         });
@@ -1205,12 +1209,318 @@ function shouldBehaveLikeERC1155721Inventory(
       });
 
       context('safeBatchTransferFrom', function () {
-        it('should revert if `to` is the zero address', async function () {
-          safeBatchTransferFrom(this.token, owner, ZeroAddress, [nft1], [1], data, {from: owner}),
-          revertMessages.TransferToZero
+        it('should revert if `ids` and `values` have inconsistent lengths', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, other, [nft1, fCollection1.id], [1], data, {from: owner}),
+            revertMessages.InconsistentArrays
+          );
         });
 
-        // TODO: write missing tests
+        it('should revert if `to` is the zero address', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, ZeroAddress, [nft1, fCollection1.id], [1, 1], data, {from: owner}),
+            revertMessages.TransferToZero
+          );
+        });
+
+        it('should revert if the sender is non-approved', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, other, [nft1, fCollection1.id], [1, 1], data, {from: other}),
+            revertMessages.NonApproved
+          );
+        });
+
+        it('should revert if one of `ids` is a non-fungible collection', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, other, [nft1, nfCollection, fCollection1.id], [1, 1, 1], data, {from: owner}),
+            revertMessages.NotTokenId
+          );
+        });
+
+        it('should revert if one of `ids` is a non-fungible token and its paired `value` is not 1', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, other, [nft1, fCollection1.id], [0, 1], data, {from: owner}),
+            revertMessages.WrongNFTValue
+          );
+        });
+
+        it('should revert if one of `ids` is a non-fungible token and is not owned by `from`', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, other, owner, [nft1], [1], data, {from: owner}),
+            revertMessages.NonOwnedNFT
+          );
+        });
+
+        it('should revert if one of `ids` is a fungible token and its paired `value` is 0', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, other, [nft1, fCollection1.id], [1, 0], data, {from: owner}),
+            revertMessages.ZeroValue
+          );
+        });
+
+        it('should revert if one of `ids` is a fungible token and `from` has an insufficient balance', async function () {
+          await expectRevert(
+            safeBatchTransferFrom(this.token, owner, other, [nft1, fCollection1.id], [1, fCollection1.supply + 1], data, {from: owner}),
+            revertMessages.InsufficientBalance
+          );
+        });
+
+        context('when successful', function () {
+          const batch = [
+            {
+              id: nft3,
+              value: 1,
+              nfCollection: nfCollection2,
+              isFungible: false
+            },
+            {
+              id: fCollection1.id,
+              value: 2,
+              nfCollection: null,
+              isFungible: true
+            },
+            {
+              id: nft1,
+              value: 1,
+              nfCollection: nfCollection,
+              isFungible: false
+            },
+            {
+              id: nft2,
+              value: 1,
+              nfCollection: nfCollection2,
+              isFungible: false
+            },
+            {
+              id: fCollection2.id,
+              value: 5,
+              nfCollection: null,
+              isFungible: true
+            },
+          ];
+
+          const batchTransferFrom = (from, approvedSender = false) => {
+            beforeEach(async function () {
+              this.nftBalanceOwner = [];
+              this.nftBalanceToWhom = [];
+              this.nfCollectionBalanceOwner = [];
+              this.nfCollectionBalanceToWhom = [];
+              this.fCollectionBalanceOwner = [];
+              this.fCollectionBalanceToWhom = []
+              this.nfCollectionSupply = {};
+              this.fCollectionSupply = {};
+
+              for (const item of batch) {
+                if (item.isFungible) {
+                  if (!approvedSender) {
+                    this.fCollectionBalanceOwner.push(await this.token.balanceOf(owner, item.id));
+                    this.fCollectionBalanceToWhom.push(await this.token.balanceOf(this.toWhom, item.id));
+
+                    if (this.fCollectionSupply[item.id] == undefined) {
+                      this.fCollectionSupply[item.id] = item.value;
+                    } else {
+                      this.fCollectionSupply[item.id] += item.value;
+                    }
+                  }
+                } else {
+                  this.nftBalanceOwner.push(await this.token.balanceOf(owner, item.id));
+                  this.nftBalanceToWhom.push(await this.token.balanceOf(this.toWhom, item.id));
+                  this.nfCollectionBalanceOwner.push(await this.token.balanceOf(owner, item.nfCollection));
+                  this.nfCollectionBalanceToWhom.push(await this.token.balanceOf(this.toWhom, item.nfCollection));
+
+                  if (this.nfCollectionSupply[item.nfCollection] == undefined) {
+                    this.nfCollectionSupply[item.nfCollection] = 1;
+                  } else {
+                    this.nfCollectionSupply[item.nfCollection] += 1;
+                  }
+                }
+              }
+
+              this.tokens = batch
+                .filter((item) => !item.isFungible || !approvedSender)
+                .map((item) => item.id);
+
+              this.values = batch
+                .filter((item) => !item.isFungible || !approvedSender)
+                .map((item) => item.value);
+              
+              this.receipt = await safeBatchTransferFrom(this.token, owner, this.toWhom, this.tokens, this.values, data, {from: from});
+            });
+
+            it('should transfer the non-fungible tokens to the new owner', async function () {
+              for (const item of batch) {
+                if (!item.isFungible) {
+                  const newOwner = await this.token.ownerOf(item.id);
+                  newOwner.should.not.equal(owner);
+                  newOwner.should.equal(this.toWhom);
+                }
+              }
+            });
+  
+            it('should increase the non-fungible token balance of the new owner', async function () {
+              let index = 0;
+              for (const item of batch) {
+                if (!item.isFungible) {
+                  (await this.token.balanceOf(this.toWhom, item.id)).should.be.bignumber.equal(this.nftBalanceToWhom[index++].addn(1));
+                }
+              }
+            });
+  
+            it('should decrease the non-fungible token balance of the previous owner', async function () {
+              let index = 0;
+              for (const item of batch) {
+                if (!item.isFungible) {
+                  (await this.token.balanceOf(owner, item.id)).should.be.bignumber.equal(this.nftBalanceOwner[index++].subn(1));
+                }
+              }
+            });
+  
+            it('should increase the non-fungible collection balance of the new owner', async function () {
+              let index = 0;
+              for (const item of batch) {
+                if (!item.isFungible) {
+                  (await this.token.balanceOf(this.toWhom, item.nfCollection)).should.be.bignumber.equal(this.nfCollectionBalanceToWhom[index++].addn(this.nfCollectionSupply[item.nfCollection]));
+                }
+              }
+            });
+  
+            it('should decrease the non-fungible collection balance of the previous owner', async function () {
+              let index = 0;
+              for (const item of batch) {
+                if (!item.isFungible) {
+                  (await this.token.balanceOf(owner, item.nfCollection)).should.be.bignumber.equal(this.nfCollectionBalanceOwner[index++].subn(this.nfCollectionSupply[item.nfCollection]));
+                }
+              }
+            });
+
+            it('should decrease the fungible token balance of the previous owner', async function () {
+              let index = 0;
+              for (const item of batch) {
+                if (item.isFungible && !approvedSender) {
+                  (await this.token.balanceOf(this.toWhom, item.id)).should.be.bignumber.equal(this.fCollectionBalanceToWhom[index++].addn(this.fCollectionSupply[item.id]));
+                }
+              }
+            });
+  
+            it('should increase the fungible token balance of the new owner', async function () {
+              let index = 0;
+              for (const item of batch) {
+                if (item.isFungible && !approvedSender) {
+                  (await this.token.balanceOf(owner, item.id)).should.be.bignumber.equal(this.fCollectionBalanceOwner[index++].subn(this.fCollectionSupply[item.id]));
+                }
+              }
+            });
+
+            it('should emit the Transfer event', async function () {
+              for (const item of batch) {
+                if (!item.isFungible) {
+                  expectEvent(
+                    this.receipt,
+                    'Transfer',
+                    {
+                      _from: owner,
+                      _to: this.toWhom,
+                      _tokenId: item.id
+                    }
+                  );
+                }
+              }
+            });
+  
+            it('should emit the TransferBatch event', async function () {
+              expectEvent(
+                this.receipt,
+                'TransferBatch',
+                {
+                  _operator: from,
+                  _from: owner,
+                  _to: this.toWhom,
+                  _ids: this.tokens,
+                  _values: this.values,
+                }
+              );
+            });
+          };
+
+          context('transferred to a user account', function () {
+              beforeEach(async function () {
+                  this.toWhom = other;
+              });
+
+              context('when called by the owner', function () {
+                batchTransferFrom(owner);
+              });
+  
+              context('when called by an operator', function () {
+                beforeEach(async function () {
+                  await this.token.setApprovalForAll(operator, true, { from: owner });
+                });
+  
+                batchTransferFrom(operator);
+              });
+  
+              context('when called by an approved sender', function () {
+                beforeEach(async function () {
+                  for (const item of batch) {
+                    if (!item.isFungible) {
+                      await this.token.approve(approved, item.id, { from: owner });
+                    }
+                  }
+                });
+  
+                batchTransferFrom(approved, true);
+              });
+            });
+
+          context('transferred to an ERC-1155 receiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver.address;
+            })
+
+            const batchTransferFromToReceiver = function (from, approvedSender = false) {
+              batchTransferFrom(from, approvedSender);
+
+              it('should safely receive', async function () {
+                await expectEvent.inTransaction(
+                  this.receipt.tx,
+                  this.receiver,
+                  'ReceivedBatch',
+                  {
+                    operator: from,
+                    from: owner,
+                    ids: this.tokens,
+                    values: this.values,
+                    data: data,
+                  }
+                );
+              });
+            };
+
+            context('when called by the owner', function () {
+              batchTransferFromToReceiver(owner);
+            });
+
+            context('when called by an operator', function () {
+              beforeEach(async function () {
+                await this.token.setApprovalForAll(operator, true, { from: owner });
+              });
+
+              batchTransferFromToReceiver(operator);
+            });
+
+            context('when called by an approved sender', function () {
+              beforeEach(async function () {
+                for (const item of batch) {
+                  if (!item.isFungible) {
+                    await this.token.approve(approved, item.id, { from: owner });
+                  }
+                }
+              });
+
+              batchTransferFromToReceiver(approved, true);
+            });
+          });
+        });
       });
     });
 
