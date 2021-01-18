@@ -23,11 +23,12 @@
   ],
   "author": "Animoca Brands",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "@animoca/blockchain-inventory_metadata": "0.0.1",
     "@animoca/ethereum-contracts-core_library": "=3.1.1",
     "@openzeppelin/test-helpers": "git+https://github.com/nataouze/openzeppelin-test-helpers.git#fix_bn_array_event_args",
-    "bits.js": "^0.1.1"
+    "bits.js": "^0.1.1",
+    "solidity-coverage": "^0.7.14",
+    "truffle": "^5.1.62"
   }
 }

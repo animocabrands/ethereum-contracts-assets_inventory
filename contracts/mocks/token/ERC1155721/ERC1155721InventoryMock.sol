@@ -10,7 +10,7 @@ import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfer, IERC1155721InventoryMintable, IERC1155721InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMintable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
 
     string public override constant name = "ERC1155721InventoryMock";
     string public override constant symbol = "INV";
@@ -95,39 +95,6 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfe
     function creator(uint256 collectionId) external override view returns(address) {
         require(!isNFT(collectionId), "Inventory: not a collection");
         return _creators[collectionId];
-    }
-
-    /**
-     * @dev See {IERC1155721BatchTransfer-batchTransferFrom(address,address,uint256[])}.
-     */
-    function batchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata nftIds
-    ) external override {
-        _batchTransferFrom_ERC721(from, to, nftIds);
-    }
-
-    /**
-     * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
-     */
-    function burnFrom(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external override {
-        _burnFrom(from, id, value);
-    }
-
-    /**
-     * @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
-     */
-    function batchBurnFrom(
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external override {
-        _batchBurnFrom(from, ids, values);
     }
 
     // ===================================================================================================

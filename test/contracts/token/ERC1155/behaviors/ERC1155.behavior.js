@@ -9,7 +9,7 @@ const { expect } = require('chai');
 const ERC1155ReceiverMock = contract.fromArtifact('ERC1155TokenReceiverMock');
 
 function shouldBehaveLikeERC1155 (
-    {revertMessages, mint},
+    {revertMessages, safeMint},
     [minter, firstTokenHolder, secondTokenHolder, multiTokenHolder, recipient, proxy],
   ) {
   const firstTokenId = new BN(1);
@@ -49,10 +49,10 @@ function shouldBehaveLikeERC1155 (
 
       context('when accounts own some tokens', function () {
         beforeEach(async function () {
-            await mint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
+            await safeMint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
                 from: minter,
             });
-            await mint(
+            await safeMint(
                 this.token,
                 secondTokenHolder,
                 secondTokenId,
@@ -126,10 +126,10 @@ function shouldBehaveLikeERC1155 (
 
       context('when accounts own some tokens', function () {
         beforeEach(async function () {
-            await mint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
+            await safeMint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
                 from: minter,
             });
-            await mint(
+            await safeMint(
                 this.token,
                 secondTokenHolder,
                 secondTokenId,
@@ -195,11 +195,11 @@ function shouldBehaveLikeERC1155 (
 
     describe('safeTransferFrom', function () {
       beforeEach(async function () {
-        await mint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
+        await safeMint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
             from: minter,
         });
 
-        await mint(
+        await safeMint(
             this.token,
             multiTokenHolder,
             secondTokenId,
@@ -424,10 +424,10 @@ function shouldBehaveLikeERC1155 (
 
     describe('safeBatchTransferFrom', function () {
       beforeEach(async function () {
-        await mint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
+        await safeMint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
             from: minter,
             });
-        await mint(
+        await safeMint(
             this.token,
             multiTokenHolder,
             secondTokenId,

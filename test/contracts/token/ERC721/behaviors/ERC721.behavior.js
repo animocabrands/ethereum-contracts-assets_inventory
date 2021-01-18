@@ -10,24 +10,26 @@ const { makeNonFungibleTokenId } = require('@animoca/blockchain-inventory_metada
 const ERC721ReceiverMock = contract.fromArtifact('ERC721ReceiverMock');
 
 function shouldBehaveLikeERC721(
-  {nfMaskLength, safeMint_ERC721},
+  {nfMaskLength, contractName, safeMint_ERC721, batchTransferFrom_ERC721},
   [creator, owner, approved, anotherApproved, operator, other]
 ) {
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);
+  const nft3 = makeNonFungibleTokenId(3, 1, nfMaskLength);
   const unknownNFT = makeNonFungibleTokenId(999, 1, nfMaskLength);
 
   describe('like an ERC721', function () {
     beforeEach(async function () {
       await safeMint_ERC721(this.token, owner, nft1, '0x', { from: creator });
       await safeMint_ERC721(this.token, owner, nft2, '0x', { from: creator });
+      await safeMint_ERC721(this.token, owner, nft3, '0x', { from: creator });
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 
     describe('balanceOf', function () {
       context('when the given address owns some tokens', function () {
         it('returns the amount of tokens owned by the given address', async function () {
-          (await this.token.balanceOf(owner)).should.be.bignumber.equal('2');
+          (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
         });
       });
 
@@ -70,16 +72,18 @@ function shouldBehaveLikeERC721(
 
     describe('transfers', function () {
       const tokenId = nft1;
+      const tokenIds = [nft1, nft3];
       const data = '0x42';
 
       let receipt = null;
 
       beforeEach(async function () {
-        await this.token.approve(approved, tokenId, { from: owner });
+        await this.token.approve(approved, nft1, { from: owner });
+        await this.token.approve(approved, nft3, { from: owner });
         await this.token.setApprovalForAll(operator, true, { from: owner });
       });
 
-      const transferWasSuccessful = function ({ owner, tokenId, approved }) {
+      const transferWasSuccessful = function ({ owner, tokenId }) {
         it('transfers the ownership of the given token ID to the given address', async function () {
           (await this.token.ownerOf(tokenId)).should.be.equal(this.toWhom);
         });
@@ -88,7 +92,6 @@ function shouldBehaveLikeERC721(
           (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
         });
 
-        if (approved) {
           it('emits a transfer event', function () {
             expectEvent(receipt, 'Transfer', {
               _from: owner,
@@ -96,18 +99,9 @@ function shouldBehaveLikeERC721(
               _tokenId: tokenId,
             });
           });
-        } else {
-          it('emits only a transfer event', function () {
-            expectEvent(receipt, 'Transfer', {
-              _from: owner,
-              _to: this.toWhom,
-              _tokenId: tokenId,
-            });
-          });
-        }
 
         it('adjusts owners balances', async function () {
-          (await this.token.balanceOf(owner)).should.be.bignumber.equal('1');
+          (await this.token.balanceOf(owner)).should.be.bignumber.equal('2');
         });
 
         it('adjusts recipient balances', async function () {
@@ -175,7 +169,7 @@ function shouldBehaveLikeERC721(
           });
 
           it('keeps the owner balance', async function () {
-            (await this.token.balanceOf(owner)).should.be.bignumber.equal('2');
+            (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
           });
 
           it('keeps same tokens by index', async function () {
@@ -222,6 +216,163 @@ function shouldBehaveLikeERC721(
       describe('via transferFrom', function () {
         shouldTransferTokensByUsers(function (from, to, tokenId, opts) {
           return this.token.transferFrom(from, to, tokenId, opts);
+        });
+      });
+
+      const multipleTransferWasSuccessful = function ({ owner, tokenIds }) {
+        it('transfers the ownership of the given token IDs to the given address', async function () {
+            for (const tokenId of tokenIds) {
+                (await this.token.ownerOf(tokenId)).should.be.equal(this.toWhom);
+            }
+        });
+
+        it('clears the approval for the token ID', async function () {
+            for (const tokenId of tokenIds) {
+                (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
+            }
+        });
+
+          it('emits a Transfer event', function () {
+            for (const tokenId of tokenIds) {
+                expectEvent(receipt, 'Transfer', {
+                    _from: owner,
+                    _to: this.toWhom,
+                    _tokenId: tokenId,
+                });
+            }
+          });
+
+        it('adjusts owners balances', async function () {
+          (await this.token.balanceOf(owner)).should.be.bignumber.equal('1');
+        });
+
+        it('adjusts recipient balances', async function () {
+          (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal('2');
+        });
+
+        it('adjusts owners tokens by index', async function () {
+          if (!this.token.tokenOfOwnerByIndex) return;
+
+          (await this.token.tokenOfOwnerByIndex(this.toWhom, 0)).should.be.bignumber.equal(tokenIds[0]);
+
+          (await this.token.tokenOfOwnerByIndex(owner, 0)).should.be.bignumber.not.equal(tokenIds[0]);
+        });
+      };
+
+      const shouldTransferMultipleTokensByUsers = function (transferFunction) {
+        context('when called by the owner', function () {
+          beforeEach(async function () {
+            receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, { from: owner });
+          });
+          multipleTransferWasSuccessful({ owner, tokenIds, approved });
+        });
+
+        context('when called by the approved individual', function () {
+          beforeEach(async function () {
+            receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, { from: approved });
+          });
+          multipleTransferWasSuccessful({ owner, tokenIds, approved });
+        });
+
+        context('when called by the operator', function () {
+          beforeEach(async function () {
+            receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, { from: operator });
+          });
+          multipleTransferWasSuccessful({ owner, tokenIds, approved });
+        });
+
+        context('when called by the owner without an approved user', function () {
+          beforeEach(async function () {
+              for (const tokenId of tokenIds) {
+                  await this.token.approve(ZeroAddress, tokenId, { from: owner });
+              }
+            receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, { from: operator });
+          });
+          multipleTransferWasSuccessful({ owner, tokenIds, approved: null });
+        });
+
+        context('when sent to the owner', function () {
+          beforeEach(async function () {
+            receipt = await transferFunction.call(this, owner, owner, tokenIds, { from: owner });
+          });
+
+          it('keeps ownership of the token', async function () {
+            for (const tokenId of tokenIds) {
+
+                (await this.token.ownerOf(tokenId)).should.be.equal(owner);
+            }
+          });
+
+          it('clears the approval for the token ID', async function () {
+            for (const tokenId of tokenIds) {
+
+            (await this.token.getApproved(tokenId)).should.be.equal(ZeroAddress);
+            }
+          });
+
+          it('emits Transfer events', function () {
+              for (const tokenId of tokenIds) {
+                expectEvent(receipt, 'Transfer', {
+              _from: owner,
+              _to: owner,
+              _tokenId: tokenId,
+            });
+        }
+          });
+
+          it('keeps the owner balance', async function () {
+            (await this.token.balanceOf(owner)).should.be.bignumber.equal('3');
+          });
+
+          it('keeps same tokens by index', async function () {
+            if (!this.token.tokenOfOwnerByIndex) return;
+            const tokensListed = await Promise.all(
+              [0, 1].map(i => this.token.tokenOfOwnerByIndex(owner, i))
+            );
+            tokensListed.map(t => t.toNumber()).should.have.members(
+              [nft1.toNumber(), nft1.toNumber()]
+            );
+          });
+        });
+
+        context('when the address of the previous owner is incorrect', function () {
+          it('reverts', async function () {
+            await expectRevert.unspecified(transferFunction.call(this, other, other, tokenIds, { from: owner })
+            );
+          });
+        });
+
+        context('when the sender is not authorized for the token id', function () {
+          it('reverts', async function () {
+            await expectRevert.unspecified(transferFunction.call(this, owner, other, tokenIds, { from: other })
+            );
+          });
+        });
+
+        context('when the given token ID does not exist', function () {
+          it('reverts', async function () {
+            await expectRevert.unspecified(transferFunction.call(this, owner, other, [nft1, unknownNFT], { from: owner })
+            );
+          });
+        });
+
+        context('when the address to transfer the token to is the zero address', function () {
+          it('reverts', async function () {
+            await expectRevert.unspecified(
+              transferFunction.call(this, owner, ZeroAddress, tokenIds, { from: owner })
+            );
+          });
+        });
+      };
+
+      describe('via batchTransferFrom', function () {
+          if (batchTransferFrom_ERC721 === undefined) {
+              console.log(`ERC721Standard: batchTransferFrom_ERC721 is not supported by ${contractName}, skipping test`);
+              return;
+          }
+
+        shouldTransferMultipleTokensByUsers(function (from, to, tokenIds, opts) {
+          return batchTransferFrom_ERC721(this.token, from, to, tokenIds, opts);
         });
       });
 

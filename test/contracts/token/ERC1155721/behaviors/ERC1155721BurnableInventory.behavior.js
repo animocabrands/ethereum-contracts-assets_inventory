@@ -4,7 +4,7 @@ const { makeFungibleCollectionId, makeNonFungibleCollectionId, makeNonFungibleTo
 const { ZeroAddress } = require('@animoca/ethereum-contracts-core_library').constants;
 
 function shouldBehaveLikeERC1155721BurnableInventory(
-    {nfMaskLength, revertMessages, mint},
+    {nfMaskLength, contractName, revertMessages, safeMint, burnFrom_ERC1155, batchBurnFrom_ERC1155},
     [creator, owner, operator, other],
 ) {
     describe('like a burnable ERC1155721Inventory', function () {
@@ -19,11 +19,15 @@ function shouldBehaveLikeERC1155721BurnableInventory(
         beforeEach(async function () {
             await this.token.createCollection(fCollection.id, { from: creator });
             await this.token.createCollection(nfCollection, { from: creator });
-            await mint(this.token, owner, fCollection.id, fCollection.supply, '0x', { from: creator });
-            await mint(this.token, owner, nft, 1, '0x', { from: creator });
+            await safeMint(this.token, owner, fCollection.id, fCollection.supply, '0x', { from: creator });
+            await safeMint(this.token, owner, nft, 1, '0x', { from: creator });
         });
 
-        describe('burnFrom', function () {
+        describe('burnFrom(address,uint256,uint256)', function () {
+            if (burnFrom_ERC1155 === undefined) {
+                console.log(`ERC1155721BurnableInventory: burnFrom_ERC1155 is not supported by ${contractName}, skipping test`);
+                return;
+            }
 
             context('with a non-fungible token', function () {
 
@@ -36,7 +40,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                         nftBalanceBefore = await this.token.balanceOf(owner);
                         supplyBefore = await this.token.totalSupply(nfCollection);
                         nftSupplyBefore = await this.token.totalSupply(nft);
-                        receipt = await this.token.burnFrom(from, nft, '1', { from: sender });
+                        receipt = await burnFrom_ERC1155(this.token, from, nft, '1', { from: sender });
                         balanceAfter = await this.token.balanceOf(owner, nfCollection);
                         nftBalanceAfter = await this.token.balanceOf(owner);
                         supplyAfter = await this.token.totalSupply(nfCollection);
@@ -81,7 +85,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 context('from is not the owner', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(other, nft, 1, { from: other }),
+                            burnFrom_ERC1155(this.token, other, nft, 1, { from: other }),
                             revertMessages.NonOwnedNFT
                         );
                     });
@@ -102,7 +106,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 context('sent by a non-approved account', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(owner, nft, 1, { from: other }),
+                            burnFrom_ERC1155(this.token, owner, nft, 1, { from: other }),
                             revertMessages.NonApproved
                         );
                     });
@@ -117,7 +121,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                     beforeEach(async function () {
                         balanceBefore = await this.token.balanceOf(from, collection);
                         supplyBefore = await this.token.totalSupply(collection);
-                        receipt = await this.token.burnFrom(from, collection, amount, { from: sender });
+                        receipt = await burnFrom_ERC1155(this.token, from, collection, amount, { from: sender });
                         balanceAfter = await this.token.balanceOf(owner, collection);
                         supplyAfter = await this.token.totalSupply(collection);
                     });
@@ -156,7 +160,7 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 context('sent by a non-approved account', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(owner, fCollection.id, 4, { from: other }),
+                            burnFrom_ERC1155(this.token, owner, fCollection.id, 4, { from: other }),
                             revertMessages.NonApproved
                         );
                     });
@@ -165,13 +169,23 @@ function shouldBehaveLikeERC1155721BurnableInventory(
                 context('sent more than owned', function () {
                     it('reverts', async function () {
                         await expectRevert(
-                            this.token.burnFrom(owner, fCollection.id, 11, { from: owner }),
+                            burnFrom_ERC1155(this.token, owner, fCollection.id, 11, { from: owner }),
                             revertMessages.InsufficientBalance
                         );
                     });
                 });
             });
         });
+
+        describe('batchBurnFrom(address,uint256[],uint256[])', function () {
+            if (batchBurnFrom_ERC1155 === undefined) {
+                console.log(`ERC1155721BurnableInventory: batchBurnFrom_ERC1155 is not supported by ${contractName}, skipping test`);
+                return;
+            }
+            // TODO
+        });
+
+
     });
 }
 

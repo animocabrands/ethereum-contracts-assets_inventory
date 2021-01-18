@@ -1,13 +1,8 @@
-const safeMint = async function(contract, to, id, value, data, overrides) {
-    return contract.safeMint(to, id, value, data, overrides);
-};
+const { contract, accounts } = require('@openzeppelin/test-environment');
+const {shouldBehaveLikeERC1155Inventory} = require('./behaviors/ERC1155Inventory.behavior');
 
-const safeBatchMint = async function(contract, to, ids, values, data, overrides) {
-    return contract.safeBatchMint(to, ids, values, data, overrides);
-};
-
-module.exports = {
-    contract: "ERC1155InventoryMock",
+const implementation = {
+    contractName: "ERC1155InventoryMock",
     nfMaskLength: 32,
     suppliesManagement: true,
     revertMessages: {
@@ -27,9 +22,24 @@ module.exports = {
         NotNFT: "Inventory: not an NFT",
         ExistingOrBurntNFT: "Inventory: existing/burnt NFT",
         NotMinter: "MinterRole: caller does not have the Minter role",
+        SupplyOverflow: "Inventory: supply overflow",
     },
-    safeMint,
-    safeBatchMint,
-    mint: safeMint,
-    batchMint: safeBatchMint,
+    safeMint: async function(contract, to, id, value, data, overrides) {
+        return contract.safeMint(to, id, value, data, overrides);
+    },
+    safeBatchMint: async function(contract, to, ids, values, data, overrides) {
+        return contract.safeBatchMint(to, ids, values, data, overrides);
+    },
 };
+
+describe('ERC1155InventoryMock', function () {
+
+    const [creator] = accounts;
+
+    beforeEach(async function () {
+      this.token = await contract.fromArtifact(implementation.contractName).new({ from: creator });
+    });
+
+    shouldBehaveLikeERC1155Inventory(implementation, accounts);
+});
+
