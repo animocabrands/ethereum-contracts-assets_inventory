@@ -18,6 +18,17 @@ function shouldBehaveLikeERC1155721MintableInventory(
     { nfMaskLength, contractName, revertMessages, safeMint, safeBatchMint, mint_ERC721, safeMint_ERC721, batchMint_ERC721 },
     [creator, minter, nonMinter, owner]
 ) {
+
+    if (mint_ERC721 === undefined) {
+        console.log(`ERC1155721MintableInventory: non-standard ERC721 method mint(address,uint256) is not supported by ${contractName}, associated tests will be skipped`);
+    }
+    if (safeMint_ERC721 === undefined) {
+        console.log(`ERC1155721MintableInventory: non-standard ERC721 method safeMint(address,uint256,bytes) is not supported by ${contractName}, associated tests will be skipped`);
+    }
+    if (batchMint_ERC721 === undefined) {
+        console.log(`ERC1155721MintableInventory: non-standard ERC721 method batchMint(address,uint256[]) is not supported by ${contractName}, associated tests will be skipped`);
+    }
+
     const fCollection1 = makeFungibleCollectionId(1);
     const fCollection2 = makeFungibleCollectionId(2);
     const fCollection3 = makeFungibleCollectionId(3);
@@ -34,9 +45,9 @@ function shouldBehaveLikeERC1155721MintableInventory(
             this.receiver721 = await ReceiverMock721.new(true);
         });
 
-        context("ERC-1155 minting", function() {
-            context("_safeMint()", function() {
-                it("should revert if the caller is not a minter", async function() {
+        context("ERC1155 minting", function() {
+            context("safeMint(address,uint256,uint256,bytes)", function() {
+                it("reverts if the caller is not a minter", async function() {
                     await expectRevert(
                         safeMint(this.token, owner, nft1, 1, "0x", { from: nonMinter }),
                         revertMessages.NotMinter
@@ -105,36 +116,36 @@ function shouldBehaveLikeERC1155721MintableInventory(
                 });
             });
 
-            context("_safeBatchMint()", function() {
-                it("should revert if the caller is not a minter", async function() {
+            context("safeBatchMint(address,uint256[],uint256[],bytes)", function() {
+                it("reverts if the caller is not a minter", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], "0x", { from: nonMinter }),
                         revertMessages.NotMinter
                     );
                 });
 
-                it("should revert if the fungible quantity is less than 1", async function() {
+                it("reverts if the fungible quantity is less than 1", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], "0x", { from: minter }),
                         revertMessages.ZeroValue
                     );
                 });
 
-                it("should revert if the non-fungible quantity is greater than 1", async function() {
+                it("reverts if the non-fungible quantity is greater than 1", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [nft1], [Two], "0x", { from: minter }),
                         revertMessages.WrongNFTValue
                     );
                 });
 
-                it("should revert if the non-fungible quantity is less than 1", async function() {
+                it("reverts if the non-fungible quantity is less than 1", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [nft1], [Zero], "0x", { from: minter }),
                         revertMessages.WrongNFTValue
                     );
                 });
 
-                it("should revert if there is a mismatch in the param array lengths", async function() {
+                it("reverts if there is a mismatch in the param array lengths", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [nft1, nft2, nft3], [new BN(1), new BN(1)], "0x", {
                             from: minter
@@ -143,14 +154,14 @@ function shouldBehaveLikeERC1155721MintableInventory(
                     );
                 });
 
-                it("should revert if minting a collection", async function() {
+                it("reverts if minting a collection", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [nfCollection1], [new BN(1)], "0x", { from: minter }),
                         revertMessages.NotTokenId
                     );
                 });
 
-                it("should revert if minting a non-fungible token that already has been minted", async function() {
+                it("reverts if minting a non-fungible token that already has been minted", async function() {
                     await expectRevert(
                         safeBatchMint(this.token, owner, [nft1, nft2, nft2], [new BN(1), new BN(1), new BN(1)], "0x", {
                             from: minter
@@ -273,11 +284,10 @@ function shouldBehaveLikeERC1155721MintableInventory(
         context("ERC721 minting", function() {
             context("mint(address,uint256)", function() {
                 if (mint_ERC721 === undefined) {
-                    console.log(`ERC1155721MintableInventory: mint_ERC721 is not supported by ${contractName}, skipping test`);
                     return;
                 }
 
-                it("should revert if the caller is not a minter", async function() {
+                it("reverts if the caller is not a minter", async function() {
                     await expectRevert(
                         mint_ERC721(this.token, owner, nft1, { from: nonMinter }),
                         revertMessages.NotMinter
@@ -326,7 +336,7 @@ function shouldBehaveLikeERC1155721MintableInventory(
                         mint();
                     });
 
-                    context("minted to an ERC-1155 receiver contract", function() {
+                    context("minted to an ERC1155TokenReceiver contract", function() {
                         beforeEach(async function() {
                             this.toWhom = this.receiver.address;
                         });
@@ -359,26 +369,30 @@ function shouldBehaveLikeERC1155721MintableInventory(
             });
 
             context("safeMint(address,uint256)", function() {
-                it("should revert if the caller is not a minter", async function() {
+                if (safeMint_ERC721 === undefined) {
+                    return;
+                }
+
+                it("reverts if the caller is not a minter", async function() {
                     await expectRevert(
                         safeMint_ERC721(this.token, owner, nft1, "0x", { from: nonMinter }),
                         revertMessages.NotMinter
                     );
                 });
 
-                it("should revert if the recipient is a non-receiver contract", async function() {
+                it("reverts if the recipient is a non-receiver contract", async function() {
                     const receiver = await Mock.new();
                     await expectRevert.unspecified(safeMint_ERC721(this.token, receiver.address, nft1, "0x", { from: minter }));
                 });
 
-                it("should revert if the recipient is an ERC721Receiver which refuses the transfer", async function() {
+                it("reverts if the recipient is an ERC721Receiver which refuses the transfer", async function() {
                     const receiver = await ReceiverMock721.new(false);
                     await expectRevert(safeMint_ERC721(this.token, receiver.address, nft1, "0x", { from: minter }),
                         revertMessages.TransferRejected
                     );
                 });
 
-                it("should revert if the recipient is an ERC1155TokenReceiver which refuses the transfer", async function() {
+                it("reverts if the recipient is an ERC1155TokenReceiver which refuses the transfer", async function() {
                     const receiver = await ReceiverMock.new(true, false);
                     await expectRevert(
                         safeMint_ERC721(this.token, receiver.address, nft1, "0x", { from: minter }),
@@ -428,7 +442,7 @@ function shouldBehaveLikeERC1155721MintableInventory(
                         mint();
                     });
 
-                    context("minted to an ERC-1155 receiver contract", function() {
+                    context("minted to an ERC1155TokenReceiver contract", function() {
                         beforeEach(async function() {
                             this.toWhom = this.receiver.address;
                         });
@@ -467,24 +481,23 @@ function shouldBehaveLikeERC1155721MintableInventory(
 
             context("safeMint(address,uint256,bytes)", function() {
                 if (safeMint_ERC721 === undefined) {
-                    console.log(`ERC115572MintableInventory: safeMint_ERC721 is not supported by ${contractName}, skipping test`);
                     return;
                 }
 
                 const data = '0x42';
-                it("should revert if the caller is not a minter", async function() {
+                it("reverts if the caller is not a minter", async function() {
                     await expectRevert(
                         safeMint_ERC721(this.token, owner, nft1, data, { from: nonMinter }),
                         revertMessages.NotMinter
                     );
                 });
 
-                it("should revert if the recipient is a non-receiver contract", async function() {
+                it("reverts if the recipient is a non-receiver contract", async function() {
                     const receiver = await Mock.new();
                     await expectRevert.unspecified(safeMint_ERC721(this.token, receiver.address, nft1, data, { from: minter }));
                 });
 
-                it("should revert if the recipient is an ERC721Receiver which refuses the transfer", async function() {
+                it("reverts if the recipient is an ERC721Receiver which refuses the transfer", async function() {
                     const receiver = await ReceiverMock721.new(false);
                     await expectRevert(
                         safeMint_ERC721(this.token, receiver.address, nft1, data, { from: minter }),
@@ -492,7 +505,7 @@ function shouldBehaveLikeERC1155721MintableInventory(
                     );
                 });
 
-                it("should revert if the recipient is an ERC1155TokenReceiver which refuses the transfer", async function() {
+                it("reverts if the recipient is an ERC1155TokenReceiver which refuses the transfer", async function() {
                     const receiver = await ReceiverMock.new(true, false);
                     await expectRevert(
                         safeMint_ERC721(this.token, receiver.address, nft1, data, { from: minter }),
@@ -542,7 +555,7 @@ function shouldBehaveLikeERC1155721MintableInventory(
                         mint();
                     });
 
-                    context("minted to an ERC-1155 receiver contract", function() {
+                    context("minted to an ERC1155TokenReceiver contract", function() {
                         beforeEach(async function() {
                             this.toWhom = this.receiver.address;
                         });
@@ -580,35 +593,39 @@ function shouldBehaveLikeERC1155721MintableInventory(
             });
 
             context("batchMint(address,uint256[])", function() {
-                it("should revert if the caller is not a minter", async function() {
+                if (batchMint_ERC721 === undefined) {
+                    return;
+                }
+
+                it("reverts if the caller is not a minter", async function() {
                     await expectRevert(
                         batchMint_ERC721(this.token, owner, [nft1], { from: nonMinter }),
                         revertMessages.NotMinter
                     );
                 });
 
-                it("should revert if `to` is the zero address", async function() {
+                it("reverts if `to` is the zero address", async function() {
                     await expectRevert(
                         batchMint_ERC721(this.token, ZeroAddress, [nft1], { from: minter }),
                         revertMessages.TransferToZero
                     );
                 });
 
-                it("should revert if the if any of the `nftIds` is a fungible collection", async function() {
+                it("reverts if the if any of the `nftIds` is a fungible collection", async function() {
                     await expectRevert(
                         batchMint_ERC721(this.token, owner, [fCollection1], { from: minter }),
                         revertMessages.NotNFT
                     );
                 });
 
-                it("should revert if the if any of the `nftIds` is a non-fungible collection", async function() {
+                it("reverts if the if any of the `nftIds` is a non-fungible collection", async function() {
                     await expectRevert(
                         batchMint_ERC721(this.token, owner, [nfCollection1], { from: minter }),
                         revertMessages.NotNFT
                     );
                 });
 
-                it("should revert if minting a non-fungible token that already has been minted", async function() {
+                it("reverts if minting a non-fungible token that already has been minted", async function() {
                     await expectRevert(
                         batchMint_ERC721(this.token, owner, [nft2, nft2], { from: minter }),
                         revertMessages.ExistingOrBurntNFT

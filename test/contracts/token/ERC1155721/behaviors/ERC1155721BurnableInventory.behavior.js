@@ -7,6 +7,13 @@ function shouldBehaveLikeERC1155721BurnableInventory(
     {nfMaskLength, contractName, revertMessages, safeMint, burnFrom_ERC1155, batchBurnFrom_ERC1155},
     [creator, owner, operator, other],
 ) {
+    if (burnFrom_ERC1155 === undefined) {
+        console.log(`ERC1155721BurnableInventory: non-standard ERC1155 method burnFrom(address,uint256,uint256) is not supported by ${contractName}, associated tests will be skipped`);
+    }
+    if (batchBurnFrom_ERC1155 === undefined) {
+        console.log(`ERC1155721BurnableInventory: non-standard ERC1155 method batchBurnFrom(address,uint256[],uint256[]) is not supported by ${contractName}, associated tests will be skipped`);
+    }
+
     describe('like a burnable ERC1155721Inventory', function () {
 
         const fCollection = {
@@ -25,7 +32,6 @@ function shouldBehaveLikeERC1155721BurnableInventory(
 
         describe('burnFrom(address,uint256,uint256)', function () {
             if (burnFrom_ERC1155 === undefined) {
-                console.log(`ERC1155721BurnableInventory: burnFrom_ERC1155 is not supported by ${contractName}, skipping test`);
                 return;
             }
 
@@ -179,13 +185,10 @@ function shouldBehaveLikeERC1155721BurnableInventory(
 
         describe('batchBurnFrom(address,uint256[],uint256[])', function () {
             if (batchBurnFrom_ERC1155 === undefined) {
-                console.log(`ERC1155721BurnableInventory: batchBurnFrom_ERC1155 is not supported by ${contractName}, skipping test`);
                 return;
             }
             // TODO
         });
-
-
     });
 }
 

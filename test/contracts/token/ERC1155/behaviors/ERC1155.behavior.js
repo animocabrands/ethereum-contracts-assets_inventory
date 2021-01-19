@@ -410,7 +410,7 @@ function shouldBehaveLikeERC1155 (
         });
       });
 
-      context('to a contract that does not implement the required function', function () {
+      context('to a contract which does not implement ERC115TokenReceiver', function () {
         it('reverts', async function () {
           const invalidReceiver = this.token;
           await expectRevert.unspecified(
@@ -659,7 +659,7 @@ function shouldBehaveLikeERC1155 (
         });
       });
 
-      context('to a contract that does not implement the required function', function () {
+      context('to a contract which does not implement ERC115TokenReceiver', function () {
         it('reverts', async function () {
           const invalidReceiver = this.token;
           await expectRevert.unspecified(

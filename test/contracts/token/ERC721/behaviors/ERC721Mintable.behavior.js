@@ -28,15 +28,15 @@ function shouldBehaveLikeERC721Mintable(
         });
 
         context('mint(address,uint256)', function () {
-            it('should revert if the sender is not a Minter', async function () {
+            it('reverts if the sender is not a Minter', async function () {
                 await expectRevert(mint_ERC721(this.token, owner, nft1, { from: nonMinter }), revertMessages.NotMinter);
             });
 
-            it('should revert if sent to the zero address', async function () {
+            it('reverts if sent to the zero address', async function () {
                 await expectRevert(mint_ERC721(this.token, ZeroAddress, nft1, { from: minter }), revertMessages.TransferToZero);
             });
 
-            it('should revert if the token has already been minted', async function () {
+            it('reverts if the token has already been minted', async function () {
                 await mint_ERC721(this.token, owner, nft1, { from: minter });
                 await expectRevert(mint_ERC721(this.token, owner, nft1, { from: minter }), revertMessages.ExistingOrBurntNFT);
             });
@@ -78,15 +78,15 @@ function shouldBehaveLikeERC721Mintable(
         });
 
         context('safeMint(address,uint256)', function () {
-            it('should revert if the sender is not a Minter', async function () {
+            it('reverts if the sender is not a Minter', async function () {
                 await expectRevert(safeMint_ERC721(this.token, owner, nft1, '0x', { from: nonMinter }), revertMessages.NotMinter);
             });
 
-            it('should revert if sent to the zero address', async function () {
+            it('reverts if sent to the zero address', async function () {
                 await expectRevert(safeMint_ERC721(this.token, ZeroAddress, nft1, '0x',{ from: minter }), revertMessages.TransferToZero);
             });
 
-            it('should revert if the token has already been minted', async function () {
+            it('reverts if the token has already been minted', async function () {
                 await safeMint_ERC721(this.token, owner, nft1, '0x', { from: minter });
                 await expectRevert(safeMint_ERC721(this.token, owner, nft1, '0x', { from: minter }), revertMessages.ExistingOrBurntNFT);
             });
@@ -124,7 +124,7 @@ function shouldBehaveLikeERC721Mintable(
             });
 
             context('if the recipient is a contract', function () {
-                it('should revert if the contract does not implement ERC721Receiver', async function () {
+                it('reverts if the contract does not implement ERC721Receiver', async function () {
                     await expectRevert.unspecified(safeMint_ERC721(this.token, this.token.address, nft1, '0x', { from: minter }));
                 });
 
@@ -140,16 +140,16 @@ function shouldBehaveLikeERC721Mintable(
         });
 
         context('batchMint(address,uint256[])', function () {
-            it('should revert if the sender is not a Minter', async function () {
+            it('reverts if the sender is not a Minter', async function () {
                 await expectRevert(batchMint_ERC721(this.token, owner, [nft1], { from: nonMinter }), revertMessages.NotMinter);
             });
 
-            it('should revert if sent to the zero address', async function () {
+            it('reverts if sent to the zero address', async function () {
                 await expectRevert(batchMint_ERC721(this.token, ZeroAddress, [nft1], { from: minter }), revertMessages.TransferToZero);
             });
 
 
-            it('should revert if minting a token that already has been minted', async function () {
+            it('reverts if minting a token that already has been minted', async function () {
                 await batchMint_ERC721(this.token, owner, [nft1], { from: minter });
                 await expectRevert(batchMint_ERC721(this.token, owner, [nft1], { from: minter }), revertMessages.ExistingOrBurntNFT);
             });

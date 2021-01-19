@@ -14,6 +14,8 @@ const implementation = {
         InconsistentArrays: "Inventory: inconsistent arrays",
         InsufficientBalance: "Inventory: not enough balance",
         TransferRejected: "Inventory: transfer refused",
+        transfer_NonExistingNFT: "Inventory: non-owned NFT",
+        transfer_NonOwnedNFT: "Inventory: non-approved sender",
         NonExistingNFT: "Inventory: non-existing NFT",
         NonOwnedNFT: "Inventory: non-owned NFT",
         WrongNFTValue: "Inventory: wrong NFT value",

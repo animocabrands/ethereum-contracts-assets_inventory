@@ -1,5 +1,8 @@
-module.exports = {
-    contractName: "ERC1155721InventoryMock",
+const { contract, accounts } = require("@openzeppelin/test-environment");
+const { shouldBehaveLikeERC1155721Inventory } = require("./behaviors/ERC1155721Inventory.behavior");
+
+const implementation = {
+    contractName: "ERC1155721InventoryFullMock",
     nfMaskLength: 32,
     suppliesManagement: true,
     name: "ERC1155721InventoryMock",
@@ -15,6 +18,8 @@ module.exports = {
         TransferRejected: "Inventory: transfer refused",
         NonExistingNFT: "Inventory: non-existing NFT",
         NonOwnedNFT: "Inventory: non-owned NFT",
+        transfer_NonExistingNFT: "Inventory: non-owned NFT",
+        transfer_NonOwnedNFT: "Inventory: non-owned NFT",
         WrongNFTValue: "Inventory: wrong NFT value",
         ZeroValue: "Inventory: zero value",
         NotTokenId: "Inventory: not a token id",
@@ -38,4 +43,23 @@ module.exports = {
     safeBatchMint: async function(contract, to, ids, values, data, overrides) {
         return contract.safeBatchMint(to, ids, values, data, overrides);
     },
+    batchTransferFrom_ERC721: async function(contract, from, to, nftIds, overrides) {
+        return contract.batchTransferFrom(from, to, nftIds, overrides);
+    },
+    burnFrom_ERC1155: async function(contract, to, id, value, overrides) {
+        return contract.burnFrom(to, id, value, overrides);
+    },
+    batchBurnFrom_ERC1155: async function(contract, to, ids, values, overrides) {
+        return contract.batchBurnFrom(to, ids, values, overrides);
+    },
 };
+
+const [creator] = accounts;
+
+describe("ERC1155721InventoryFullMock", function() {
+    beforeEach(async function() {
+        this.token = await contract.fromArtifact(implementation.contractName).new({ from: creator });
+    });
+
+    shouldBehaveLikeERC1155721Inventory(implementation, accounts);
+});
