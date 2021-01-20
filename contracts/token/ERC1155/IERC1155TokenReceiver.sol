@@ -9,7 +9,6 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0x4e2312e0.
  */
 interface IERC1155TokenReceiver {
-
     /**
      * @notice Handle the receipt of a single ERC1155 token type.
      * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.
@@ -22,7 +21,7 @@ interface IERC1155TokenReceiver {
      * @param value     The amount of tokens being transferred
      * @param data      Additional data with no specified format
      * @return bytes4   `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
-    */
+     */
     function onERC1155Received(
         address operator,
         address from,
@@ -43,7 +42,7 @@ interface IERC1155TokenReceiver {
      * @param values    An array containing amounts of each token being transferred (order and length must match _ids array)
      * @param data      Additional data with no specified format
      * @return          `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
-    */
+     */
     function onERC1155BatchReceived(
         address operator,
         address from,

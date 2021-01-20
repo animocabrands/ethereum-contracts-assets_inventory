@@ -1,0 +1,6 @@
+artifacts/
+cache/
+contracts_flattened/
+coverage/
+node_modules/
+package.json

@@ -23,7 +23,12 @@ interface IERC1155InventoryMintable {
      * @param value Amount of token to mint.
      * @param data Optional data to send along to a receiver contract.
      */
-    function safeMint(address to, uint256 id, uint256 value, bytes calldata data) external;
+    function safeMint(
+        address to,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external;
 
     /**
      * Safely mints a batch of tokens.
@@ -41,5 +46,10 @@ interface IERC1155InventoryMintable {
      * @param values Amounts of tokens to mint.
      * @param data Optional data to send along to a receiver contract.
      */
-    function safeBatchMint(address to, uint256[] calldata ids, uint256[] calldata values, bytes calldata data) external;
+    function safeBatchMint(
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external;
 }

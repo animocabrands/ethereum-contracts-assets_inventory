@@ -1,0 +1,11 @@
+{
+"recommendations": [
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "hbenl.vscode-mocha-test-adapter",
+    "juanblanco.solidity",
+    "ms-vscode-remote.vscode-remote-extensionpack"
+  ],
+  "unwantedRecommendations": []
+}

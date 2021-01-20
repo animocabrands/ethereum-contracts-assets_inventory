@@ -14,8 +14,10 @@ import "./../ERC1155/ERC1155InventoryBase.sol";
 abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155InventoryBase {
     using Address for address;
 
-    bytes4 internal constant _INTERFACE_ID_ERC165 = type(IERC165).interfaceId;
-    bytes4 internal constant _INTERFACE_ID_ERC1155TokenReceiver = type(IERC1155TokenReceiver).interfaceId;
+    bytes4 private constant _ERC165_INTERFACE_ID = type(IERC165).interfaceId;
+    bytes4 private constant _ERC1155_TOKEN_RECEIVER_INTERFACE_ID = type(IERC1155TokenReceiver).interfaceId;
+    bytes4 private constant _ERC721_INTERFACE_ID = type(IERC721).interfaceId;
+    bytes4 private constant _ERC721_METADATA_INTERFACE_ID = type(IERC721Metadata).interfaceId;
 
     bytes4 internal constant _ERC721_RECEIVED = type(IERC721Receiver).interfaceId;
 
@@ -27,9 +29,14 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /* NFT ID => operator */
     mapping(uint256 => address) internal _nftApprovals;
 
-    constructor() internal ERC1155InventoryBase() {
-        _registerInterface(type(IERC721).interfaceId);
-        _registerInterface(type(IERC721Metadata).interfaceId);
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            super.supportsInterface(interfaceId) ||
+            interfaceId == _ERC721_INTERFACE_ID ||
+            interfaceId == _ERC721_METADATA_INTERFACE_ID;
     }
 
     //================================== ERC1155 =======================================/
@@ -65,7 +72,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /**
      * @dev See {IERC721-balanceOf(address)}.
      */
-    function balanceOf(address tokenOwner) public virtual override view returns (uint256) {
+    function balanceOf(address tokenOwner) public view virtual override returns (uint256) {
         require(tokenOwner != address(0), "Inventory: zero address");
         return _nftBalances[tokenOwner];
     }
@@ -73,7 +80,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /**
      * @dev See {IERC721-ownerOf(uint256)}.
      */
-    function ownerOf(uint256 nftId) public virtual override(IERC721, ERC1155InventoryBase) view returns (address) {
+    function ownerOf(uint256 nftId) public view virtual override(IERC721, ERC1155InventoryBase) returns (address) {
         return ERC1155InventoryBase.ownerOf(nftId);
     }
 
@@ -94,7 +101,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /**
      * @dev See {IERC721-getApproved(uint256)}.
      */
-    function getApproved(uint256 nftId) public virtual override view returns (address) {
+    function getApproved(uint256 nftId) public view virtual override returns (address) {
         uint256 tokenOwner = _owners[nftId];
         require(address(tokenOwner) != address(0), "Inventory: non-existing NFT");
         if (tokenOwner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) {
@@ -107,13 +114,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /**
      * @dev See {IERC721-isApprovedForAll(address,address)}.
      */
-    function isApprovedForAll(address tokenOwner, address operator)
-        public
-        virtual
-        override(IERC721, ERC1155InventoryBase)
-        view
-        returns (bool)
-    {
+    function isApprovedForAll(address tokenOwner, address operator) public view virtual override(IERC721, ERC1155InventoryBase) returns (bool) {
         return ERC1155InventoryBase.isApprovedForAll(tokenOwner, operator);
     }
 
@@ -127,28 +128,62 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     /**
      * @dev See {IERC721-transferFrom(address,address,uint256)}.
      */
-    function transferFrom(address from, address to, uint256 nftId) public virtual override {
-        _transferFrom_ERC721(from, to, nftId, "", /* safe */false);
+    function transferFrom(
+        address from,
+        address to,
+        uint256 nftId
+    ) public virtual override {
+        _transferFrom_ERC721(
+            from,
+            to,
+            nftId,
+            "",
+            /* safe */
+            false
+        );
     }
 
     /**
      * @dev See {IERC721-safeTransferFrom(address,address,uint256)}.
      */
-    function safeTransferFrom(address from, address to, uint256 nftId) public virtual override {
-        _transferFrom_ERC721(from, to, nftId, "", /* safe */true);
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 nftId
+    ) public virtual override {
+        _transferFrom_ERC721(
+            from,
+            to,
+            nftId,
+            "",
+            /* safe */
+            true
+        );
     }
 
     /**
      * @dev See {IERC721-safeTransferFrom(address,address,uint256,bytes)}.
      */
-    function safeTransferFrom(address from, address to, uint256 nftId, bytes memory data) public virtual override {
-        _transferFrom_ERC721(from, to, nftId, data, /* safe */true);
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 nftId,
+        bytes memory data
+    ) public virtual override {
+        _transferFrom_ERC721(
+            from,
+            to,
+            nftId,
+            data,
+            /* safe */
+            true
+        );
     }
 
     /**
      * @dev See {IERC721-tokenURI(uint256)}.
      */
-    function tokenURI(uint256 nftId) external virtual override view returns (string memory) {
+    function tokenURI(uint256 nftId) external view virtual override returns (string memory) {
         require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
         return _uri(nftId);
     }
@@ -235,10 +270,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @param to Address of the new token owner.
      * @param nftIds Identifiers of the tokens to transfer.
      */
-    function _batchMint_ERC721(
-        address to,
-        uint256[] memory nftIds
-    ) internal {
+    function _batchMint_ERC721(address to, uint256[] memory nftIds) internal {
         require(to != address(0), "Inventory: transfer to zero");
 
         uint256 length = nftIds.length;
@@ -349,7 +381,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
-                _mintFungible(to, id, value); 
+                _mintFungible(to, id, value);
             } else if (id & _NF_TOKEN_MASK != 0) {
                 _mintNFT(to, id, value, true);
                 emit Transfer(address(0), to, id);
@@ -416,10 +448,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 owner = _owners[id];
         require(from == address(owner), "Inventory: non-owned NFT");
         if (!operatable) {
-            require(
-                (owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id],
-                "Inventory: non-approved sender"
-            );
+            require((owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id], "Inventory: non-approved sender");
         }
         _owners[id] = uint256(to);
         if (!isBatch) {
@@ -628,7 +657,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             if (isFungible(id)) {
-                _transferFungible(from, to, id, values[i], operatable); 
+                _transferFungible(from, to, id, values[i], operatable);
             } else if (id & _NF_TOKEN_MASK != 0) {
                 _transferNFT(from, to, id, values[i], operatable, true);
                 emit Transfer(from, to, id);
@@ -663,7 +692,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
-
     //================================ Burning Internal Functions ======================================/
 
     function _burnFungible(
@@ -692,10 +720,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 owner = _owners[id];
         require(from == address(owner), "Inventory: non-owned NFT");
         if (!operatable) {
-            require(
-                (owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id],
-                "Inventory: non-approved sender"
-            );
+            require((owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id], "Inventory: non-approved sender");
         }
         _owners[id] = _BURNT_NFT_OWNER;
 
@@ -765,7 +790,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             if (isFungible(id)) {
-                _burnFungible(from, id, values[i], operatable); 
+                _burnFungible(from, id, values[i], operatable);
             } else if (id & _NF_TOKEN_MASK != 0) {
                 _burnNFT(from, id, values[i], operatable, true);
                 emit Transfer(from, address(0), id);
@@ -811,10 +836,13 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     function _isERC1155TokenReceiver(address _contract) internal view returns (bool) {
         bool success;
         bool result;
-        bytes memory call_data = abi.encodeWithSelector(_INTERFACE_ID_ERC165, _INTERFACE_ID_ERC1155TokenReceiver);
+        bytes memory staticCallData = abi.encodeWithSelector(
+            _ERC165_INTERFACE_ID,
+            _ERC1155_TOKEN_RECEIVER_INTERFACE_ID
+        );
         assembly {
-            let call_ptr := add(0x20, call_data)
-            let call_size := mload(call_data)
+            let call_ptr := add(0x20, staticCallData)
+            let call_size := mload(staticCallData)
             let output := mload(0x40) // Find empty storage location using "free memory pointer"
             mstore(output, 0x0)
             success := staticcall(10000, _contract, call_ptr, call_size, output, 0x20) // 32 bytes
@@ -840,9 +868,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         uint256 nftId,
         bytes memory data
     ) internal {
-        require(
-            IERC721Receiver(to).onERC721Received(_msgSender(), from, nftId, data) == _ERC721_RECEIVED,
-            "Inventory: transfer refused"
-        );
+        require(IERC721Receiver(to).onERC721Received(_msgSender(), from, nftId, data) == _ERC721_RECEIVED, "Inventory: transfer refused");
     }
 }

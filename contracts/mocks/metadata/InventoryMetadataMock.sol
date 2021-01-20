@@ -5,17 +5,17 @@ pragma solidity 0.6.8;
 import "../../metadata/InventoryMetadata.sol";
 
 contract InventoryMetadataMock is InventoryMetadata {
+    constructor(uint256 nfCollectionMaskLength, address inventoryContract) public InventoryMetadata(nfCollectionMaskLength, inventoryContract) {}
 
-    constructor(
-        uint256 nfCollectionMaskLength,
-        address inventoryContract
-    ) public InventoryMetadata(nfCollectionMaskLength, inventoryContract) {}
-
-    function getLayout(uint256 collectionId) external view returns (
-        bytes32[] memory names,
-        uint256[] memory lengths,
-        uint256[] memory indices
-    ) {
+    function getLayout(uint256 collectionId)
+        external
+        view
+        returns (
+            bytes32[] memory names,
+            uint256[] memory lengths,
+            uint256[] memory indices
+        )
+    {
         return _getLayout(collectionId);
     }
 

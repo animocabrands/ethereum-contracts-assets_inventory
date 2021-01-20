@@ -10,9 +10,7 @@ import "../ERC1155/IERC1155InventoryMintable.sol";
  * The devdoc of the functions in this interface overrides the devdoc in the parent interfaces.
  */
 interface IERC1155721InventoryMintable is IERC721Mintable, IERC1155InventoryMintable {
-
     //====================================== ERC721 ===========================================/
-
     /**
      * Unsafely mints an NFT.
      * @dev Reverts if `to` is the zero address.
@@ -25,7 +23,6 @@ interface IERC1155721InventoryMintable is IERC721Mintable, IERC1155InventoryMint
      * @param nftId Identifier of the token to mint.
      */
     // function mint(address to, uint256 nftId) external;
-
     /**
      * Unsafely mints a batch of NFTs.
      * @dev Reverts if `to` is the zero address.
@@ -38,7 +35,6 @@ interface IERC1155721InventoryMintable is IERC721Mintable, IERC1155InventoryMint
      * @param nftIds Identifiers of the tokens to mint.
      */
     // function batchMint(address to, uint256[] calldata nftIds) external;
-
     /**
      * Safely mints an NFT.
      * @dev Reverts if `to` is the zero address.
@@ -53,9 +49,7 @@ interface IERC1155721InventoryMintable is IERC721Mintable, IERC1155InventoryMint
      * @param data Optional data to pass along to the receiver call.
      */
     // function safeMint(address to, uint256 nftId, bytes calldata data) external;
-
     //========================================= ERC1155 ===============================================/
-
     /**
      * Safely mints some token.
      * @dev Reverts if `to` is the zero address.
@@ -73,7 +67,6 @@ interface IERC1155721InventoryMintable is IERC721Mintable, IERC1155InventoryMint
      * @param data Optional data to send along to a receiver contract.
      */
     // function safeMint(address to, uint256 id, uint256 value, bytes calldata data) external;
-
     /**
      * Safely mints a batch of tokens.
      * @dev Reverts if `ids` and `values` have different lengths.

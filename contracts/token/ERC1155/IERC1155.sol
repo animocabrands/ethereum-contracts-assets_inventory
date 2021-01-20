@@ -8,33 +8,13 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0xd9b67a26.
  */
 interface IERC1155 {
+    event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value);
 
-    event TransferSingle(
-        address indexed _operator,
-        address indexed _from,
-        address indexed _to,
-        uint256 _id,
-        uint256 _value
-    );
+    event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values);
 
-    event TransferBatch(
-        address indexed _operator,
-        address indexed _from,
-        address indexed _to,
-        uint256[] _ids,
-        uint256[] _values
-    );
+    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
-    event ApprovalForAll(
-        address indexed _owner,
-        address indexed _operator,
-        bool _approved
-    );
-
-    event URI(
-        string _value,
-        uint256 indexed _id
-    );
+    event URI(string _value, uint256 indexed _id);
 
     /**
      * @notice Transfers `value` amount of an `id` from  `from` to `to`  (with safety call).
@@ -49,7 +29,7 @@ interface IERC1155 {
      * @param id      ID of the token type
      * @param value   Transfer amount
      * @param data    Additional data with no specified format, MUST be sent unaltered in call to `onERC1155Received` on `to`
-    */
+     */
     function safeTransferFrom(
         address from,
         address to,
@@ -73,7 +53,7 @@ interface IERC1155 {
      * @param ids     IDs of each token type (order and length must match _values array)
      * @param values  Transfer amounts per token type (order and length must match _ids array)
      * @param data    Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `to`
-    */
+     */
     function safeBatchTransferFrom(
         address from,
         address to,
@@ -96,17 +76,14 @@ interface IERC1155 {
      * @param ids    ID of the tokens
      * @return       The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
      */
-    function balanceOfBatch(
-        address[] calldata owners,
-        uint256[] calldata ids
-    ) external view returns (uint256[] memory);
+    function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view returns (uint256[] memory);
 
     /**
      * @notice Enable or disable approval for a third party ("operator") to manage all of the caller's tokens.
      * @dev MUST emit the ApprovalForAll event on success.
      * @param operator Address to add to the set of authorized operators
      * @param approved True if the operator is approved, false to revoke approval
-    */
+     */
     function setApprovalForAll(address operator, bool approved) external;
 
     /**
@@ -114,6 +91,6 @@ interface IERC1155 {
      * @param owner     The owner of the tokens
      * @param operator  Address of authorized operator
      * @return          True if the operator is approved, false if not
-    */
+     */
     function isApprovedForAll(address owner, address operator) external view returns (bool);
 }

@@ -1,0 +1,83 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ICoreMetadata",
+  "sourceName": "contracts/metadata/ICoreMetadata.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "integer",
+          "type": "uint256"
+        }
+      ],
+      "name": "getAllAttributes",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "names",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "integer",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "name",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getAttribute",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "integer",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "names",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "getAttributes",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -158,7 +158,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
-                _mintFungible(to, id, value); 
+                _mintFungible(to, id, value);
             } else if (id & _NF_TOKEN_MASK != 0) {
                 _mintNFT(to, id, value, true);
                 uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
@@ -305,7 +305,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
-                _transferFungible(from, to, id, value); 
+                _transferFungible(from, to, id, value);
             } else if (id & _NF_TOKEN_MASK != 0) {
                 _transferNFT(from, to, id, value, true);
                 uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
@@ -437,7 +437,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (isFungible(id)) {
-                _burnFungible(from, id, value); 
+                _burnFungible(from, id, value);
             } else if (id & _NF_TOKEN_MASK != 0) {
                 _burnNFT(from, id, value, true);
                 uint256 nextCollectionId = id & _NF_COLLECTION_MASK;

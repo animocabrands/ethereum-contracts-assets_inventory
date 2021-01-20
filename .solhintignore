@@ -1,0 +1,5 @@
+artifacts/
+contracts_flattened/
+cache/
+coverage/
+node_modules/

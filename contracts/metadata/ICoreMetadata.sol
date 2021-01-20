@@ -13,17 +13,13 @@ pragma solidity 0.6.8;
  * specific contract.
  */
 interface ICoreMetadata {
-
     /**
      * @dev Retrieve the value of a specific attribute for an integer
      * @param integer uint256 the integer to inspect
      * @param name bytes32 the attribute name to retrieve
      * @return value uint256 the value of the attribute
      */
-    function getAttribute(
-        uint256 integer,
-        bytes32 name
-    ) external view returns (uint256 value);
+    function getAttribute(uint256 integer, bytes32 name) external view returns (uint256 value);
 
     /**
      * @dev Retrieve the value of a specific attribute for an integer
@@ -31,10 +27,7 @@ interface ICoreMetadata {
      * @param names bytes32[] the list of attribute names to retrieve
      * @return values uint256[] the values of the attributes
      */
-    function getAttributes(
-        uint256 integer,
-        bytes32[] calldata names
-    ) external view returns (uint256[] memory values);
+    function getAttributes(uint256 integer, bytes32[] calldata names) external view returns (uint256[] memory values);
 
     /**
      * @dev Retrieve the whole core metadata for an integer
@@ -42,8 +35,5 @@ interface ICoreMetadata {
      * @return names bytes32[] the names of the metadata attributes
      * @return values uint256[] the values of the metadata attributes
      */
-    function getAllAttributes(uint256 integer) external view returns (
-        bytes32[] memory names,
-        uint256[] memory values
-    );
+    function getAllAttributes(uint256 integer) external view returns (bytes32[] memory names, uint256[] memory values);
 }

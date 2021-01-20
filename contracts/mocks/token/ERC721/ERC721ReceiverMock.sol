@@ -5,14 +5,7 @@ pragma solidity 0.6.8;
 import "../../../token/ERC721/ERC721Receiver.sol";
 
 contract ERC721ReceiverMock is ERC721Receiver {
-
-    event Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes data,
-        uint256 gas
-    );
+    event Received(address operator, address from, uint256 tokenId, bytes data, uint256 gas);
 
     bool internal _accept721;
 
@@ -25,8 +18,7 @@ contract ERC721ReceiverMock is ERC721Receiver {
         address from,
         uint256 tokenId,
         bytes memory data
-    ) public virtual override returns (bytes4)
-    {
+    ) public virtual override returns (bytes4) {
         if (_accept721) {
             emit Received(operator, from, tokenId, data, gasleft());
             return _ERC721_RECEIVED;

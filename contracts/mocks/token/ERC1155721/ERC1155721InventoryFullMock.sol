@@ -5,7 +5,6 @@ pragma solidity 0.6.8;
 import "./ERC1155721InventoryMock.sol";
 
 contract ERC1155721InventoryFullMock is ERC1155721InventoryMock, IERC1155721BatchTransfer, IERC1155721InventoryBurnable {
-
     // ===================================================================================================
     //                                 User Public Functions
     // ===================================================================================================

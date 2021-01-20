@@ -3,14 +3,18 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/GSN/Context.sol";
-import "@openzeppelin/contracts/introspection/ERC165.sol";
+import "@openzeppelin/contracts/introspection/IERC165.sol";
 import "./../ERC1155/IERC1155.sol";
 import "./../ERC1155/IERC1155MetadataURI.sol";
 import "./../ERC1155/IERC1155Inventory.sol";
 import "./../ERC1155/IERC1155TokenReceiver.sol";
 
+abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC1155Inventory, IERC165, Context {
+    bytes4 private constant _ERC165_INTERFACE_ID = type(IERC165).interfaceId;
+    bytes4 private constant _ERC1155_INTERFACE_ID = type(IERC1155).interfaceId;
+    bytes4 private constant _ERC1155_METADATA_URI_INTERFACE_ID = type(IERC1155MetadataURI).interfaceId;
+    bytes4 private constant _ERC1155_INVENTORY_INTERFACE_ID = type(IERC1155Inventory).interfaceId;
 
-abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC1155Inventory, ERC165, Context {
     // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
     bytes4 internal constant _ERC1155_RECEIVED = 0xf23a6e61;
 
@@ -43,12 +47,14 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     mapping(uint256 => address) internal _creators;
 
     /**
-     * @dev Constructor function
+     * @dev See {IERC165-supportsInterface}.
      */
-    constructor() internal {
-        _registerInterface(type(IERC1155).interfaceId);
-        _registerInterface(type(IERC1155MetadataURI).interfaceId);
-        _registerInterface(type(IERC1155Inventory).interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == _ERC165_INTERFACE_ID ||
+            interfaceId == _ERC1155_INTERFACE_ID ||
+            interfaceId == _ERC1155_METADATA_URI_INTERFACE_ID ||
+            interfaceId == _ERC1155_INVENTORY_INTERFACE_ID;
     }
 
     //================================== ERC1155 =======================================/
@@ -56,7 +62,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155-balanceOf}.
      */
-    function balanceOf(address owner, uint256 id) public virtual override view returns (uint256) {
+    function balanceOf(address owner, uint256 id) public view virtual override returns (uint256) {
         require(owner != address(0), "Inventory: zero address");
 
         if (isNFT(id)) {
@@ -69,13 +75,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155-balanceOfBatch}.
      */
-    function balanceOfBatch(address[] memory owners, uint256[] memory ids)
-        public
-        virtual
-        override
-        view
-        returns (uint256[] memory)
-    {
+    function balanceOfBatch(address[] memory owners, uint256[] memory ids) public view virtual override returns (uint256[] memory) {
         require(owners.length == ids.length, "Inventory: inconsistent arrays");
 
         uint256[] memory balances = new uint256[](owners.length);
@@ -100,7 +100,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155-isApprovedForAll}.
      */
-    function isApprovedForAll(address tokenOwner, address operator) public virtual override view returns (bool) {
+    function isApprovedForAll(address tokenOwner, address operator) public view virtual override returns (bool) {
         return _operators[tokenOwner][operator];
     }
 
@@ -109,7 +109,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155MetadataURI-uri}.
      */
-    function uri(uint256 id) external virtual override view returns (string memory) {
+    function uri(uint256 id) external view virtual override returns (string memory) {
         return _uri(id);
     }
 
@@ -118,14 +118,14 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155Inventory-isFungible}.
      */
-    function isFungible(uint256 id) public virtual override pure returns (bool) {
+    function isFungible(uint256 id) public pure virtual override returns (bool) {
         return id & _NF_BIT == 0;
     }
 
     /**
      * @dev See {IERC1155Inventory-collectionOf}.
      */
-    function collectionOf(uint256 nftId) public virtual override pure returns (uint256) {
+    function collectionOf(uint256 nftId) public pure virtual override returns (uint256) {
         require(isNFT(nftId), "Inventory: not an NFT");
         return nftId & _NF_COLLECTION_MASK;
     }
@@ -133,7 +133,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155Inventory-ownerOf}.
      */
-    function ownerOf(uint256 nftId) public virtual override view returns (address) {
+    function ownerOf(uint256 nftId) public view virtual override returns (address) {
         address owner = address(_owners[nftId]);
         require(owner != address(0), "Inventory: non-existing NFT");
         return owner;
@@ -142,7 +142,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155Inventory-totalSupply}.
      */
-    function totalSupply(uint256 id) public virtual override view returns (uint256) {
+    function totalSupply(uint256 id) public view virtual override returns (uint256) {
         if (isNFT(id)) {
             return address(_owners[id]) == address(0) ? 0 : 1;
         } else {
@@ -157,7 +157,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      * @param id Identifier to query.
      * @return True if `id` represents an non-fungible token.
      */
-    function isNFT(uint256 id) public virtual pure returns (bool) {
+    function isNFT(uint256 id) public pure virtual returns (bool) {
         return (id & _NF_BIT) != 0 && (id & _NF_TOKEN_MASK != 0);
     }
 
@@ -182,7 +182,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      * @param id Identifier to query the URI of.
      * @return The metadata URI for `id`.
      */
-    function _uri(uint256 id) internal virtual view returns (string memory);
+    function _uri(uint256 id) internal view virtual returns (string memory);
 
     /**
      * Returns whether `sender` is authorised to make a transfer on behalf of `from`.
@@ -190,7 +190,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      * @param sender The sender address.
      * @return True if sender is `from` or an operator for `from`, false otherwise.
      */
-    function _isOperatable(address from, address sender) internal virtual view returns (bool) {
+    function _isOperatable(address from, address sender) internal view virtual returns (bool) {
         return (from == sender) || _operators[from][sender];
     }
 
@@ -213,10 +213,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         uint256 value,
         bytes memory data
     ) internal {
-        require(
-            IERC1155TokenReceiver(to).onERC1155Received(_msgSender(), from, id, value, data) == _ERC1155_RECEIVED,
-            "Inventory: transfer refused"
-        );
+        require(IERC1155TokenReceiver(to).onERC1155Received(_msgSender(), from, id, value, data) == _ERC1155_RECEIVED, "Inventory: transfer refused");
     }
 
     /**
@@ -237,8 +234,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         bytes memory data
     ) internal {
         require(
-            IERC1155TokenReceiver(to).onERC1155BatchReceived(_msgSender(), from, ids, values, data) ==
-                _ERC1155_BATCH_RECEIVED,
+            IERC1155TokenReceiver(to).onERC1155BatchReceived(_msgSender(), from, ids, values, data) == _ERC1155_BATCH_RECEIVED,
             "Inventory: transfer refused"
         );
     }

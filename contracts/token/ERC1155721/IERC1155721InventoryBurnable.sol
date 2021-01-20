@@ -24,7 +24,6 @@ interface IERC1155721InventoryBurnable is IERC1155InventoryBurnable {
      * @param value Amount of token to burn.
      */
     // function burnFrom(address from, uint256 id, uint256 value) external;
-
     /**
      * Burns multiple tokens.
      * @dev Reverts if `ids` and `values` have different lengths.

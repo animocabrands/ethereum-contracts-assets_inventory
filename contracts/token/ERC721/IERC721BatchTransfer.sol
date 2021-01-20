@@ -19,5 +19,9 @@ interface IERC721BatchTransfer {
      * @param to Address of the new token owner.
      * @param nftIds Identifiers of the tokens to transfer.
      */
-    function batchTransferFrom(address from, address to, uint256[] calldata nftIds) external; 
+    function batchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata nftIds
+    ) external;
 }

@@ -7,7 +7,6 @@ pragma solidity 0.6.8;
  * @dev See https://eips.ethereum.org/EIPS/eip-721
  */
 interface IERC721Mintable {
-
     /**
      * Unsafely mints an NFT.
      * @dev Reverts if `to` is the zero address.
@@ -41,5 +40,9 @@ interface IERC721Mintable {
      * @param nftId Identifier of the token to mint.
      * @param data Optional data to pass along to the receiver call.
      */
-    function safeMint(address to, uint256 nftId, bytes calldata data) external;
+    function safeMint(
+        address to,
+        uint256 nftId,
+        bytes calldata data
+    ) external;
 }

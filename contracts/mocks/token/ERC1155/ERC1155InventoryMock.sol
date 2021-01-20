@@ -9,7 +9,14 @@ import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IERC1155InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+contract ERC1155InventoryMock is
+    ERC1155Inventory,
+    IERC1155InventoryMintable,
+    IERC1155InventoryBurnable,
+    IERC1155InventoryCreator,
+    BaseMetadataURI,
+    MinterRole
+{
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================
@@ -56,7 +63,7 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     /**
      * @dev See {IERC1155InventoryCreator-creator(uint256)}.
      */
-    function creator(uint256 collectionId) external override view returns(address) {
+    function creator(uint256 collectionId) external view override returns (address) {
         require(!isNFT(collectionId), "Inventory: not a collection");
         return _creators[collectionId];
     }
@@ -87,7 +94,7 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
     //                                  ERC1155 Internal Functions
     // ===================================================================================================
 
-    function _uri(uint256 id) internal override(ERC1155InventoryBase, BaseMetadataURI) view returns (string memory) {
+    function _uri(uint256 id) internal view override(ERC1155InventoryBase, BaseMetadataURI) returns (string memory) {
         return BaseMetadataURI._uri(id);
     }
 }

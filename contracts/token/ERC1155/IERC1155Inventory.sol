@@ -2,7 +2,6 @@
 
 pragma solidity 0.6.8;
 
-
 /**
  * @title ERC-1155 Multi Token Standard, optional Inventory extension
  * @dev See https://eips.ethereum.org/EIPS/eip-xxxx
@@ -32,20 +31,19 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0x469bd23f.
  */
 interface IERC1155Inventory {
-
     /**
      * Optional event emitted when a collection is created.
      *  This event SHOULD NOT be emitted twice for the same `collectionId`.
-     * 
+     *
      *  The parameters in the functions `collectionOf` and `ownerOf` are required to be
      *  non-fungible token identifiers, so they should not be called with any collection
      *  identifiers, else they will revert.
-     * 
+     *
      *  On the contrary, the functions `balanceOf`, `balanceOfBatch` and `totalSupply` are
      *  best used with collection identifiers, which will return meaningful information for
      *  the owner.
      */
-    event CollectionCreated (uint256 indexed collectionId, bool indexed fungible);
+    event CollectionCreated(uint256 indexed collectionId, bool indexed fungible);
 
     /**
      * Retrieves the owner of a non-fungible token.
