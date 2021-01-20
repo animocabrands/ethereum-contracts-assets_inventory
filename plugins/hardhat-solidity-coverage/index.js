@@ -1,4 +1,5 @@
 const fse = require('fs-extra');
+const path = require('path');
 const {task, extendConfig} = require('hardhat/config');
 
 require('solidity-coverage');
@@ -18,7 +19,7 @@ task('coverage', async (taskArguments, env, runSuper) => {
   const result = await runSuper(taskArguments);
 
   // env.config.path.artifacts was modified during the coverage task
-  const coverageArtifacts = env.config.paths.artifacts;
+  const coverageArtifacts = path.normalize(path.join(config.paths.root, 'coverage_artifacts'));
   fse.moveSync(artifacts, coverageArtifacts, {overwrite: true});
   if (fse.pathExistsSync(artifactsBackup)) {
     fse.moveSync(artifactsBackup, artifacts, {});

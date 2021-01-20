@@ -3,17 +3,7 @@ const path = require('path');
 const glob = require('glob/sync');
 const {TASK_FLATTEN_GET_FLATTENED_SOURCE} = require('hardhat/builtin-tasks/task-names');
 const {extendConfig, task} = require('hardhat/config');
-
-function normalizePath(config, userPath, defaultPath) {
-  if (userPath === undefined) {
-    userPath = path.join(config.paths.root, defaultPath);
-  } else {
-    if (!path.isAbsolute(userPath)) {
-      userPath = path.normalize(path.join(config.paths.root, userPath));
-    }
-  }
-  return userPath;
-}
+const {normalizePath} = require('../helpers');
 
 extendConfig((config, userConfig) => {
   config.paths.flattened = normalizePath(

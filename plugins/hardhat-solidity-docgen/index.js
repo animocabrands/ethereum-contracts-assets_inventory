@@ -1,5 +1,3 @@
-// require('hardhat');
-
 const {task, extendConfig} = require('hardhat/config');
 const {docgen} = require('solidity-docgen/dist/docgen');
 
