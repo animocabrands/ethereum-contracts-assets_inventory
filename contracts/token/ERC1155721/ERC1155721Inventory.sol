@@ -5,13 +5,14 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./../ERC721/IERC721.sol";
 import "./../ERC721/IERC721Metadata.sol";
+import "./../ERC721/IERC721BatchTransfer.sol";
 import "./../ERC721/IERC721Receiver.sol";
 import "./../ERC1155/ERC1155InventoryBase.sol";
 
 /**
  * @title ERC1155721Inventory, an ERC1155Inventory with additional support for ERC721.
  */
-abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155InventoryBase {
+abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchTransfer, ERC1155InventoryBase {
     using Address for address;
 
     bytes4 private constant _ERC165_INTERFACE_ID = type(IERC165).interfaceId;
@@ -33,10 +34,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return
-            super.supportsInterface(interfaceId) ||
-            interfaceId == _ERC721_INTERFACE_ID ||
-            interfaceId == _ERC721_METADATA_INTERFACE_ID;
+        return super.supportsInterface(interfaceId) || interfaceId == _ERC721_INTERFACE_ID || interfaceId == _ERC721_METADATA_INTERFACE_ID;
     }
 
     //================================== ERC1155 =======================================/
@@ -181,7 +179,54 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     }
 
     /**
-     * @dev See {IERC721-tokenURI(uint256)}.
+     * @dev See {IERC721BatchTransfer-batchTransferFrom(address,address,uint256[])}.
+     */
+    function batchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata nftIds
+    ) external virtual override {
+        require(to != address(0), "Inventory: transfer to zero");
+        address sender = _msgSender();
+        bool operatable = _isOperatable(from, sender);
+
+        uint256 length = nftIds.length;
+        uint256[] memory values = new uint256[](length);
+
+        uint256 nfCollectionId;
+        uint256 nfCollectionCount;
+        for (uint256 i; i != length; ++i) {
+            uint256 nftId = nftIds[i];
+            require(isNFT(nftId), "Inventory: not an NFT");
+            values[i] = 1;
+            _transferNFT(from, to, nftId, 1, operatable, true);
+            emit Transfer(from, to, nftId);
+            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
+            if (nfCollectionId == 0) {
+                nfCollectionId = nextCollectionId;
+                nfCollectionCount = 1;
+            } else {
+                if (nextCollectionId != nfCollectionId) {
+                    transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                    nfCollectionId = nextCollectionId;
+                    nfCollectionCount = 1;
+                } else {
+                    ++nfCollectionCount;
+                }
+            }
+        }
+
+        transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+        transferNFTUpdateBalances(from, to, length);
+
+        emit TransferBatch(_msgSender(), from, to, nftIds, values);
+        if (to.isContract() && _isERC1155TokenReceiver(to)) {
+            _callOnERC1155BatchReceived(from, to, nftIds, values, "");
+        }
+    }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI(uint256)}.
      */
     function tokenURI(uint256 nftId) external view virtual override returns (string memory) {
         require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
@@ -523,62 +568,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     }
 
     /**
-     * Transfers a batch of NFTs to another address.
-     * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if the sender is not approved.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` is not owned by `from`.
-     * @dev Emits up to several {IERC721-Transfer} events.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @param from Current token owner.
-     * @param to Address of the new token owner.
-     * @param nftIds Identifiers of the tokens to transfer.
-     */
-    function _batchTransferFrom_ERC721(
-        address from,
-        address to,
-        uint256[] memory nftIds
-    ) internal {
-        require(to != address(0), "Inventory: transfer to zero");
-        address sender = _msgSender();
-        bool operatable = _isOperatable(from, sender);
-
-        uint256 length = nftIds.length;
-        uint256[] memory values = new uint256[](length);
-
-        uint256 nfCollectionId;
-        uint256 nfCollectionCount;
-        for (uint256 i; i != length; ++i) {
-            uint256 nftId = nftIds[i];
-            require(isNFT(nftId), "Inventory: not an NFT");
-            values[i] = 1;
-            _transferNFT(from, to, nftId, 1, operatable, true);
-            emit Transfer(from, to, nftId);
-            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
-            if (nfCollectionId == 0) {
-                nfCollectionId = nextCollectionId;
-                nfCollectionCount = 1;
-            } else {
-                if (nextCollectionId != nfCollectionId) {
-                    transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
-                    nfCollectionId = nextCollectionId;
-                    nfCollectionCount = 1;
-                } else {
-                    ++nfCollectionCount;
-                }
-            }
-        }
-
-        transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
-        transferNFTUpdateBalances(from, to, length);
-
-        emit TransferBatch(_msgSender(), from, to, nftIds, values);
-        if (to.isContract() && _isERC1155TokenReceiver(to)) {
-            _callOnERC1155BatchReceived(from, to, nftIds, values, "");
-        }
-    }
-
-    /**
      * Transfers tokens to another address.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if `id` represents a non-fungible collection.
@@ -692,140 +681,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
         }
     }
 
-    //================================ Burning Internal Functions ======================================/
-
-    function _burnFungible(
-        address from,
-        uint256 id,
-        uint256 value,
-        bool operatable
-    ) internal {
-        require(value != 0, "Inventory: zero value");
-        require(operatable, "Inventory: non-approved sender");
-        uint256 balance = _balances[id][from];
-        require(balance >= value, "Inventory: not enough balance");
-        _balances[id][from] = balance - value;
-        // Cannot underflow
-        _supplies[id] -= value;
-    }
-
-    function _burnNFT(
-        address from,
-        uint256 id,
-        uint256 value,
-        bool operatable,
-        bool isBatch
-    ) internal virtual {
-        require(value == 1, "Inventory: wrong NFT value");
-        uint256 owner = _owners[id];
-        require(from == address(owner), "Inventory: non-owned NFT");
-        if (!operatable) {
-            require((owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id], "Inventory: non-approved sender");
-        }
-        _owners[id] = _BURNT_NFT_OWNER;
-
-        if (!isBatch) {
-            uint256 collectionId = id & _NF_COLLECTION_MASK;
-            // cannot underflow as balance is confirmed through ownership
-            --_balances[collectionId][from];
-            // Cannot underflow
-            --_supplies[collectionId];
-            // Cannot underflow
-            --_nftBalances[from];
-        }
-    }
-
-    /**
-     * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
-     */
-    function _burnFrom(
-        address from,
-        uint256 id,
-        uint256 value
-    ) internal virtual {
-        address sender = _msgSender();
-        bool operatable = _isOperatable(from, sender);
-
-        if (isFungible(id)) {
-            _burnFungible(from, id, value, operatable);
-        } else if (id & _NF_TOKEN_MASK != 0) {
-            _burnNFT(from, id, value, operatable, false);
-            emit Transfer(from, address(0), id);
-        } else {
-            revert("Inventory: not a token id");
-        }
-
-        emit TransferSingle(sender, from, address(0), id, value);
-    }
-
-    /**
-     * Burns multiple tokens.
-     * @dev Reverts if `ids` and `values` have different lengths.
-     * @dev Reverts if the sender is not approved.
-     * @dev Reverts if one of `ids` represents a non-fungible collection.
-     * @dev Reverts if one of `ids` represents afungible token and `value` is 0.
-     * @dev Reverts if one of `ids` represents afungible token and `from` doesn't have enough balance.
-     * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
-     * @dev Reverts if one of `ids` represents a non-fungible token which is not owned by `from`.
-     * @dev Emits an {IERC1155-TransferBatch} event.
-     * @dev Emits up to several {IERC721-Transfer} events for each one of `ids` that represents a non-fungible token.
-     * @param from Address of the current tokens owner.
-     * @param ids Identifiers of the tokens to burn.
-     * @param values Amounts of tokens to burn.
-     */
-    function _batchBurnFrom(
-        address from,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) internal virtual {
-        uint256 length = ids.length;
-        require(length == values.length, "Inventory: inconsistent arrays");
-
-        address sender = _msgSender();
-        bool operatable = _isOperatable(from, sender);
-
-        uint256 nfCollectionId;
-        uint256 nfCollectionCount;
-        uint256 nftsCount;
-        for (uint256 i; i != length; ++i) {
-            uint256 id = ids[i];
-            if (isFungible(id)) {
-                _burnFungible(from, id, values[i], operatable);
-            } else if (id & _NF_TOKEN_MASK != 0) {
-                _burnNFT(from, id, values[i], operatable, true);
-                emit Transfer(from, address(0), id);
-                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
-                if (nfCollectionId == 0) {
-                    nfCollectionId = nextCollectionId;
-                    nfCollectionCount = 1;
-                } else {
-                    if (nextCollectionId != nfCollectionId) {
-                        _balances[nfCollectionId][from] -= nfCollectionCount;
-                        _supplies[nfCollectionId] -= nfCollectionCount;
-
-                        nfCollectionId = nextCollectionId;
-                        nftsCount += nfCollectionCount;
-                        nfCollectionCount = 1;
-                    } else {
-                        ++nfCollectionCount;
-                    }
-                }
-            } else {
-                revert("Inventory: not a token id");
-            }
-        }
-
-        if (nfCollectionId != 0) {
-            // cannot underflow as balance is verified through ownership
-            _balances[nfCollectionId][from] -= nfCollectionCount;
-            _supplies[nfCollectionId] -= nfCollectionCount;
-            nftsCount += nfCollectionCount;
-            _nftBalances[from] -= nftsCount;
-        }
-
-        emit TransferBatch(sender, from, address(0), ids, values);
-    }
-
     ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////
 
     /**
@@ -836,10 +691,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, ERC1155Invent
     function _isERC1155TokenReceiver(address _contract) internal view returns (bool) {
         bool success;
         bool result;
-        bytes memory staticCallData = abi.encodeWithSelector(
-            _ERC165_INTERFACE_ID,
-            _ERC1155_TOKEN_RECEIVER_INTERFACE_ID
-        );
+        bytes memory staticCallData = abi.encodeWithSelector(_ERC165_INTERFACE_ID, _ERC1155_TOKEN_RECEIVER_INTERFACE_ID);
         assembly {
             let call_ptr := add(0x20, staticCallData)
             let call_size := mload(staticCallData)

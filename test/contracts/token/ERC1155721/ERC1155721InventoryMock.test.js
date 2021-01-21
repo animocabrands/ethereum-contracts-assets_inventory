@@ -43,6 +43,9 @@ const implementation = {
   safeBatchMint: async function (contract, to, ids, values, data, overrides) {
     return contract.safeBatchMint(to, ids, values, data, overrides);
   },
+  batchTransferFrom_ERC721: async function (contract, from, to, nftIds, overrides) {
+    return contract.batchTransferFrom(from, to, nftIds, overrides);
+  },
   deploy: async function (creator) {
     return artifacts.require('ERC1155721InventoryMock').new({from: creator});
   },

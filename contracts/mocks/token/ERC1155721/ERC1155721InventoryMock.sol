@@ -3,9 +3,7 @@
 pragma solidity 0.6.8;
 
 import "../../../token/ERC1155721/ERC1155721Inventory.sol";
-import "../../../token/ERC1155721/IERC1155721BatchTransfer.sol";
 import "../../../token/ERC1155721/IERC1155721InventoryMintable.sol";
-import "../../../token/ERC1155721/IERC1155721InventoryBurnable.sol";
 import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";

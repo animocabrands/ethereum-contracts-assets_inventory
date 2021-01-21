@@ -4,7 +4,6 @@ pragma solidity 0.6.8;
 
 import "../../../token/ERC1155/ERC1155Inventory.sol";
 import "../../../token/ERC1155/IERC1155InventoryMintable.sol";
-import "../../../token/ERC1155/IERC1155InventoryBurnable.sol";
 import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
@@ -12,7 +11,6 @@ import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol
 contract ERC1155InventoryMock is
     ERC1155Inventory,
     IERC1155InventoryMintable,
-    IERC1155InventoryBurnable,
     IERC1155InventoryCreator,
     BaseMetadataURI,
     MinterRole
@@ -66,28 +64,6 @@ contract ERC1155InventoryMock is
     function creator(uint256 collectionId) external view override returns (address) {
         require(!isNFT(collectionId), "Inventory: not a collection");
         return _creators[collectionId];
-    }
-
-    /**
-     * @dev See {IERC1155InventoryBurnable-burnFrom(address,uint256,uint256)}.
-     */
-    function burnFrom(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external override {
-        _burnFrom(from, id, value);
-    }
-
-    /**
-     * @dev See {IERC1155InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
-     */
-    function batchBurnFrom(
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external override {
-        _batchBurnFrom(from, ids, values);
     }
 
     // ===================================================================================================

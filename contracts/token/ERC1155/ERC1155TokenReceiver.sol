@@ -21,8 +21,6 @@ abstract contract ERC1155TokenReceiver is IERC1155TokenReceiver, IERC165 {
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return
-            interfaceId == _ERC165_INTERFACE_ID ||
-            interfaceId == _ERC1155_TOKEN_RECEIVER_INTERFACE_ID;
+        return interfaceId == _ERC165_INTERFACE_ID || interfaceId == _ERC1155_TOKEN_RECEIVER_INTERFACE_ID;
     }
 }

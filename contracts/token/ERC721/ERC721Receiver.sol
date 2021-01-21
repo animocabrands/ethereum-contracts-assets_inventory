@@ -16,8 +16,6 @@ abstract contract ERC721Receiver is IERC721Receiver, IERC165 {
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return 
-            interfaceId == _ERC165_INTERFACE_ID ||
-            interfaceId == _ERC721_RECEIVER_INTERFACE_ID;
+        return interfaceId == _ERC165_INTERFACE_ID || interfaceId == _ERC721_RECEIVER_INTERFACE_ID;
     }
 }

@@ -40,6 +40,19 @@
       ],
       "name": "CollectionsUnpaused",
       "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "c__0x515fa39c",
+          "type": "bytes32"
+        }
+      ],
+      "name": "c_0x515fa39c",
+      "outputs": [],
+      "stateMutability": "pure",
+      "type": "function"
     }
   ],
   "bytecode": "0x",
