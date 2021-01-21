@@ -1,4 +1,5 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts, accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {behaviors, interfaces} = require('@animoca/ethereum-contracts-core_library');
 const interfaces1155 = require('../../../../../src/interfaces/ERC165/ERC1155');
 const {BN, constants, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
@@ -8,8 +9,8 @@ const {expect} = require('chai');
 
 const ERC1155ReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 
-function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
-  const [minter, firstTokenHolder, secondTokenHolder, multiTokenHolder, recipient, proxy] = accounts;
+function shouldBehaveLikeERC1155({revertMessages, deploy, safeMint}) {
+  const [creator, minter, firstTokenHolder, secondTokenHolder, multiTokenHolder, other, proxy] = accounts;
 
   const firstTokenId = new BN(1);
   const secondTokenId = new BN(2);
@@ -19,6 +20,16 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
   const secondAmount = new BN(2000);
 
   describe('like an ERC1155', function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
+      await this.token.addMinter(minter, {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
+    });
+
     describe('balanceOf', function () {
       it('reverts when queried about the zero address', async function () {
         await expectRevert(this.token.balanceOf(ZERO_ADDRESS, firstTokenId), revertMessages.ZeroAddress);
@@ -173,7 +184,7 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
         await expectRevert(
           this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             multiTokenHolder,
-            recipient,
+            other,
             firstTokenId,
             firstAmount.addn(1),
             '0x',
@@ -221,10 +232,10 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
 
       context('when called by the multiTokenHolder', function () {
         beforeEach(async function () {
-          this.toWhom = recipient;
+          this.toWhom = other;
           this.transferReceipt = await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             multiTokenHolder,
-            recipient,
+            other,
             firstTokenId,
             firstAmount,
             '0x',
@@ -245,7 +256,7 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
           const balance1 = await this.token.balanceOf(multiTokenHolder, secondTokenId);
           expect(balance1).to.be.a.bignumber.equal(secondAmount);
 
-          const balance2 = await this.token.balanceOf(recipient, secondTokenId);
+          const balance2 = await this.token.balanceOf(other, secondTokenId);
           expect(balance2).to.be.a.bignumber.equal('0');
         });
       });
@@ -260,7 +271,7 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
             await expectRevert(
               this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
                 multiTokenHolder,
-                recipient,
+                other,
                 firstTokenId,
                 firstAmount,
                 '0x',
@@ -275,11 +286,11 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
 
         context('when operator is approved by multiTokenHolder', function () {
           beforeEach(async function () {
-            this.toWhom = recipient;
+            this.toWhom = other;
             await this.token.setApprovalForAll(proxy, true, {from: multiTokenHolder});
             this.transferReceipt = await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               multiTokenHolder,
-              recipient,
+              other,
               firstTokenId,
               firstAmount,
               '0x',
@@ -420,7 +431,7 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
         await expectRevert(
           this.token.safeBatchTransferFrom(
             multiTokenHolder,
-            recipient,
+            other,
             [firstTokenId, secondTokenId],
             [firstAmount, secondAmount.addn(1)],
             '0x',
@@ -432,21 +443,16 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
 
       it("reverts when ids array length doesn't match amounts array length", async function () {
         await expectRevert(
-          this.token.safeBatchTransferFrom(
-            multiTokenHolder,
-            recipient,
-            [firstTokenId],
-            [firstAmount, secondAmount],
-            '0x',
-            {from: multiTokenHolder}
-          ),
+          this.token.safeBatchTransferFrom(multiTokenHolder, other, [firstTokenId], [firstAmount, secondAmount], '0x', {
+            from: multiTokenHolder,
+          }),
           revertMessages.InconsistentArrays
         );
 
         await expectRevert(
           this.token.safeBatchTransferFrom(
             multiTokenHolder,
-            recipient,
+            other,
             [firstTokenId, secondTokenId],
             [firstAmount],
             '0x',
@@ -498,10 +504,10 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
 
       context('when called by the multiTokenHolder', function () {
         beforeEach(async function () {
-          this.toWhom = recipient;
+          this.toWhom = other;
           this.transferReceipt = await this.token.safeBatchTransferFrom(
             multiTokenHolder,
-            recipient,
+            other,
             [firstTokenId, secondTokenId],
             [firstAmount, secondAmount],
             '0x',
@@ -527,7 +533,7 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
             await expectRevert(
               this.token.safeBatchTransferFrom(
                 multiTokenHolder,
-                recipient,
+                other,
                 [firstTokenId, secondTokenId],
                 [firstAmount, secondAmount],
                 '0x',
@@ -540,11 +546,11 @@ function shouldBehaveLikeERC1155({revertMessages, safeMint}) {
 
         context('when operator is approved by multiTokenHolder', function () {
           beforeEach(async function () {
-            this.toWhom = recipient;
+            this.toWhom = other;
             await this.token.setApprovalForAll(proxy, true, {from: multiTokenHolder});
             this.transferReceipt = await this.token.safeBatchTransferFrom(
               multiTokenHolder,
-              recipient,
+              other,
               [firstTokenId, secondTokenId],
               [firstAmount, secondAmount],
               '0x',

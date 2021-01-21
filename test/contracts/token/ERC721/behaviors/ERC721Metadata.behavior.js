@@ -1,17 +1,27 @@
-const {accounts} = require('hardhat');
+const {accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {expectRevert} = require('@openzeppelin/test-helpers');
 const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const {behaviors} = require('@animoca/ethereum-contracts-core_library');
 const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
 
-function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, safeMint_ERC721}) {
+function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, safeMint_ERC721}) {
   const [creator, owner] = accounts;
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);
 
   describe('like an ERC721Metadata', function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
+    });
+
     it('has a name', async function () {
       (await this.token.name()).should.be.equal(name);
     });

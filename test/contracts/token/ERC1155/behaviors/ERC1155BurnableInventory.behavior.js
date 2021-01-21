@@ -1,4 +1,5 @@
-const {accounts} = require('hardhat');
+const {accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 const {
   makeFungibleCollectionId,
@@ -11,11 +12,12 @@ function shouldBehaveLikeERC1155BurnableInventory({
   nfMaskLength,
   contractName,
   revertMessages,
+  deploy,
   safeMint,
   burnFrom_ERC1155,
   batchBurnFrom_ERC1155,
 }) {
-  const [creator, owner, operator, other] = accounts;
+  const [creator, _minter, owner, operator, _approved, other] = accounts;
 
   if (burnFrom_ERC1155 === undefined) {
     console.log(
@@ -36,11 +38,17 @@ function shouldBehaveLikeERC1155BurnableInventory({
     const nfCollection = makeNonFungibleCollectionId(1, nfMaskLength);
     const nft = makeNonFungibleTokenId(1, 1, nfMaskLength);
 
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await this.token.createCollection(fCollection.id, {from: creator});
       await this.token.createCollection(nfCollection, {from: creator});
       await safeMint(this.token, owner, fCollection.id, fCollection.supply, '0x', {from: creator});
       await safeMint(this.token, owner, nft, 1, '0x', {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
     });
 
     describe('burnFrom(address,uint256,uint256)', function () {

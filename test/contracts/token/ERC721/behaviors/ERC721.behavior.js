@@ -1,4 +1,5 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts, accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 
 const {behaviors, constants, interfaces} = require('@animoca/ethereum-contracts-core_library');
@@ -13,6 +14,7 @@ function shouldBehaveLikeERC721({
   nfMaskLength,
   contractName,
   revertMessages,
+  deploy,
   safeMint_ERC721,
   batchTransferFrom_ERC721,
 }) {
@@ -30,10 +32,16 @@ function shouldBehaveLikeERC721({
   const unknownNFT = makeNonFungibleTokenId(999, 1, nfMaskLength);
 
   describe('like an ERC721', function () {
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await safeMint_ERC721(this.token, owner, nft1, '0x', {from: creator});
       await safeMint_ERC721(this.token, owner, nft2, '0x', {from: creator});
       await safeMint_ERC721(this.token, owner, nft3, '0x', {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 

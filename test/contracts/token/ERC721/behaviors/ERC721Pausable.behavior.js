@@ -1,4 +1,6 @@
+const {accounts, web3} = require('hardhat');
 const {expectRevert} = require('@openzeppelin/test-helpers');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {
   makeFungibleCollectionId,
   makeNonFungibleCollectionId,
@@ -8,7 +10,7 @@ const {
 const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
-function shouldBehaveLikeERC721Pausable({mint_ERC721, nfMaskLength}) {
+function shouldBehaveLikeERC721Pausable({deploy, mint_ERC721, nfMaskLength}) {
   const [creator, owner, recipient, operator] = accounts;
 
   const mockData = '0x42';
@@ -29,7 +31,9 @@ function shouldBehaveLikeERC721Pausable({mint_ERC721, nfMaskLength}) {
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
   describe('like an ERC721Pausable', function () {
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await this.token.createCollection(fCollection1.id, {from: creator});
       await this.token.createCollection(fCollection2.id, {from: creator});
       await this.token.createCollection(nfCollection1, {from: creator});
@@ -40,10 +44,14 @@ function shouldBehaveLikeERC721Pausable({mint_ERC721, nfMaskLength}) {
       await mint_ERC721(this.token, owner, nft1, 1, '0x', {from: creator});
       await mint_ERC721(this.token, owner, nft2, 1, '0x', {from: creator});
       await mint_ERC721(this.token, owner, nft3, 1, '0x', {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
     });
 
     describe('Pausable', function () {
-      context('when not paued', function () {
+      context('when not paused', function () {
         it('allows approve', async function () {
           await this.token.approve(operator, nft1, {from: owner});
         });

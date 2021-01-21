@@ -8,7 +8,7 @@ module.exports = {
   require: ['hardhat/register'],
   slow: 300,
   spec: 'test/**/*.test.js',
-  timeout: 20000,
+  timeout: 60000,
   ui: 'bdd',
   watch: false,
   'watch-files': ['contracts/**/*.sol', 'test/**/*.js'],

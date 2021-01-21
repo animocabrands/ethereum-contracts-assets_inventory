@@ -1,4 +1,5 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts, accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 
 const {constants} = require('@animoca/ethereum-contracts-core_library');
@@ -17,6 +18,7 @@ function shouldBehaveLikeERC1155721StandardInventory({
   nfMaskLength,
   contractName,
   revertMessages,
+  deploy,
   safeMint,
   batchTransferFrom_ERC721,
 }) {
@@ -52,7 +54,9 @@ function shouldBehaveLikeERC1155721StandardInventory({
     // workaround for test cases that throw with `Error: Timeout of 2000ms exceeded`
     this.timeout(10000);
 
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await safeMint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: creator});
       await safeMint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: creator});
       await safeMint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', {from: creator});
@@ -62,7 +66,10 @@ function shouldBehaveLikeERC1155721StandardInventory({
 
       this.receiver = await ReceiverMock.new(true, true);
       this.receiver721 = await ReceiverMock721.new(true);
+    };
 
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 

@@ -15,7 +15,6 @@ smartcheck*
 contracts_flattened/
 docs/
 
-
 yarn-error.log
 node_modules/
 

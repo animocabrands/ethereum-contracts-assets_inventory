@@ -1,4 +1,5 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts, accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {One, Two, Three, Zero} = require('@animoca/ethereum-contracts-core_library/src/constants');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 const {ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
@@ -18,6 +19,7 @@ function shouldBehaveLikeERC1155721MintableInventory({
   nfMaskLength,
   contractName,
   revertMessages,
+  deploy,
   safeMint,
   safeBatchMint,
   mint_ERC721,
@@ -52,10 +54,16 @@ function shouldBehaveLikeERC1155721MintableInventory({
   const nft3 = makeNonFungibleTokenId(2, getNonFungibleBaseCollectionId(nfCollection2, nfMaskLength), nfMaskLength);
 
   describe('like a mintable ERC1155721Inventory', function () {
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await this.token.addMinter(minter, {from: creator});
       this.receiver = await ReceiverMock.new(true, true);
       this.receiver721 = await ReceiverMock721.new(true);
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
     });
 
     context('ERC1155 minting', function () {

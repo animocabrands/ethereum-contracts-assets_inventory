@@ -1,4 +1,4 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts} = require('hardhat');
 const {shouldBehaveLikeERC1155Inventory} = require('./behaviors/ERC1155Inventory.behavior');
 
 const implementation = {
@@ -32,13 +32,11 @@ const implementation = {
   safeBatchMint: async function (contract, to, ids, values, data, overrides) {
     return contract.safeBatchMint(to, ids, values, data, overrides);
   },
+  deploy: async function (creator) {
+    return artifacts.require('ERC1155InventoryMock').new({from: creator});
+  },
 };
 
 describe('ERC1155InventoryMock', function () {
-  const [creator] = accounts;
-  beforeEach(async function () {
-    this.token = await artifacts.require(implementation.contractName).new({from: creator});
-  });
-
   shouldBehaveLikeERC1155Inventory(implementation);
 });

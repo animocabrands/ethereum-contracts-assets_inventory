@@ -1,4 +1,5 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts, accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 
 const {constants} = require('@animoca/ethereum-contracts-core_library');
@@ -12,8 +13,8 @@ const {
 
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 
-function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages, safeMint}) {
-  const [creator, owner, operator, other] = accounts;
+function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages, deploy, safeMint}) {
+  const [creator, _minter, owner, operator, _approved, other] = accounts;
 
   const fCollection1 = {
     id: makeFungibleCollectionId(1),
@@ -40,13 +41,19 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
   const unknownNft = makeNonFungibleTokenId(99, 99, nfMaskLength);
 
   describe('like an ERC1155StandardInventory', function () {
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await safeMint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: creator});
       await safeMint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: creator});
       await safeMint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', {from: creator});
       await safeMint(this.token, owner, nft1, 1, '0x', {from: creator});
       await safeMint(this.token, owner, nft2, 1, '0x', {from: creator});
       await safeMint(this.token, owner, nft3, 1, '0x', {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
       this.toWhom = other; // default to anyone for toWhom in context-dependent tests
     });
 

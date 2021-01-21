@@ -1,4 +1,5 @@
-const {accounts} = require('hardhat');
+const {accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {expectRevert} = require('@openzeppelin/test-helpers');
 const {
   makeFungibleCollectionId,
@@ -9,8 +10,8 @@ const {
 const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
-function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
-  const [creator, owner, recipient, operator] = accounts;
+function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) {
+  const [creator, _minter, owner, operator, _approved, other] = accounts;
 
   const mockData = '0x42';
 
@@ -30,7 +31,10 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
   const nft3 = makeNonFungibleTokenId(2, 2, nfMaskLength);
 
   describe('like a pausable ERC1155Inventory', function () {
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await this.token.createCollection(fCollection1.id, {from: creator});
       await this.token.createCollection(fCollection2.id, {from: creator});
       await this.token.createCollection(nfCollection1, {from: creator});
@@ -41,6 +45,10 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
       await mint(this.token, owner, nft1, 1, '0x', {from: creator});
       await mint(this.token, owner, nft2, 1, '0x', {from: creator});
       await mint(this.token, owner, nft3, 1, '0x', {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
     });
 
     describe('PausableCollections', function () {
@@ -52,7 +60,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
         it('should allow transfers for other collections', async function () {
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection2.id,
             '1',
             mockData,
@@ -60,7 +68,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft1,
             '1',
             mockData,
@@ -68,7 +76,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft3,
             '1',
             mockData,
@@ -80,7 +88,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               fCollection1.id,
               '1',
               mockData,
@@ -94,7 +102,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await this.token.unpauseCollections([fCollection1.id], {from: creator});
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection1.id,
             '1',
             mockData,
@@ -111,7 +119,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
         it('should allow transfers for other collections', async function () {
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection1.id,
             '1',
             mockData,
@@ -119,7 +127,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection2.id,
             '1',
             mockData,
@@ -127,7 +135,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft2,
             '1',
             mockData,
@@ -135,7 +143,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft3,
             '1',
             mockData,
@@ -147,7 +155,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft1,
               '1',
               mockData,
@@ -161,7 +169,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await this.token.unpauseCollections([nfCollection1], {from: creator});
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft1,
             '1',
             mockData,
@@ -178,7 +186,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
         it('should allow transfers for other collections', async function () {
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection1.id,
             '1',
             mockData,
@@ -186,7 +194,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft1,
             '1',
             mockData,
@@ -198,7 +206,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               fCollection2.id,
               '1',
               mockData,
@@ -209,7 +217,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft2,
               '1',
               mockData,
@@ -220,7 +228,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft3,
               '1',
               mockData,
@@ -235,7 +243,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
 
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection2.id,
             '1',
             mockData,
@@ -243,7 +251,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection1.id,
             '1',
             mockData,
@@ -251,7 +259,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft1,
             '1',
             mockData,
@@ -260,7 +268,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft2,
               '1',
               mockData,
@@ -271,7 +279,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft3,
               '1',
               mockData,
@@ -286,7 +294,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
 
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection1.id,
             '1',
             mockData,
@@ -295,7 +303,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               fCollection2.id,
               '1',
               mockData,
@@ -305,7 +313,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft1,
             '1',
             mockData,
@@ -313,7 +321,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft2,
             '1',
             mockData,
@@ -321,7 +329,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft3,
             '1',
             mockData,
@@ -340,7 +348,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
         it('allows safeTransferFrom', async function () {
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection2.id,
             '1',
             mockData,
@@ -348,7 +356,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft1,
             '1',
             mockData,
@@ -356,7 +364,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             nft3,
             '1',
             mockData,
@@ -364,7 +372,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           );
           await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
             owner,
-            recipient,
+            other,
             fCollection1.id,
             '1',
             mockData,
@@ -376,7 +384,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           const ids = [fCollection2.id, nft1, nft3, fCollection1.id];
           const values = ['1', '1', '1', '1'];
 
-          await this.token.safeBatchTransferFrom(owner, recipient, ids, values, mockData, {from: owner});
+          await this.token.safeBatchTransferFrom(owner, other, ids, values, mockData, {from: owner});
         });
 
         it('allows burnFrom', async function () {
@@ -400,7 +408,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               fCollection2.id,
               '1',
               mockData,
@@ -411,7 +419,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft1,
               '1',
               mockData,
@@ -422,7 +430,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               nft3,
               '1',
               mockData,
@@ -433,7 +441,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           await expectRevert(
             this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
               owner,
-              recipient,
+              other,
               fCollection1.id,
               '1',
               mockData,
@@ -448,7 +456,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, mint}) {
           const values = ['1', '1', '1', '1'];
 
           await expectRevert(
-            this.token.safeBatchTransferFrom(owner, recipient, ids, values, mockData, {from: owner}),
+            this.token.safeBatchTransferFrom(owner, other, ids, values, mockData, {from: owner}),
             Paused_RevertMessage
           );
         });

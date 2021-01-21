@@ -1,4 +1,5 @@
-const {artifacts, accounts} = require('hardhat');
+const {artifacts, accounts, web3} = require('hardhat');
+const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
 const {MaxUInt256} = require('@animoca/ethereum-contracts-core_library/src/constants');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 const {One, ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
@@ -12,14 +13,14 @@ const {
 
 const ReceiverMock = artifacts.require('ERC1155721ReceiverMock');
 
-function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, safeMint, safeBatchMint, revertMessages}) {
-  const [creator, minter, nonMinter, owner, newOwner, approved] = accounts;
+function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, deploy, safeMint, safeBatchMint, revertMessages}) {
+  const [creator, minter, owner, _operator, _approved, other] = accounts;
 
-  const fCollection1 = makeFungibleCollectionId(1);
-  const fCollection2 = makeFungibleCollectionId(2);
-  const fCollection3 = makeFungibleCollectionId(3);
-  const nfCollection1 = makeNonFungibleCollectionId(1, nfMaskLength);
-  const nfCollection2 = makeNonFungibleCollectionId(2, nfMaskLength);
+  const fCollection1 = makeFungibleCollectionId(111);
+  const fCollection2 = makeFungibleCollectionId(222);
+  const fCollection3 = makeFungibleCollectionId(333);
+  const nfCollection1 = makeNonFungibleCollectionId(101, nfMaskLength);
+  const nfCollection2 = makeNonFungibleCollectionId(202, nfMaskLength);
   const nft1 = makeNonFungibleTokenId(1, getNonFungibleBaseCollectionId(nfCollection1, nfMaskLength), nfMaskLength);
   const nft2 = makeNonFungibleTokenId(1, getNonFungibleBaseCollectionId(nfCollection2, nfMaskLength), nfMaskLength);
   const nft3 = makeNonFungibleTokenId(2, getNonFungibleBaseCollectionId(nfCollection2, nfMaskLength), nfMaskLength);
@@ -30,13 +31,19 @@ function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, safeMint, safeB
   };
 
   describe('like a mintable ERC1155Inventory', function () {
-    beforeEach(async function () {
+    const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
+    const fixture = async function () {
+      this.token = await deploy(creator);
       await this.token.addMinter(minter, {from: creator});
+    };
+
+    beforeEach(async function () {
+      await fixtureLoader(fixture, this);
     });
 
     context('minting NFT', function () {
       it('reverts if the sender is not a Minter', async function () {
-        await expectRevert(safeMint(this.token, owner, nft1, 1, '0x', {from: nonMinter}), revertMessages.NotMinter);
+        await expectRevert(safeMint(this.token, owner, nft1, 1, '0x', {from: other}), revertMessages.NotMinter);
       });
 
       it('reverts if sent to the zero address', async function () {
@@ -118,7 +125,7 @@ function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, safeMint, safeB
 
       it('reverts if the sender is not a Minter', async function () {
         await expectRevert(
-          safeMint(this.token, owner, fCollection1, supply, '0x', {from: nonMinter}),
+          safeMint(this.token, owner, fCollection1, supply, '0x', {from: other}),
           revertMessages.NotMinter
         );
       });
@@ -194,7 +201,7 @@ function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, safeMint, safeB
     context('batch minting', function () {
       it('reverts if the sender is not a Minter', async function () {
         await expectRevert(
-          safeBatchMint(this.token, owner, tokensToBatchMint.ids, tokensToBatchMint.supplies, '0x', {from: nonMinter}),
+          safeBatchMint(this.token, owner, tokensToBatchMint.ids, tokensToBatchMint.supplies, '0x', {from: other}),
           revertMessages.NotMinter
         );
       });

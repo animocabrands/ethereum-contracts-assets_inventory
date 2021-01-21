@@ -28,6 +28,9 @@ function shouldBehaveLikeERC1155721Inventory(implementation) {
     shouldBehaveLikeERC1155721BurnableInventory(implementation);
 
     describe('ERC165 interfaces support', function () {
+      beforeEach(async function () {
+        this.token = await implementation.deploy();
+      });
       behaviors.shouldSupportInterfaces([interfaces1155.ERC1155Inventory_Experimental]);
     });
   });
