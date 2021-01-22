@@ -55,7 +55,7 @@
     "lint:sol": "solhint contracts/**/*.sol",
     "lint": "run-s lint:js lint:sol",
     "fix:js": "eslint --fix \"**/*.{js,ts}\"",
-    "fix:sol": "eslint --fix \"**/*.{js,ts}\" && solhint --fix contracts/**/*.sol",
+    "fix:sol": "solhint --fix contracts/**/*.sol",
     "fix": "run-s fix:js fix:sol",
     "format:js": "prettier --write \"**/*.{ts,js}\"",
     "format:sol": "prettier --write \"**/*.sol\"",

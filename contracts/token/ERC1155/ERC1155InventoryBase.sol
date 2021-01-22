@@ -180,7 +180,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /**
      * @dev See {IERC1155InventoryCreator-creator(uint256)}.
      */
-    function _creator(uint256 collectionId) internal virtual view returns (address) {
+    function _creator(uint256 collectionId) internal view virtual returns (address) {
         require(!isNFT(collectionId), "Inventory: not a collection");
         return _creators[collectionId];
     }
