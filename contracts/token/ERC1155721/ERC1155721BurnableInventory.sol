@@ -9,7 +9,6 @@ import "../ERC1155/IERC1155InventoryBurnable.sol";
  * @title ERC1155721BurnableInventory, a burnable ERC1155721Inventory.
  */
 abstract contract ERC1155721BurnableInventory is IERC1155InventoryBurnable, ERC1155721Inventory {
-
     /**
      * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
      */
@@ -135,5 +134,4 @@ abstract contract ERC1155721BurnableInventory is IERC1155InventoryBurnable, ERC1
             --_nftBalances[from];
         }
     }
-    
 }

@@ -4,19 +4,6 @@
   "sourceName": "contracts/metadata/CoreMetadataDelegator.sol",
   "abi": [
     {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "c__0x2f660110",
-          "type": "bytes32"
-        }
-      ],
-      "name": "c_0x2f660110",
-      "outputs": [],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
       "inputs": [],
       "name": "coreMetadataImplementer",
       "outputs": [

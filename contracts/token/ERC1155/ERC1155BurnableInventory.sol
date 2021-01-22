@@ -9,7 +9,6 @@ import "./IERC1155InventoryBurnable.sol";
  * @title ERC1155BurnableInventory, a burnable ERC1155Inventory
  */
 abstract contract ERC1155BurnableInventory is IERC1155InventoryBurnable, ERC1155Inventory {
-
     /**
      * @dev See {IERC1155InventoryBurnable-burnFrom(address,uint256,uint256)}.
      */

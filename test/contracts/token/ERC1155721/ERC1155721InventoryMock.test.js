@@ -52,5 +52,6 @@ const implementation = {
 };
 
 describe('ERC1155721InventoryMock', function () {
+  this.timeout(0);
   shouldBehaveLikeERC1155721Inventory(implementation);
 });

@@ -44,5 +44,6 @@ const implementation = {
 };
 
 describe('ERC1155BurnableInventoryMock', function () {
+  this.timeout(0);
   shouldBehaveLikeERC1155Inventory(implementation);
 });

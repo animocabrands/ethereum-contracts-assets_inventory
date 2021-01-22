@@ -8,7 +8,13 @@ import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155721BurnableInventoryMock is ERC1155721BurnableInventory, IERC1155721InventoryMintable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+contract ERC1155721BurnableInventoryMock is
+    ERC1155721BurnableInventory,
+    IERC1155721InventoryMintable,
+    IERC1155InventoryCreator,
+    BaseMetadataURI,
+    MinterRole
+{
     string public constant override name = "ERC1155721InventoryMock";
     string public constant override symbol = "INV";
 

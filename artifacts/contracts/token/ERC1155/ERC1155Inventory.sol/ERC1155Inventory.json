@@ -191,32 +191,6 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "c__0x2d1acd92",
-          "type": "bytes32"
-        }
-      ],
-      "name": "c_0x2d1acd92",
-      "outputs": [],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "c__0xe073e19d",
-          "type": "bytes32"
-        }
-      ],
-      "name": "c_0xe073e19d",
-      "outputs": [],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "uint256",
           "name": "nftId",
           "type": "uint256"

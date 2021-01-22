@@ -8,13 +8,7 @@ import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155InventoryMock is
-    ERC1155Inventory,
-    IERC1155InventoryMintable,
-    IERC1155InventoryCreator,
-    BaseMetadataURI,
-    MinterRole
-{
+contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
     // ===================================================================================================
     //                               Admin Public Functions
     // ===================================================================================================

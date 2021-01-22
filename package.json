@@ -64,10 +64,10 @@
     "flatten": "hardhat flatten-all --show-stack-traces",
     "smartcheck": "smartcheck -p contracts &> smartcheck.log",
     "test": "hardhat test --show-stack-traces",
-    "coverage:ERC1155Inventory": "hardhat coverage --network coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155InventoryMock.test.js && rm -rf coverage_ERC1155InventoryMock && mv coverage coverage_ERC1155InventoryMock",
-    "coverage:ERC1155BurnableInventory": "hardhat coverage --network coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155BurnableInventoryMock.test.js && rm -rf coverage_ERC1155BurnableInventoryMock && mv coverage coverage_ERC1155BurnableInventoryMock",
-    "coverage:ERC1155721Inventory": "hardhat coverage --network coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721InventoryMock.test.js && rm -rf coverage_ERC1155721InventoryMock && mv coverage coverage_ERC1155721InventoryMock",
-    "coverage:ERC1155721BurnableInventory": "hardhat coverage --network coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721BurnableInventoryMock.test.js && rm -rf coverage_ERC1155721BurnableInventoryMock && mv coverage coverage_ERC1155721BurnableInventoryMock",
+    "coverage:ERC1155Inventory": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155InventoryMock.test.js && rm -rf coverage_ERC1155InventoryMock && mv coverage coverage_ERC1155InventoryMock",
+    "coverage:ERC1155BurnableInventory": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155BurnableInventoryMock.test.js && rm -rf coverage_ERC1155BurnableInventoryMock && mv coverage coverage_ERC1155BurnableInventoryMock",
+    "coverage:ERC1155721Inventory": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721InventoryMock.test.js && rm -rf coverage_ERC1155721InventoryMock && mv coverage coverage_ERC1155721InventoryMock",
+    "coverage:ERC1155721BurnableInventory": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721BurnableInventoryMock.test.js && rm -rf coverage_ERC1155721BurnableInventoryMock && mv coverage coverage_ERC1155721BurnableInventoryMock",
     "coverage": "run-s coverage:ERC1155Inventory coverage:ERC1155BurnableInventory coverage:ERC1155721Inventory coverage:ERC1155721BurnableInventory",
     "ganache": "ganache-cli -g 1000000000",
     "gas-report": "wait-on tcp:8545 && cross-env REPORT_GAS=true hardhat --network localhost test --show-stack-traces",
@@ -83,6 +83,6 @@
     "clean:doc": "rm -rf docs",
     "clean": "run-p clean:compile clean:flatten clean:smartcheck clean:coverage clean:doc",
     "make:coffee": "run-s format fix compile flatten smartcheck test coverage doc",
-    "make:tiramisu": "run-s clean make:coffee"
+    "make:tiramisu": "run-s clean make:coffee gas-report"
   }
 }
