@@ -7,15 +7,8 @@ const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata
 
 const ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC721Mintable({
-  nfMaskLength,
-  deploy,
-  mint_ERC721,
-  safeMint_ERC721,
-  batchMint_ERC721,
-  revertMessages,
-}) {
-  const [creator, minter, nonMinter, owner] = accounts;
+function shouldBehaveLikeERC721Mintable({nfMaskLength, deploy, mint_ERC721, safeMint_ERC721, batchMint_ERC721, revertMessages}) {
+  const [deployer, minter, nonMinter, owner] = accounts;
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);
@@ -25,9 +18,9 @@ function shouldBehaveLikeERC721Mintable({
   describe('like a mintable ERC721', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
-      this.token = await deploy(creator);
-      await this.token.addMinter(minter, {from: creator});
-      this.receiver = await ReceiverMock.new(true, {from: creator});
+      this.token = await deploy(deployer);
+      await this.token.addMinter(minter, {from: deployer});
+      this.receiver = await ReceiverMock.new(true, {from: deployer});
     };
     beforeEach(async function () {
       await fixtureLoader(fixture, this);
@@ -88,18 +81,12 @@ function shouldBehaveLikeERC721Mintable({
       });
 
       it('reverts if sent to the zero address', async function () {
-        await expectRevert(
-          safeMint_ERC721(this.token, ZeroAddress, nft1, '0x', {from: minter}),
-          revertMessages.TransferToZero
-        );
+        await expectRevert(safeMint_ERC721(this.token, ZeroAddress, nft1, '0x', {from: minter}), revertMessages.TransferToZero);
       });
 
       it('reverts if the token has already been minted', async function () {
         await safeMint_ERC721(this.token, owner, nft1, '0x', {from: minter});
-        await expectRevert(
-          safeMint_ERC721(this.token, owner, nft1, '0x', {from: minter}),
-          revertMessages.ExistingOrBurntNFT
-        );
+        await expectRevert(safeMint_ERC721(this.token, owner, nft1, '0x', {from: minter}), revertMessages.ExistingOrBurntNFT);
       });
 
       context('when successful', function () {
@@ -138,7 +125,9 @@ function shouldBehaveLikeERC721Mintable({
         });
 
         it('should emit the Received event', async function () {
-          this.receipt = await safeMint_ERC721(this.token, this.receiver.address, nft1, '0x', {from: minter});
+          this.receipt = await safeMint_ERC721(this.token, this.receiver.address, nft1, '0x', {
+            from: minter,
+          });
           await expectEvent.inTransaction(this.receipt.tx, this.receiver, 'Received', {
             from: ZeroAddress,
             tokenId: nft1,
@@ -154,18 +143,12 @@ function shouldBehaveLikeERC721Mintable({
       });
 
       it('reverts if sent to the zero address', async function () {
-        await expectRevert(
-          batchMint_ERC721(this.token, ZeroAddress, [nft1], {from: minter}),
-          revertMessages.TransferToZero
-        );
+        await expectRevert(batchMint_ERC721(this.token, ZeroAddress, [nft1], {from: minter}), revertMessages.TransferToZero);
       });
 
       it('reverts if minting a token that already has been minted', async function () {
         await batchMint_ERC721(this.token, owner, [nft1], {from: minter});
-        await expectRevert(
-          batchMint_ERC721(this.token, owner, [nft1], {from: minter}),
-          revertMessages.ExistingOrBurntNFT
-        );
+        await expectRevert(batchMint_ERC721(this.token, owner, [nft1], {from: minter}), revertMessages.ExistingOrBurntNFT);
       });
 
       context('when successful', function () {

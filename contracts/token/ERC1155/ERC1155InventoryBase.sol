@@ -161,7 +161,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         return (id & _NF_BIT) != 0 && (id & _NF_TOKEN_MASK != 0);
     }
 
-    //================================== Inventory Internal Functions =======================================/
+    //================================== Inventory ABI-level Internal Functions =======================================/
 
     /**
      * Creates a collection (optional).
@@ -178,11 +178,21 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     }
 
     /**
+     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
+     */
+    function _creator(uint256 collectionId) internal virtual view returns (address) {
+        require(!isNFT(collectionId), "Inventory: not a collection");
+        return _creators[collectionId];
+    }
+
+    /**
      * @dev (abstract) Returns an URI for a given identifier.
      * @param id Identifier to query the URI of.
      * @return The metadata URI for `id`.
      */
     function _uri(uint256 id) internal view virtual returns (string memory);
+
+    //================================== Inventory Internal Functions =======================================/
 
     /**
      * Returns whether `sender` is authorised to make a transfer on behalf of `from`.
@@ -193,8 +203,6 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     function _isOperatable(address from, address sender) internal view virtual returns (bool) {
         return (from == sender) || _operators[from][sender];
     }
-
-    //================================== Token Receiver Calls Internal =======================================/
 
     /**
      * Calls {IERC1155TokenReceiver-onERC1155Received} on a target contract.

@@ -7,7 +7,7 @@ const {behaviors} = require('@animoca/ethereum-contracts-core_library');
 const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
 
 function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, safeMint_ERC721}) {
-  const [creator, owner] = accounts;
+  const [deployer, owner] = accounts;
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);
@@ -15,7 +15,7 @@ function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, saf
   describe('like an ERC721Metadata', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
-      this.token = await deploy(creator);
+      this.token = await deploy(deployer);
     };
 
     beforeEach(async function () {
@@ -32,7 +32,7 @@ function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, saf
 
     describe('tokenURI', function () {
       beforeEach(async function () {
-        await safeMint_ERC721(this.token, owner, nft1, '0x', {from: creator});
+        await safeMint_ERC721(this.token, owner, nft1, '0x', {from: deployer});
       });
 
       it('tokenURI()', async function () {

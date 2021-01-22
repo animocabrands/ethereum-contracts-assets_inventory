@@ -6,11 +6,7 @@ const {extendConfig, task} = require('hardhat/config');
 const {normalizePath} = require('../helpers');
 
 extendConfig((config, userConfig) => {
-  config.paths.flattened = normalizePath(
-    config,
-    userConfig.paths ? userConfig.paths.flattened : undefined,
-    'flattened'
-  );
+  config.paths.flattened = normalizePath(config, userConfig.paths ? userConfig.paths.flattened : undefined, 'flattened');
 });
 
 task('flatten-all', 'Flattens and saves each individual solidity file', async (taskArguments, env) => {

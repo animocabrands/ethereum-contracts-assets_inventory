@@ -9,19 +9,9 @@ const ERC1155_Functions = [
   'isApprovedForAll(address,address)',
 ];
 
-const ERC1155AssetCollections_Functions = [
-  'isFungible(uint256)',
-  'collectionOf(uint256)',
-  'ownerOf(uint256)',
-  'exists(uint256)',
-];
+const ERC1155AssetCollections_Functions = ['isFungible(uint256)', 'collectionOf(uint256)', 'ownerOf(uint256)', 'exists(uint256)'];
 
-const ERC1155Inventory_Functions = [
-  'isFungible(uint256)',
-  'collectionOf(uint256)',
-  'ownerOf(uint256)',
-  'totalSupply(uint256)',
-];
+const ERC1155Inventory_Functions = ['isFungible(uint256)', 'collectionOf(uint256)', 'ownerOf(uint256)', 'totalSupply(uint256)'];
 
 const ERC1155MetadataURI_Functions = ['uri(uint256)'];
 

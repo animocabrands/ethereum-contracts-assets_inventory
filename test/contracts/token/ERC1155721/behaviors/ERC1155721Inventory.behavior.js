@@ -9,6 +9,7 @@ const {shouldBehaveLikeERC1155StandardInventory} = require('../../ERC1155/behavi
 const {shouldBehaveLikeERC1155BurnableInventory} = require('../../ERC1155/behaviors/ERC1155BurnableInventory.behavior');
 const {shouldBehaveLikeERC1155MintableInventory} = require('../../ERC1155/behaviors/ERC1155MintableInventory.behavior');
 const {shouldBehaveLikeERC1155MetadataURI} = require('../../ERC1155/behaviors/ERC1155MetadataURI.behavior');
+const {shouldBehaveLikeERC1155InventoryCreator} = require('../../ERC1155/behaviors/ERC1155InventoryCreator.behavior');
 const {shouldBehaveLikeERC1155721StandardInventory} = require('./ERC1155721StandardInventory.behavior');
 const {shouldBehaveLikeERC1155721MintableInventory} = require('./ERC1155721MintableInventory.behavior');
 const {shouldBehaveLikeERC1155721BurnableInventory} = require('./ERC1155721BurnableInventory.behavior');
@@ -23,6 +24,7 @@ function shouldBehaveLikeERC1155721Inventory(implementation) {
     shouldBehaveLikeERC1155MintableInventory(implementation);
     shouldBehaveLikeERC1155BurnableInventory(implementation);
     shouldBehaveLikeERC1155MetadataURI(implementation);
+    shouldBehaveLikeERC1155InventoryCreator(implementation);
     shouldBehaveLikeERC1155721StandardInventory(implementation);
     shouldBehaveLikeERC1155721MintableInventory(implementation);
     shouldBehaveLikeERC1155721BurnableInventory(implementation);

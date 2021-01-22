@@ -229,10 +229,7 @@ describe('CoreMetadata', function () {
         if (name == 'nf_flag' || name == 'nfFlag') continue;
         const index = attributesValues.names.map((n) => fromBytes32Attribute(n)).indexOf(name);
         index.should.be.gte(0, `Missing attribute: ${name}`);
-        attributesValues.values[index].should.be.bignumber.equal(
-          new BN(`${value}`),
-          "Attribute's value from getAllAttributes() is wrong"
-        );
+        attributesValues.values[index].should.be.bignumber.equal(new BN(`${value}`), "Attribute's value from getAllAttributes() is wrong");
 
         const attributeValue = await this.contract.getAttribute(integer.toString(10), toBytes32Attribute(name));
         attributeValue.should.be.bignumber.equal(new BN(`${value}`), "Attribute's value from getAttribute() is wrong");

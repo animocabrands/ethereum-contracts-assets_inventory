@@ -182,15 +182,7 @@ describe('InventoryMetadata', function () {
 
   describe('getAttribute() / getAllAttributes()', function () {
     const layout = {
-      names: [
-        'token_attr1',
-        'token_attr2',
-        'token_attr3',
-        'token_attr4',
-        'collection_attr1',
-        'collection_attr2',
-        'collection_attr3',
-      ],
+      names: ['token_attr1', 'token_attr2', 'token_attr3', 'token_attr4', 'collection_attr1', 'collection_attr2', 'collection_attr3'],
       lengths: [32, 64, 64, 64, 15, 8, 8],
       indices: [0, 32, 96, 160, 224, 239, 247],
     };
@@ -245,10 +237,7 @@ describe('InventoryMetadata', function () {
         if (name == 'nf_flag' || name == 'nfFlag') continue;
         const index = attributesValues.names.map((n) => fromBytes32Attribute(n)).indexOf(name);
         index.should.be.gte(0, `Missing attribute: ${name}`);
-        attributesValues.values[index].should.be.bignumber.equal(
-          new BN(`${value}`),
-          `Wrong value for '${name}' from getAllAttributes()`
-        );
+        attributesValues.values[index].should.be.bignumber.equal(new BN(`${value}`), `Wrong value for '${name}' from getAllAttributes()`);
 
         const attributeValue = await this.contract.getAttribute(nftId.toString(10), toBytes32Attribute(name));
         attributeValue.should.be.bignumber.equal(new BN(`${value}`), `Wrong value for '${name}' from getAttribute()`);
@@ -256,9 +245,5 @@ describe('InventoryMetadata', function () {
     });
   });
 
-  behaviors.shouldSupportInterfaces([
-    interfaces.ERC165,
-    interfacesMetadata.CoreMetadata,
-    interfacesMetadata.InventoryMetadata,
-  ]);
+  behaviors.shouldSupportInterfaces([interfaces.ERC165, interfacesMetadata.CoreMetadata, interfacesMetadata.InventoryMetadata]);
 });

@@ -11,7 +11,7 @@ const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
 function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) {
-  const [creator, _minter, owner, operator, _approved, other] = accounts;
+  const [deployer, _minter, owner, operator, _approved, other] = accounts;
 
   const mockData = '0x42';
 
@@ -34,17 +34,17 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) 
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
 
     const fixture = async function () {
-      this.token = await deploy(creator);
-      await this.token.createCollection(fCollection1.id, {from: creator});
-      await this.token.createCollection(fCollection2.id, {from: creator});
-      await this.token.createCollection(nfCollection1, {from: creator});
-      await this.token.createCollection(nfCollection2, {from: creator});
+      this.token = await deploy(deployer);
+      await this.token.createCollection(fCollection1.id, {from: deployer});
+      await this.token.createCollection(fCollection2.id, {from: deployer});
+      await this.token.createCollection(nfCollection1, {from: deployer});
+      await this.token.createCollection(nfCollection2, {from: deployer});
 
-      await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: creator});
-      await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: creator});
-      await mint(this.token, owner, nft1, 1, '0x', {from: creator});
-      await mint(this.token, owner, nft2, 1, '0x', {from: creator});
-      await mint(this.token, owner, nft3, 1, '0x', {from: creator});
+      await mint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: deployer});
+      await mint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: deployer});
+      await mint(this.token, owner, nft1, 1, '0x', {from: deployer});
+      await mint(this.token, owner, nft2, 1, '0x', {from: deployer});
+      await mint(this.token, owner, nft3, 1, '0x', {from: deployer});
     };
 
     beforeEach(async function () {
@@ -54,287 +54,127 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) 
     describe('PausableCollections', function () {
       context('fungible token 1 paused', function () {
         beforeEach(async function () {
-          await this.token.pauseCollections([fCollection1.id], {from: creator});
+          await this.token.pauseCollections([fCollection1.id], {from: deployer});
         });
 
         it('should allow transfers for other collections', async function () {
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection2.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft1,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft3,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner});
         });
 
         it('should block transfers for this collection', async function () {
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              fCollection1.id,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+              from: owner,
+            }),
             IdIsPaused_RevertMessage
           );
         });
 
         it('should allow again after unpausing', async function () {
-          await this.token.unpauseCollections([fCollection1.id], {from: creator});
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection1.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.unpauseCollections([fCollection1.id], {from: deployer});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+            from: owner,
+          });
         });
       });
 
       context('non-fungible collection 1 paused', function () {
         beforeEach(async function () {
-          await this.token.pauseCollections([nfCollection1], {from: creator});
+          await this.token.pauseCollections([nfCollection1], {from: deployer});
         });
 
         it('should allow transfers for other collections', async function () {
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection1.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection2.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft2,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft3,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft2, '1', mockData, {from: owner});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner});
         });
 
         it('should block transfers for this collection', async function () {
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft1,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner}),
             IdIsPaused_RevertMessage
           );
         });
 
         it('should allow again after unpausing', async function () {
-          await this.token.unpauseCollections([nfCollection1], {from: creator});
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft1,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.unpauseCollections([nfCollection1], {from: deployer});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner});
         });
       });
 
       context('fungible token 2 & non-fungible collection 2 paused', function () {
         beforeEach(async function () {
-          await this.token.pauseCollections([nfCollection2, fCollection2.id], {from: creator});
+          await this.token.pauseCollections([nfCollection2, fCollection2.id], {from: deployer});
         });
 
         it('should allow transfers for other collections', async function () {
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection1.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft1,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner});
         });
 
         it('should block transfers for these collection', async function () {
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              fCollection2.id,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+              from: owner,
+            }),
             IdIsPaused_RevertMessage
           );
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft2,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft2, '1', mockData, {from: owner}),
             IdIsPaused_RevertMessage
           );
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft3,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner}),
             IdIsPaused_RevertMessage
           );
         });
 
         it('should allowfungible token 2 again after unpausing', async function () {
-          await this.token.unpauseCollections([fCollection2.id], {from: creator});
+          await this.token.unpauseCollections([fCollection2.id], {from: deployer});
 
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection2.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection1.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft1,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner});
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft2,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft2, '1', mockData, {from: owner}),
             IdIsPaused_RevertMessage
           );
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft3,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner}),
             IdIsPaused_RevertMessage
           );
         });
 
         it('should allow non-fungible collection 2 again after unpausing', async function () {
-          await this.token.unpauseCollections([nfCollection2], {from: creator});
+          await this.token.unpauseCollections([nfCollection2], {from: deployer});
 
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection1.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+            from: owner,
+          });
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              fCollection2.id,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+              from: owner,
+            }),
             IdIsPaused_RevertMessage
           );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft1,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft2,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft3,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft2, '1', mockData, {from: owner});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner});
         });
       });
     });
@@ -346,38 +186,14 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) 
         });
 
         it('allows safeTransferFrom', async function () {
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection2.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft1,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            nft3,
-            '1',
-            mockData,
-            {from: owner}
-          );
-          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-            owner,
-            other,
-            fCollection1.id,
-            '1',
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner});
+          await this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+            from: owner,
+          });
         });
 
         it('allows safeBatchTransferFrom', async function () {
@@ -397,7 +213,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) 
 
       context('when paused', function () {
         beforeEach(async function () {
-          await this.token.pause({from: creator});
+          await this.token.pause({from: deployer});
         });
 
         it('blocks setApprovalForAll', async function () {
@@ -406,47 +222,23 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) 
 
         it('blocks safeTransferFrom', async function () {
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              fCollection2.id,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection2.id, '1', mockData, {
+              from: owner,
+            }),
             Paused_RevertMessage
           );
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft1,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft1, '1', mockData, {from: owner}),
             Paused_RevertMessage
           );
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              nft3,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, nft3, '1', mockData, {from: owner}),
             Paused_RevertMessage
           );
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              owner,
-              other,
-              fCollection1.id,
-              '1',
-              mockData,
-              {from: owner}
-            ),
+            this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](owner, other, fCollection1.id, '1', mockData, {
+              from: owner,
+            }),
             Paused_RevertMessage
           );
         });
@@ -455,10 +247,7 @@ function shouldBehaveLikeERC1155PausableInventory({nfMaskLength, deploy, mint}) 
           const ids = [fCollection2.id, nft1, nft3, fCollection1.id];
           const values = ['1', '1', '1', '1'];
 
-          await expectRevert(
-            this.token.safeBatchTransferFrom(owner, other, ids, values, mockData, {from: owner}),
-            Paused_RevertMessage
-          );
+          await expectRevert(this.token.safeBatchTransferFrom(owner, other, ids, values, mockData, {from: owner}), Paused_RevertMessage);
         });
 
         it('blocks burnFrom', async function () {

@@ -14,7 +14,7 @@ const {
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 
 function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages, deploy, safeMint}) {
-  const [creator, _minter, owner, operator, _approved, other] = accounts;
+  const [deployer, _minter, owner, operator, _approved, other] = accounts;
 
   const fCollection1 = {
     id: makeFungibleCollectionId(1),
@@ -43,13 +43,13 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
   describe('like an ERC1155StandardInventory', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
-      this.token = await deploy(creator);
-      await safeMint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: creator});
-      await safeMint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: creator});
-      await safeMint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', {from: creator});
-      await safeMint(this.token, owner, nft1, 1, '0x', {from: creator});
-      await safeMint(this.token, owner, nft2, 1, '0x', {from: creator});
-      await safeMint(this.token, owner, nft3, 1, '0x', {from: creator});
+      this.token = await deploy(deployer);
+      await safeMint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: deployer});
+      await safeMint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: deployer});
+      await safeMint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', {from: deployer});
+      await safeMint(this.token, owner, nft1, 1, '0x', {from: deployer});
+      await safeMint(this.token, owner, nft2, 1, '0x', {from: deployer});
+      await safeMint(this.token, owner, nft3, 1, '0x', {from: deployer});
     };
 
     beforeEach(async function () {
@@ -75,7 +75,9 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
           const isNFT = await this.token.isNFT(collection);
           isNFT.should.be.false;
 
-          this.createCollectionReceipt[collection] = await this.token.createCollection(collection, {from: creator});
+          this.createCollectionReceipt[collection] = await this.token.createCollection(collection, {
+            from: deployer,
+          });
         }
 
         this.contract = this.token;
@@ -337,7 +339,9 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
         const shouldTransferTokensByUsers = function (transferFunction, tokenId, collectionId) {
           context('when called by the owner', function () {
             beforeEach(async function () {
-              receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, {from: owner});
+              receipt = await transferFunction.call(this, owner, this.toWhom, tokenId, new BN(1), data, {
+                from: owner,
+              });
             });
             transferWasSuccessful(owner, tokenId, collectionId, {from: owner});
           });
@@ -372,7 +376,9 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
           context('when sent to the owner', function () {
             beforeEach(async function () {
-              receipt = await transferFunction.call(this, owner, owner, tokenId, new BN(1), data, {from: owner});
+              receipt = await transferFunction.call(this, owner, owner, tokenId, new BN(1), data, {
+                from: owner,
+              });
             });
 
             it('keeps ownership of the token', async function () {
@@ -412,10 +418,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
           });
 
           it('reverts if the sender is not an operator', async function () {
-            await expectRevert(
-              transferFunction.call(this, owner, other, tokenId, new BN(1), data, {from: other}),
-              revertMessages.NonApproved
-            );
+            await expectRevert(transferFunction.call(this, owner, other, tokenId, new BN(1), data, {from: other}), revertMessages.NonApproved);
           });
 
           it('reverts with a non-existing Non-Fungible Token id', async function () {
@@ -448,7 +451,9 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
           it('reverts if trying to transfer a Non-Fungible Collection id', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, this.toWhom, collectionId, new BN(1), data, {from: owner}),
+              transferFunction.call(this, owner, this.toWhom, collectionId, new BN(1), data, {
+                from: owner,
+              }),
               revertMessages.NotTokenId
             );
           });
@@ -456,14 +461,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
         describe('safeTransferFrom(address,address,uint256,uint256,bytes)', function () {
           const safeTransferFromWithData = function (from, to, tokenId, supply, data, opts) {
-            return this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              from,
-              to,
-              tokenId,
-              supply,
-              data,
-              opts
-            );
+            return this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](from, to, tokenId, supply, data, opts);
           };
 
           const shouldTransferSafely = function (transferFun, tokenId, collectionId, supply, data) {
@@ -473,7 +471,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
             describe('to a valid receiver contract', function () {
               beforeEach(async function () {
-                this.receiver = await ERC1155TokenReceiverMock.new(true, {from: creator});
+                this.receiver = await ERC1155TokenReceiverMock.new(true, {from: deployer});
                 this.toWhom = this.receiver.address;
               });
 
@@ -506,7 +504,9 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
               it('reverts with a non-existing Non-Fungible Token id', async function () {
                 await expectRevert(
-                  transferFun.call(this, owner, this.receiver.address, unknownNft, supply, data, {from: owner}),
+                  transferFun.call(this, owner, this.receiver.address, unknownNft, supply, data, {
+                    from: owner,
+                  }),
                   revertMessages.transfer_NonExistingNFT
                 );
               });
@@ -517,7 +517,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
           //   });
 
           it('reverts if sent to an ERC1155TokenReceiver contract refusing the transfer', async function () {
-            const invalidReceiver = await ERC1155TokenReceiverMock.new(false, {from: creator});
+            const invalidReceiver = await ERC1155TokenReceiverMock.new(false, {from: deployer});
             await expectRevert(
               this.token.contract.methods
                 .safeTransferFrom(owner, invalidReceiver.address, nft1.toString(10), 1, data)
@@ -579,15 +579,11 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
           // });
 
           it('adjusts sender Fungible Token balance', async function () {
-            (await this.token.balanceOf(owner, collectionId))
-              .toNumber()
-              .should.be.equal(fCollection1.supply - transferValue.toNumber());
+            (await this.token.balanceOf(owner, collectionId)).toNumber().should.be.equal(fCollection1.supply - transferValue.toNumber());
           });
 
           it('adjusts recipient Fungible Token balances', async function () {
-            (await this.token.balanceOf(this.toWhom, collectionId))
-              .toNumber()
-              .should.be.equal(transferValue.toNumber());
+            (await this.token.balanceOf(this.toWhom, collectionId)).toNumber().should.be.equal(transferValue.toNumber());
           });
         };
 
@@ -648,39 +644,51 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
           it('reverts if the sender is not an operator', async function () {
             await expectRevert(
-              transferFunction.call(this, other, other, collectionId, transferValue, data, {from: owner}),
+              transferFunction.call(this, other, other, collectionId, transferValue, data, {
+                from: owner,
+              }),
               revertMessages.NonApproved
             );
             await expectRevert(
-              transferFunction.call(this, owner, other, collectionId, transferValue, data, {from: other}),
+              transferFunction.call(this, owner, other, collectionId, transferValue, data, {
+                from: other,
+              }),
               revertMessages.NonApproved
             );
           });
 
           it('reverts if the balance is insufficient', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, other, unknownFCollection.id, transferValue, data, {from: owner}),
+              transferFunction.call(this, owner, other, unknownFCollection.id, transferValue, data, {
+                from: owner,
+              }),
               revertMessages.InsufficientBalance
             );
           });
 
           it('reverts if sent to the zero address', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, ZeroAddress, collectionId, transferValue, data, {from: owner}),
+              transferFunction.call(this, owner, ZeroAddress, collectionId, transferValue, data, {
+                from: owner,
+              }),
               revertMessages.TransferToZero
             );
           });
 
           it('reverts if value is 0', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, this.toWhom, collectionId, new BN(0), data, {from: owner}),
+              transferFunction.call(this, owner, this.toWhom, collectionId, new BN(0), data, {
+                from: owner,
+              }),
               revertMessages.ZeroValue
             );
           });
 
           it('reverts if the balance is insufficient 2', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, this.toWhom, collectionId, new BN(100), data, {from: owner}),
+              transferFunction.call(this, owner, this.toWhom, collectionId, new BN(100), data, {
+                from: owner,
+              }),
               revertMessages.InsufficientBalance
             );
           });
@@ -688,14 +696,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
         describe('safeTransferFrom(address,address,uint256,uint256,bytes)', function () {
           const safeTransferFromWithData = function (from, to, collectionId, supply, data, opts) {
-            return this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](
-              from,
-              to,
-              collectionId,
-              supply,
-              data,
-              opts
-            );
+            return this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](from, to, collectionId, supply, data, opts);
           };
 
           const shouldTransferSafely = function (transferFun, collectionId, supply, data) {
@@ -705,7 +706,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
             describe('to a valid receiver contract', function () {
               beforeEach(async function () {
-                this.receiver = await ERC1155TokenReceiverMock.new(true, {from: creator});
+                this.receiver = await ERC1155TokenReceiverMock.new(true, {from: deployer});
                 this.toWhom = this.receiver.address;
               });
 
@@ -755,7 +756,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
           //   });
 
           it('reverts if sent to an ERC1155TokenReceiver contract refusing the transfer', async function () {
-            const invalidReceiver = await ERC1155TokenReceiverMock.new(false, {from: creator});
+            const invalidReceiver = await ERC1155TokenReceiverMock.new(false, {from: deployer});
             await expectRevert(
               this.token.contract.methods
                 .safeTransferFrom(owner, invalidReceiver.address, fCollection1.id.toString(10), 1, data)
@@ -823,8 +824,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
         });
 
         it('adjusts the previous owner collections balances', async function () {
-          for (let collectionId of collectionIds)
-            (await this.token.balanceOf(owner, collectionId)).should.be.bignumber.equal('0');
+          for (let collectionId of collectionIds) (await this.token.balanceOf(owner, collectionId)).should.be.bignumber.equal('0');
         });
 
         it('adjusts the recipient collectionId balances', async function () {
@@ -838,14 +838,18 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
       const shouldTransferTokensByUsers = function (transferFunction, ids, collectionIds, supplies) {
         context('when called by the owner', function () {
           beforeEach(async function () {
-            receipt = await transferFunction.call(this, owner, this.toWhom, ids, supplies, data, {from: owner});
+            receipt = await transferFunction.call(this, owner, this.toWhom, ids, supplies, data, {
+              from: owner,
+            });
           });
           transferWasSuccessful(owner, ids, collectionIds, supplies, {from: owner});
         });
 
         context('when called by the operator', function () {
           beforeEach(async function () {
-            receipt = await transferFunction.call(this, owner, this.toWhom, ids, supplies, data, {from: operator});
+            receipt = await transferFunction.call(this, owner, this.toWhom, ids, supplies, data, {
+              from: operator,
+            });
           });
           transferWasSuccessful(owner, ids, collectionIds, supplies, {from: operator});
         });
@@ -913,17 +917,11 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
         });
 
         it('reverts if the address of the previous owner is incorrect', async function () {
-          await expectRevert(
-            transferFunction.call(this, other, other, ids, supplies, data, {from: owner}),
-            revertMessages.transfer_NonOwnedNFT
-          );
+          await expectRevert(transferFunction.call(this, other, other, ids, supplies, data, {from: owner}), revertMessages.transfer_NonOwnedNFT);
         });
 
         it('reverts if the sender is not an operator', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, other, ids, supplies, data, {from: other}),
-            revertMessages.NonApproved
-          );
+          await expectRevert(transferFunction.call(this, owner, other, ids, supplies, data, {from: other}), revertMessages.NonApproved);
         });
 
         // TODO Move to ERC11557221
@@ -936,50 +934,37 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
         it('reverts with a non-existing Non-Fungible Token', async function () {
           await expectRevert(
-            transferFunction.call(
-              this,
-              owner,
-              other,
-              [unknownNft, nft1, fCollection1.id],
-              [new BN(1), new BN(1), new BN(1)],
-              data,
-              {from: owner}
-            ),
+            transferFunction.call(this, owner, other, [unknownNft, nft1, fCollection1.id], [new BN(1), new BN(1), new BN(1)], data, {from: owner}),
             revertMessages.transfer_NonExistingNFT
           );
         });
 
         it('reverts if transferred to the zero address', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, ZeroAddress, ids, supplies, data, {from: owner}),
-            revertMessages.TransferToZero
-          );
+          await expectRevert(transferFunction.call(this, owner, ZeroAddress, ids, supplies, data, {from: owner}), revertMessages.TransferToZero);
         });
 
         it('reverts with a Non-Fungible Token value over 1', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, this.toWhom, [nft1], [new BN(2)], data, {from: owner}),
-            revertMessages.WrongNFTValue
-          );
+          await expectRevert(transferFunction.call(this, owner, this.toWhom, [nft1], [new BN(2)], data, {from: owner}), revertMessages.WrongNFTValue);
         });
 
         it('reverts with a Non-Fungible Token value of 0', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, this.toWhom, [nft1], [new BN(0)], data, {from: owner}),
-            revertMessages.WrongNFTValue
-          );
+          await expectRevert(transferFunction.call(this, owner, this.toWhom, [nft1], [new BN(0)], data, {from: owner}), revertMessages.WrongNFTValue);
         });
 
         it('reverts if trying to transfer a Non-Fungible Collection', async function () {
           await expectRevert(
-            transferFunction.call(this, owner, this.toWhom, [nfCollection1], [new BN(0)], data, {from: owner}),
+            transferFunction.call(this, owner, this.toWhom, [nfCollection1], [new BN(0)], data, {
+              from: owner,
+            }),
             revertMessages.NotTokenId
           );
         });
 
         it('reverts with a Fungible Token value of 0', async function () {
           await expectRevert(
-            transferFunction.call(this, owner, this.toWhom, [fCollection1.id], [new BN(0)], data, {from: owner}),
+            transferFunction.call(this, owner, this.toWhom, [fCollection1.id], [new BN(0)], data, {
+              from: owner,
+            }),
             revertMessages.ZeroValue
           );
         });
@@ -995,14 +980,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
         it('reverts if the Fungible Token balance is insufficient', async function () {
           await expectRevert.unspecified(
-            this.token.safeBatchTransferFrom(
-              owner,
-              this.toWhom,
-              [nft1, fCollection1.id],
-              [new BN(1), new BN(11)],
-              data,
-              {from: creator}
-            ),
+            this.token.safeBatchTransferFrom(owner, this.toWhom, [nft1, fCollection1.id], [new BN(1), new BN(11)], data, {from: deployer}),
             revertMessages.InsufficientBalance
           );
         });
@@ -1010,14 +988,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
       //   describe('via safeBatchTransferFrom', function () {
       const safeTransferFromWithData = function (from, to, ids, supplies, data, opts) {
-        return this.token.methods['safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)'](
-          from,
-          to,
-          ids,
-          supplies,
-          data,
-          opts
-        );
+        return this.token.methods['safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)'](from, to, ids, supplies, data, opts);
       };
 
       const shouldTransferSafely = function (transferFun, ids, collectionIds, supplies, data) {
@@ -1027,7 +998,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
 
         describe('to an ERC1155TokenReceiver contract', function () {
           beforeEach(async function () {
-            this.receiver = await ERC1155TokenReceiverMock.new(true, {from: creator});
+            this.receiver = await ERC1155TokenReceiverMock.new(true, {from: deployer});
             this.toWhom = this.receiver.address;
           });
 
@@ -1077,7 +1048,7 @@ function shouldBehaveLikeERC1155StandardInventory({nfMaskLength, revertMessages,
       // });
 
       it('reverts if sent to an ERC1155TokenReceiver contract which refuses the transfer', async function () {
-        const invalidReceiver = await ERC1155TokenReceiverMock.new(false, {from: creator});
+        const invalidReceiver = await ERC1155TokenReceiverMock.new(false, {from: deployer});
         await expectRevert(
           this.token.safeBatchTransferFrom(owner, invalidReceiver.address, [fCollection1.id], [new BN(1)], data, {
             from: owner,

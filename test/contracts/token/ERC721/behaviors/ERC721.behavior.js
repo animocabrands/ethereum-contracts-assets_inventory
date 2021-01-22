@@ -10,19 +10,12 @@ const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata
 
 const ERC721ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC721({
-  nfMaskLength,
-  contractName,
-  revertMessages,
-  deploy,
-  safeMint_ERC721,
-  batchTransferFrom_ERC721,
-}) {
-  const [creator, owner, approved, anotherApproved, operator, other] = accounts;
+function shouldBehaveLikeERC721({nfMaskLength, contractName, revertMessages, deploy, safeMint_ERC721, batchTransferFrom_ERC721}) {
+  const [deployer, owner, approved, anotherApproved, operator, other] = accounts;
 
   if (batchTransferFrom_ERC721 === undefined) {
     console.log(
-      `ERC1155721StandardInventory: non-standard ERC721 method batchTransfer(address,uint256[]) is not supported by ${contractName}, associated tests will be skipped`
+      `ERC721: non-standard ERC721 method batchTransfer(address,uint256[]) is not supported by ${contractName}, associated tests will be skipped`
     );
   }
 
@@ -34,10 +27,10 @@ function shouldBehaveLikeERC721({
   describe('like an ERC721', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
-      this.token = await deploy(creator);
-      await safeMint_ERC721(this.token, owner, nft1, '0x', {from: creator});
-      await safeMint_ERC721(this.token, owner, nft2, '0x', {from: creator});
-      await safeMint_ERC721(this.token, owner, nft3, '0x', {from: creator});
+      this.token = await deploy(deployer);
+      await safeMint_ERC721(this.token, owner, nft1, '0x', {from: deployer});
+      await safeMint_ERC721(this.token, owner, nft2, '0x', {from: deployer});
+      await safeMint_ERC721(this.token, owner, nft3, '0x', {from: deployer});
     };
 
     beforeEach(async function () {
@@ -195,31 +188,19 @@ function shouldBehaveLikeERC721({
         });
 
         it('reverts if the address of the previous owner is incorrect', async function () {
-          await expectRevert(
-            transferFunction.call(this, other, other, tokenId, {from: owner}),
-            revertMessages.NonOwnedNFT
-          );
+          await expectRevert(transferFunction.call(this, other, other, tokenId, {from: owner}), revertMessages.NonOwnedNFT);
         });
 
         it('reverts if the sender is not authorized for the token id', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, other, tokenId, {from: other}),
-            revertMessages.NonApproved
-          );
+          await expectRevert(transferFunction.call(this, owner, other, tokenId, {from: other}), revertMessages.NonApproved);
         });
 
         it('reverts if the Non-Fungible Token does not exist', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, other, unknownNFT, {from: owner}),
-            revertMessages.NonOwnedNFT
-          );
+          await expectRevert(transferFunction.call(this, owner, other, unknownNFT, {from: owner}), revertMessages.NonOwnedNFT);
         });
 
         it('reverts if transferred to the zero address', async function () {
-          await expectRevert(
-            transferFunction.call(this, owner, ZeroAddress, tokenId, {from: owner}),
-            revertMessages.TransferToZero
-          );
+          await expectRevert(transferFunction.call(this, owner, ZeroAddress, tokenId, {from: owner}), revertMessages.TransferToZero);
         });
       };
 
@@ -284,14 +265,18 @@ function shouldBehaveLikeERC721({
 
           context('when called by the approved individual', function () {
             beforeEach(async function () {
-              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, {from: approved});
+              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, {
+                from: approved,
+              });
             });
             multipleTransferWasSuccessful({owner, tokenIds, approved});
           });
 
           context('when called by the operator', function () {
             beforeEach(async function () {
-              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, {from: operator});
+              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, {
+                from: operator,
+              });
             });
             multipleTransferWasSuccessful({owner, tokenIds, approved});
           });
@@ -301,7 +286,9 @@ function shouldBehaveLikeERC721({
               for (const tokenId of tokenIds) {
                 await this.token.approve(ZeroAddress, tokenId, {from: owner});
               }
-              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, {from: operator});
+              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, {
+                from: operator,
+              });
             });
             multipleTransferWasSuccessful({owner, tokenIds, approved: null});
           });
@@ -345,31 +332,19 @@ function shouldBehaveLikeERC721({
           });
 
           it('reverts if the address of the previous owner is incorrect', async function () {
-            await expectRevert(
-              transferFunction.call(this, other, other, tokenIds, {from: owner}),
-              revertMessages.NonOwnedNFT
-            );
+            await expectRevert(transferFunction.call(this, other, other, tokenIds, {from: owner}), revertMessages.NonOwnedNFT);
           });
 
           it('reverts if the sender is not authorised', async function () {
-            await expectRevert(
-              transferFunction.call(this, owner, other, tokenIds, {from: other}),
-              revertMessages.NonApproved
-            );
+            await expectRevert(transferFunction.call(this, owner, other, tokenIds, {from: other}), revertMessages.NonApproved);
           });
 
           it('reverts if the Non-Fungible Token does not exist', async function () {
-            await expectRevert(
-              transferFunction.call(this, owner, other, [nft1, unknownNFT], {from: owner}),
-              revertMessages.NonOwnedNFT
-            );
+            await expectRevert(transferFunction.call(this, owner, other, [nft1, unknownNFT], {from: owner}), revertMessages.NonOwnedNFT);
           });
 
           it('reverts if transferred to the zero address', async function () {
-            await expectRevert(
-              transferFunction.call(this, owner, ZeroAddress, tokenIds, {from: owner}),
-              revertMessages.TransferToZero
-            );
+            await expectRevert(transferFunction.call(this, owner, ZeroAddress, tokenIds, {from: owner}), revertMessages.TransferToZero);
           });
         };
 
@@ -401,7 +376,9 @@ function shouldBehaveLikeERC721({
             shouldTransferTokensByUsers(transferFun);
 
             it('should call onERC721Received', async function () {
-              receipt = await transferFun.call(this, owner, this.receiver.address, tokenId, {from: owner});
+              receipt = await transferFun.call(this, owner, this.receiver.address, tokenId, {
+                from: owner,
+              });
 
               await expectEvent.inTransaction(receipt.tx, ERC721ReceiverMock, 'Received', {
                 operator: owner,
@@ -412,7 +389,9 @@ function shouldBehaveLikeERC721({
             });
 
             it('should call onERC721Received from approved', async function () {
-              receipt = await transferFun.call(this, owner, this.receiver.address, tokenId, {from: approved});
+              receipt = await transferFun.call(this, owner, this.receiver.address, tokenId, {
+                from: approved,
+              });
 
               await expectEvent.inTransaction(receipt.tx, ERC721ReceiverMock, 'Received', {
                 operator: approved,
@@ -423,10 +402,7 @@ function shouldBehaveLikeERC721({
             });
 
             it('reverts if a Non-Fungible Token does not exist', async function () {
-              await expectRevert(
-                transferFun.call(this, owner, this.receiver.address, unknownNFT, {from: owner}),
-                revertMessages.NonOwnedNFT
-              );
+              await expectRevert(transferFun.call(this, owner, this.receiver.address, unknownNFT, {from: owner}), revertMessages.NonOwnedNFT);
             });
           });
         };

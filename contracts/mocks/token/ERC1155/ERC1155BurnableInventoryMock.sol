@@ -56,8 +56,7 @@ contract ERC1155BurnableInventoryMock is ERC1155BurnableInventory, IERC1155Inven
      * @dev See {IERC1155InventoryCreator-creator(uint256)}.
      */
     function creator(uint256 collectionId) external view override returns (address) {
-        require(!isNFT(collectionId), "Inventory: not a collection");
-        return _creators[collectionId];
+        return _creator(collectionId);
     }
 
     // ===================================================================================================

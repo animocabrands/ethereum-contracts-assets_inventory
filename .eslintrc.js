@@ -21,5 +21,6 @@ module.exports = {
     'mocha/no-top-level-hooks': 'off',
     'mocha/no-setup-in-describe': 'off',
     'mocha/no-hooks-for-single-case': 'off',
+    'max-len': ['error', {code: 150}],
   },
 };

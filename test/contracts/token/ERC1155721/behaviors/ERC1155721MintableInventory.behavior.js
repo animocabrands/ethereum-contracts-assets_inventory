@@ -26,21 +26,24 @@ function shouldBehaveLikeERC1155721MintableInventory({
   safeMint_ERC721,
   batchMint_ERC721,
 }) {
-  const [creator, minter, nonMinter, owner] = accounts;
+  const [deployer, minter, nonMinter, owner] = accounts;
 
   if (mint_ERC721 === undefined) {
     console.log(
-      `ERC1155721MintableInventory: non-standard ERC721 method mint(address,uint256) is not supported by ${contractName}, associated tests will be skipped`
+      `ERC1155721MintableInventory: non-standard ERC721 method mint(address,uint256)` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
   if (safeMint_ERC721 === undefined) {
     console.log(
-      `ERC1155721MintableInventory: non-standard ERC721 method safeMint(address,uint256,bytes) is not supported by ${contractName}, associated tests will be skipped`
+      `ERC1155721MintableInventory: non-standard ERC721 method safeMint(address,uint256,bytes)` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
   if (batchMint_ERC721 === undefined) {
     console.log(
-      `ERC1155721MintableInventory: non-standard ERC721 method batchMint(address,uint256[]) is not supported by ${contractName}, associated tests will be skipped`
+      `ERC1155721MintableInventory: non-standard ERC721 method batchMint(address,uint256[])` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
 
@@ -56,8 +59,8 @@ function shouldBehaveLikeERC1155721MintableInventory({
   describe('like a mintable ERC1155721Inventory', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
-      this.token = await deploy(creator);
-      await this.token.addMinter(minter, {from: creator});
+      this.token = await deploy(deployer);
+      await this.token.addMinter(minter, {from: deployer});
       this.receiver = await ReceiverMock.new(true, true);
       this.receiver721 = await ReceiverMock721.new(true);
     };
@@ -132,31 +135,19 @@ function shouldBehaveLikeERC1155721MintableInventory({
 
       context('safeBatchMint(address,uint256[],uint256[],bytes)', function () {
         it('reverts if the caller is not a minter', async function () {
-          await expectRevert(
-            safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: nonMinter}),
-            revertMessages.NotMinter
-          );
+          await expectRevert(safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: nonMinter}), revertMessages.NotMinter);
         });
 
         it('reverts if the fungible quantity is less than 1', async function () {
-          await expectRevert(
-            safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: minter}),
-            revertMessages.ZeroValue
-          );
+          await expectRevert(safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: minter}), revertMessages.ZeroValue);
         });
 
         it('reverts if the non-fungible quantity is greater than 1', async function () {
-          await expectRevert(
-            safeBatchMint(this.token, owner, [nft1], [Two], '0x', {from: minter}),
-            revertMessages.WrongNFTValue
-          );
+          await expectRevert(safeBatchMint(this.token, owner, [nft1], [Two], '0x', {from: minter}), revertMessages.WrongNFTValue);
         });
 
         it('reverts if the non-fungible quantity is less than 1', async function () {
-          await expectRevert(
-            safeBatchMint(this.token, owner, [nft1], [Zero], '0x', {from: minter}),
-            revertMessages.WrongNFTValue
-          );
+          await expectRevert(safeBatchMint(this.token, owner, [nft1], [Zero], '0x', {from: minter}), revertMessages.WrongNFTValue);
         });
 
         it('reverts if there is a mismatch in the param array lengths', async function () {
@@ -169,10 +160,7 @@ function shouldBehaveLikeERC1155721MintableInventory({
         });
 
         it('reverts if minting a collection', async function () {
-          await expectRevert(
-            safeBatchMint(this.token, owner, [nfCollection1], [new BN(1)], '0x', {from: minter}),
-            revertMessages.NotTokenId
-          );
+          await expectRevert(safeBatchMint(this.token, owner, [nfCollection1], [new BN(1)], '0x', {from: minter}), revertMessages.NotTokenId);
         });
 
         it('reverts if minting a non-fungible token that already has been minted', async function () {
@@ -202,14 +190,9 @@ function shouldBehaveLikeERC1155721MintableInventory({
                 nft2: await this.token.totalSupply(nft2),
                 nft3: await this.token.totalSupply(nft3),
               };
-              this.receipt = await safeBatchMint(
-                this.token,
-                this.toWhom,
-                this.tokensToBatchMint.ids,
-                this.tokensToBatchMint.supplies,
-                '0x',
-                {from: minter}
-              );
+              this.receipt = await safeBatchMint(this.token, this.toWhom, this.tokensToBatchMint.ids, this.tokensToBatchMint.supplies, '0x', {
+                from: minter,
+              });
             });
 
             it('should increase the non-fungible token balance of the target account', async function () {
@@ -223,24 +206,14 @@ function shouldBehaveLikeERC1155721MintableInventory({
             });
 
             it('should increase the non-fungible collection supply', async function () {
-              (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal(
-                this.supplies.nfCollection1.addn(1)
-              );
-              (await this.token.totalSupply(nfCollection2)).should.be.bignumber.equal(
-                this.supplies.nfCollection2.addn(2)
-              );
+              (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal(this.supplies.nfCollection1.addn(1));
+              (await this.token.totalSupply(nfCollection2)).should.be.bignumber.equal(this.supplies.nfCollection2.addn(2));
             });
 
             it('should increase the fungible collection supply', async function () {
-              (await this.token.totalSupply(fCollection1)).should.be.bignumber.equal(
-                this.supplies.fCollection1.addn(1)
-              );
-              (await this.token.totalSupply(fCollection2)).should.be.bignumber.equal(
-                this.supplies.fCollection2.addn(2)
-              );
-              (await this.token.totalSupply(fCollection3)).should.be.bignumber.equal(
-                this.supplies.fCollection3.addn(3)
-              );
+              (await this.token.totalSupply(fCollection1)).should.be.bignumber.equal(this.supplies.fCollection1.addn(1));
+              (await this.token.totalSupply(fCollection2)).should.be.bignumber.equal(this.supplies.fCollection2.addn(2));
+              (await this.token.totalSupply(fCollection3)).should.be.bignumber.equal(this.supplies.fCollection3.addn(3));
             });
 
             it('should emit Transfer events', async function () {
@@ -379,10 +352,7 @@ function shouldBehaveLikeERC1155721MintableInventory({
         }
 
         it('reverts if the caller is not a minter', async function () {
-          await expectRevert(
-            safeMint_ERC721(this.token, owner, nft1, '0x', {from: nonMinter}),
-            revertMessages.NotMinter
-          );
+          await expectRevert(safeMint_ERC721(this.token, owner, nft1, '0x', {from: nonMinter}), revertMessages.NotMinter);
         });
 
         it('reverts if the recipient is a non-receiver contract', async function () {
@@ -392,18 +362,12 @@ function shouldBehaveLikeERC1155721MintableInventory({
 
         it('reverts if the recipient is an ERC721Receiver which refuses the transfer', async function () {
           const receiver = await ReceiverMock721.new(false);
-          await expectRevert(
-            safeMint_ERC721(this.token, receiver.address, nft1, '0x', {from: minter}),
-            revertMessages.TransferRejected
-          );
+          await expectRevert(safeMint_ERC721(this.token, receiver.address, nft1, '0x', {from: minter}), revertMessages.TransferRejected);
         });
 
         it('reverts if the recipient is an ERC1155TokenReceiver which refuses the transfer', async function () {
           const receiver = await ReceiverMock.new(true, false);
-          await expectRevert(
-            safeMint_ERC721(this.token, receiver.address, nft1, '0x', {from: minter}),
-            revertMessages.TransferRejected
-          );
+          await expectRevert(safeMint_ERC721(this.token, receiver.address, nft1, '0x', {from: minter}), revertMessages.TransferRejected);
         });
 
         context('when successful', function () {
@@ -488,10 +452,7 @@ function shouldBehaveLikeERC1155721MintableInventory({
 
         const data = '0x42';
         it('reverts if the caller is not a minter', async function () {
-          await expectRevert(
-            safeMint_ERC721(this.token, owner, nft1, data, {from: nonMinter}),
-            revertMessages.NotMinter
-          );
+          await expectRevert(safeMint_ERC721(this.token, owner, nft1, data, {from: nonMinter}), revertMessages.NotMinter);
         });
 
         it('reverts if the recipient is a non-receiver contract', async function () {
@@ -501,18 +462,12 @@ function shouldBehaveLikeERC1155721MintableInventory({
 
         it('reverts if the recipient is an ERC721Receiver which refuses the transfer', async function () {
           const receiver = await ReceiverMock721.new(false);
-          await expectRevert(
-            safeMint_ERC721(this.token, receiver.address, nft1, data, {from: minter}),
-            revertMessages.TransferRejected
-          );
+          await expectRevert(safeMint_ERC721(this.token, receiver.address, nft1, data, {from: minter}), revertMessages.TransferRejected);
         });
 
         it('reverts if the recipient is an ERC1155TokenReceiver which refuses the transfer', async function () {
           const receiver = await ReceiverMock.new(true, false);
-          await expectRevert(
-            safeMint_ERC721(this.token, receiver.address, nft1, data, {from: minter}),
-            revertMessages.TransferRejected
-          );
+          await expectRevert(safeMint_ERC721(this.token, receiver.address, nft1, data, {from: minter}), revertMessages.TransferRejected);
         });
 
         context('when successful', function () {
@@ -600,31 +555,19 @@ function shouldBehaveLikeERC1155721MintableInventory({
         });
 
         it('reverts if `to` is the zero address', async function () {
-          await expectRevert(
-            batchMint_ERC721(this.token, ZeroAddress, [nft1], {from: minter}),
-            revertMessages.TransferToZero
-          );
+          await expectRevert(batchMint_ERC721(this.token, ZeroAddress, [nft1], {from: minter}), revertMessages.TransferToZero);
         });
 
         it('reverts if the if any of the `nftIds` is a fungible collection', async function () {
-          await expectRevert(
-            batchMint_ERC721(this.token, owner, [fCollection1], {from: minter}),
-            revertMessages.NotNFT
-          );
+          await expectRevert(batchMint_ERC721(this.token, owner, [fCollection1], {from: minter}), revertMessages.NotNFT);
         });
 
         it('reverts if the if any of the `nftIds` is a non-fungible collection', async function () {
-          await expectRevert(
-            batchMint_ERC721(this.token, owner, [nfCollection1], {from: minter}),
-            revertMessages.NotNFT
-          );
+          await expectRevert(batchMint_ERC721(this.token, owner, [nfCollection1], {from: minter}), revertMessages.NotNFT);
         });
 
         it('reverts if minting a non-fungible token that already has been minted', async function () {
-          await expectRevert(
-            batchMint_ERC721(this.token, owner, [nft2, nft2], {from: minter}),
-            revertMessages.ExistingOrBurntNFT
-          );
+          await expectRevert(batchMint_ERC721(this.token, owner, [nft2, nft2], {from: minter}), revertMessages.ExistingOrBurntNFT);
         });
 
         context('when successful', function () {
@@ -655,12 +598,8 @@ function shouldBehaveLikeERC1155721MintableInventory({
             });
 
             it('should increase the non-fungible collection supply', async function () {
-              (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal(
-                this.supplies.nfCollection1.addn(1)
-              );
-              (await this.token.totalSupply(nfCollection2)).should.be.bignumber.equal(
-                this.supplies.nfCollection2.addn(2)
-              );
+              (await this.token.totalSupply(nfCollection1)).should.be.bignumber.equal(this.supplies.nfCollection1.addn(1));
+              (await this.token.totalSupply(nfCollection2)).should.be.bignumber.equal(this.supplies.nfCollection2.addn(2));
             });
 
             it('should emit Transfer events', async function () {

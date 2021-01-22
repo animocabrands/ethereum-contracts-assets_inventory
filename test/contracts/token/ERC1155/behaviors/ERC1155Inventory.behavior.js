@@ -6,6 +6,7 @@ const {shouldBehaveLikeERC1155StandardInventory} = require('./ERC1155StandardInv
 const {shouldBehaveLikeERC1155MintableInventory} = require('./ERC1155MintableInventory.behavior');
 const {shouldBehaveLikeERC1155BurnableInventory} = require('./ERC1155BurnableInventory.behavior');
 const {shouldBehaveLikeERC1155MetadataURI} = require('./ERC1155MetadataURI.behavior');
+const {shouldBehaveLikeERC1155InventoryCreator} = require('./ERC1155InventoryCreator.behavior');
 
 function shouldBehaveLikeERC1155Inventory(implementation) {
   describe('like a ERC1155Inventory', function () {
@@ -14,6 +15,7 @@ function shouldBehaveLikeERC1155Inventory(implementation) {
     shouldBehaveLikeERC1155MintableInventory(implementation);
     shouldBehaveLikeERC1155BurnableInventory(implementation);
     shouldBehaveLikeERC1155MetadataURI(implementation);
+    shouldBehaveLikeERC1155InventoryCreator(implementation);
 
     describe('ERC165 interfaces support', function () {
       beforeEach(async function () {

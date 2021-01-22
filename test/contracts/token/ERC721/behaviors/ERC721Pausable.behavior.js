@@ -11,7 +11,7 @@ const Paused_RevertMessage = 'Pausable: paused';
 const IdIsPaused_RevertMessage = 'PausableCollections: id is paused';
 
 function shouldBehaveLikeERC721Pausable({deploy, mint_ERC721, nfMaskLength}) {
-  const [creator, owner, recipient, operator] = accounts;
+  const [deployer, owner, recipient, operator] = accounts;
 
   const mockData = '0x42';
 
@@ -33,17 +33,17 @@ function shouldBehaveLikeERC721Pausable({deploy, mint_ERC721, nfMaskLength}) {
   describe('like an ERC721Pausable', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
-      this.token = await deploy(creator);
-      await this.token.createCollection(fCollection1.id, {from: creator});
-      await this.token.createCollection(fCollection2.id, {from: creator});
-      await this.token.createCollection(nfCollection1, {from: creator});
-      await this.token.createCollection(nfCollection2, {from: creator});
+      this.token = await deploy(deployer);
+      await this.token.createCollection(fCollection1.id, {from: deployer});
+      await this.token.createCollection(fCollection2.id, {from: deployer});
+      await this.token.createCollection(nfCollection1, {from: deployer});
+      await this.token.createCollection(nfCollection2, {from: deployer});
 
-      await mint_ERC721(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: creator});
-      await mint_ERC721(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: creator});
-      await mint_ERC721(this.token, owner, nft1, 1, '0x', {from: creator});
-      await mint_ERC721(this.token, owner, nft2, 1, '0x', {from: creator});
-      await mint_ERC721(this.token, owner, nft3, 1, '0x', {from: creator});
+      await mint_ERC721(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: deployer});
+      await mint_ERC721(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: deployer});
+      await mint_ERC721(this.token, owner, nft1, 1, '0x', {from: deployer});
+      await mint_ERC721(this.token, owner, nft2, 1, '0x', {from: deployer});
+      await mint_ERC721(this.token, owner, nft3, 1, '0x', {from: deployer});
     };
 
     beforeEach(async function () {
@@ -58,20 +58,16 @@ function shouldBehaveLikeERC721Pausable({deploy, mint_ERC721, nfMaskLength}) {
 
         it('allows transfers', async function () {
           await this.token.transferFrom(owner, recipient, nft1, {from: owner});
-          await this.token.methods['safeTransferFrom(address,address,uint256)'](owner, recipient, nft2, {from: owner});
-          await this.token.methods['safeTransferFrom(address,address,uint256,bytes)'](
-            owner,
-            recipient,
-            nft3,
-            mockData,
-            {from: owner}
-          );
+          await this.token.methods['safeTransferFrom(address,address,uint256)'](owner, recipient, nft2, {
+            from: owner,
+          });
+          await this.token.methods['safeTransferFrom(address,address,uint256,bytes)'](owner, recipient, nft3, mockData, {from: owner});
         });
       });
 
       context('when paused', function () {
         beforeEach(async function () {
-          await this.token.pause({from: creator});
+          await this.token.pause({from: deployer});
         });
 
         it('blocks approve', async function () {
@@ -81,7 +77,9 @@ function shouldBehaveLikeERC721Pausable({deploy, mint_ERC721, nfMaskLength}) {
         it('blocks transfers', async function () {
           await expectRevert(this.token.transferFrom(owner, recipient, nft1, {from: owner}), Paused_RevertMessage);
           await expectRevert(
-            this.token.methods['safeTransferFrom(address,address,uint256)'](owner, recipient, nft2, {from: owner}),
+            this.token.methods['safeTransferFrom(address,address,uint256)'](owner, recipient, nft2, {
+              from: owner,
+            }),
             Paused_RevertMessage
           );
           await expectRevert(

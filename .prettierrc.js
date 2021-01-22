@@ -1,11 +1,11 @@
 module.exports = {
   overrides: [
     {
-      files: '*',
+      files: '*.js',
       options: {
         singleQuote: true,
         bracketSpacing: false,
-        printWidth: 120,
+        printWidth: 150,
         useTabs: false,
         tabWidth: 2,
       },

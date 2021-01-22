@@ -22,6 +22,7 @@ const implementation = {
     ZeroValue: 'Inventory: zero value',
     NotTokenId: 'Inventory: not a token id',
     NotNFT: 'Inventory: not an NFT',
+    NotCollection: 'Inventory: not a collection',
     ExistingOrBurntNFT: 'Inventory: existing/burnt NFT',
     NotMinter: 'MinterRole: caller does not have the Minter role',
     SupplyOverflow: 'Inventory: supply overflow',
@@ -32,8 +33,11 @@ const implementation = {
   safeBatchMint: async function (contract, to, ids, values, data, overrides) {
     return contract.safeBatchMint(to, ids, values, data, overrides);
   },
-  deploy: async function (creator) {
-    return artifacts.require('ERC1155InventoryMock').new({from: creator});
+  deploy: async function (deployer) {
+    return artifacts.require('ERC1155InventoryMock').new({from: deployer});
+  },
+  creator_ERC1155Inventory: async function (contract, collectionId, overrides) {
+    return contract.creator(collectionId, overrides);
   },
 };
 

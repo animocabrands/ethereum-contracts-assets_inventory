@@ -2,11 +2,7 @@ const {makeInterfaceId} = require('@openzeppelin/test-helpers');
 
 const CoreMetadataDelegator_Functions = ['coreMetadataImplementer()'];
 
-const CoreMetadata_Functions = [
-  'getAttribute(uint256,bytes32)',
-  'getAttributes(uint256,bytes32[])',
-  'getAllAttributes(uint256)',
-];
+const CoreMetadata_Functions = ['getAttribute(uint256,bytes32)', 'getAttributes(uint256,bytes32[])', 'getAllAttributes(uint256)'];
 
 const InventoryMetadata_Functions = ['inventoryMetadataDelegator()'];
 
