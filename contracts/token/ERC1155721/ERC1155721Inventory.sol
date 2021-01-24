@@ -38,7 +38,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     //===================================== ERC721 ==========================================/
 
     /// @dev See {IERC721-balanceOf(address)}.
-    function balanceOf(address tokenOwner) public view virtual override returns (uint256) {
+    function balanceOf(address tokenOwner) external view virtual override returns (uint256) {
         require(tokenOwner != address(0), "Inventory: zero address");
         return _nftBalances[tokenOwner];
     }
@@ -49,7 +49,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     }
 
     /// @dev See {IERC721-approve(address,uint256)}.
-    function approve(address to, uint256 nftId) public virtual override {
+    function approve(address to, uint256 nftId) external virtual override {
         address tokenOwner = ownerOf(nftId);
         require(to != tokenOwner, "Inventory: self-approval");
 
@@ -61,7 +61,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     }
 
     /// @dev See {IERC721-getApproved(uint256)}.
-    function getApproved(uint256 nftId) public view virtual override returns (address) {
+    function getApproved(uint256 nftId) external view virtual override returns (address) {
         uint256 tokenOwner = _owners[nftId];
         require(address(tokenOwner) != address(0), "Inventory: non-existing NFT");
         if (tokenOwner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) {
@@ -89,7 +89,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address from,
         address to,
         uint256 nftId
-    ) public virtual override {
+    ) external virtual override {
         _transferFrom(
             from,
             to,
@@ -108,7 +108,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address from,
         address to,
         uint256 nftId
-    ) public virtual override {
+    ) external virtual override {
         _transferFrom(
             from,
             to,
@@ -127,8 +127,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address from,
         address to,
         uint256 nftId,
-        bytes memory data
-    ) public virtual override {
+        bytes calldata data
+    ) external virtual override {
         _transferFrom(
             from,
             to,
@@ -162,13 +162,13 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
             values[i] = 1;
             _transferNFT(from, to, nftId, 1, operatable, true);
             emit Transfer(from, to, nftId);
-            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
+            uint256 nextCollectionId = nftId.getNonFungibleCollection();
             if (nfCollectionId == 0) {
                 nfCollectionId = nextCollectionId;
                 nfCollectionCount = 1;
             } else {
                 if (nextCollectionId != nfCollectionId) {
-                    transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                    _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
                 } else {
@@ -178,8 +178,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         }
 
         if (nfCollectionId != 0) {
-            transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
-            transferNFTUpdateBalances(from, to, length);
+            _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+            _transferNFTUpdateBalances(from, to, length);
         }
 
         emit TransferBatch(_msgSender(), from, to, nftIds, values);
@@ -199,15 +199,15 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address to,
         uint256 id,
         uint256 value,
-        bytes memory data
-    ) public virtual override {
+        bytes calldata data
+    ) external virtual override {
         address sender = _msgSender();
         require(to != address(0), "Inventory: transfer to zero");
         bool operatable = _isOperatable(from, sender);
 
-        if (isFungible(id)) {
+        if (id.isFungibleToken()) {
             _transferFungible(from, to, id, value, operatable);
-        } else if (id & _NF_TOKEN_MASK != 0) {
+        } else if (id.isNonFungibleToken()) {
             _transferNFT(from, to, id, value, operatable, false);
             emit Transfer(from, to, id);
         } else {
@@ -227,10 +227,33 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     function safeBatchTransferFrom(
         address from,
         address to,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external virtual override {
+        // internal function to avoid stack too deep error
+        _safeBatchTransferFrom(from, to, ids, values, data);
+    }
+
+    /// @dev See {IERC721Metadata-tokenURI(uint256)}.
+    function tokenURI(uint256 nftId) external view virtual override returns (string memory) {
+        require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
+        return _uri(nftId);
+    }
+
+    //================================== Transfer Core Internal Helpers =======================================/
+
+    /**
+     * Safely transfers a batch of tokens (ERC1155-compatible).
+     * @dev See {IERC1155721-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
+     */
+    function _safeBatchTransferFrom(
+        address from,
+        address to,
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public virtual override {
+    ) internal {
         require(to != address(0), "Inventory: transfer to zero");
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
@@ -242,18 +265,18 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         uint256 nftsCount;
         for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
-            if (isFungible(id)) {
+            if (id.isFungibleToken()) {
                 _transferFungible(from, to, id, values[i], operatable);
-            } else if (id & _NF_TOKEN_MASK != 0) {
+            } else if (id.isNonFungibleToken()) {
                 _transferNFT(from, to, id, values[i], operatable, true);
                 emit Transfer(from, to, id);
-                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                uint256 nextCollectionId = id.getNonFungibleCollection();
                 if (nfCollectionId == 0) {
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
                 } else {
                     if (nextCollectionId != nfCollectionId) {
-                        transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                        _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
                         nfCollectionId = nextCollectionId;
                         nftsCount += nfCollectionCount;
                         nfCollectionCount = 1;
@@ -267,9 +290,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         }
 
         if (nfCollectionId != 0) {
-            transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+            _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
             nftsCount += nfCollectionCount;
-            transferNFTUpdateBalances(from, to, nftsCount);
+            _transferNFTUpdateBalances(from, to, nftsCount);
         }
 
         emit TransferBatch(_msgSender(), from, to, ids, values);
@@ -277,14 +300,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
             _callOnERC1155BatchReceived(from, to, ids, values, data);
         }
     }
-
-    /// @dev See {IERC721Metadata-tokenURI(uint256)}.
-    function tokenURI(uint256 nftId) external view virtual override returns (string memory) {
-        require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
-        return _uri(nftId);
-    }
-
-    //================================== Transfer Core Internal Helpers =======================================/
 
     function _transferFungible(
         address from,
@@ -318,12 +333,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         }
         _owners[id] = uint256(to);
         if (!isBatch) {
-            transferNFTUpdateBalances(from, to, 1);
-            transferNFTUpdateCollectionBalances(from, to, id & _NF_COLLECTION_MASK, 1);
+            _transferNFTUpdateBalances(from, to, 1);
+            _transferNFTUpdateCollectionBalances(from, to, id.getNonFungibleCollection(), 1);
         }
     }
 
-    function transferNFTUpdateBalances(
+    function _transferNFTUpdateBalances(
         address from,
         address to,
         uint256 amount
@@ -334,7 +349,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         _nftBalances[to] += amount;
     }
 
-    function transferNFTUpdateCollectionBalances(
+    function _transferNFTUpdateCollectionBalances(
         address from,
         address to,
         uint256 collectionId,
@@ -405,7 +420,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         _owners[id] = uint256(to);
 
         if (!isBatch) {
-            uint256 collectionId = id & _NF_COLLECTION_MASK;
+            uint256 collectionId = id.getNonFungibleCollection();
             // it is virtually impossible that a non-fungible collection supply
             // overflows due to the cost of minting individual tokens
             ++_supplies[collectionId];
@@ -428,7 +443,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         bool safe
     ) internal {
         require(to != address(0), "Inventory: transfer to zero");
-        require(isNFT(nftId), "Inventory: not an NFT");
+        require(nftId.isNonFungibleToken(), "Inventory: not an NFT");
 
         _mintNFT(to, nftId, 1, false);
 
@@ -457,11 +472,11 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         uint256 nfCollectionCount;
         for (uint256 i; i != length; ++i) {
             uint256 nftId = nftIds[i];
-            require(isNFT(nftId), "Inventory: not an NFT");
+            require(nftId.isNonFungibleToken(), "Inventory: not an NFT");
             values[i] = 1;
             _mintNFT(to, nftId, 1, true);
             emit Transfer(address(0), to, nftId);
-            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
+            uint256 nextCollectionId = nftId.getNonFungibleCollection();
             if (nfCollectionId == 0) {
                 nfCollectionId = nextCollectionId;
                 nfCollectionCount = 1;
@@ -499,9 +514,9 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     ) internal virtual {
         require(to != address(0), "Inventory: transfer to zero");
         address sender = _msgSender();
-        if (isFungible(id)) {
+        if (id.isFungibleToken()) {
             _mintFungible(to, id, value);
-        } else if (id & _NF_TOKEN_MASK != 0) {
+        } else if (id.isNonFungibleToken()) {
             _mintNFT(to, id, value, false);
             emit Transfer(address(0), to, id);
         } else {
@@ -534,12 +549,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             uint256 value = values[i];
-            if (isFungible(id)) {
+            if (id.isFungibleToken()) {
                 _mintFungible(to, id, value);
-            } else if (id & _NF_TOKEN_MASK != 0) {
+            } else if (id.isNonFungibleToken()) {
                 _mintNFT(to, id, value, true);
                 emit Transfer(address(0), to, id);
-                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                uint256 nextCollectionId = id.getNonFungibleCollection();
                 if (nfCollectionId == 0) {
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;

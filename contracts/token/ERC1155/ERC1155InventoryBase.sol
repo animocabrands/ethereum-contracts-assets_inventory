@@ -9,7 +9,30 @@ import "./../ERC1155/IERC1155MetadataURI.sol";
 import "./../ERC1155/IERC1155Inventory.sol";
 import "./../ERC1155/IERC1155TokenReceiver.sol";
 
+library ERC1155InventoryIdentifiersLib {
+    // Non-fungible bit. If an id has this bit set, it is a non-fungible (either collection or token)
+    uint256 internal constant _NF_BIT = 1 << 255;
+
+    // Mask for non-fungible collection (including the nf bit)
+    uint256 internal constant _NF_COLLECTION_MASK = uint256(type(uint32).max) << 224;
+    uint256 internal constant _NF_TOKEN_MASK = ~_NF_COLLECTION_MASK;
+
+    function isFungibleToken(uint256 id) internal pure returns (bool) {
+        return id & _NF_BIT == 0;
+    }
+
+    function isNonFungibleToken(uint256 id) internal pure returns (bool) {
+        return id & _NF_BIT != 0 && id & _NF_TOKEN_MASK != 0;
+    }
+
+    function getNonFungibleCollection(uint256 nftId) internal pure returns (uint256) {
+        return nftId & _NF_COLLECTION_MASK;
+    }
+}
+
 abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC1155Inventory, IERC165, Context {
+    using ERC1155InventoryIdentifiersLib for uint256;
+
     bytes4 private constant _ERC165_INTERFACE_ID = type(IERC165).interfaceId;
     bytes4 private constant _ERC1155_INTERFACE_ID = type(IERC1155).interfaceId;
     bytes4 private constant _ERC1155_METADATA_URI_INTERFACE_ID = type(IERC1155MetadataURI).interfaceId;
@@ -23,13 +46,6 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
 
     // Burnt non-fungible token owner's magic value
     uint256 internal constant _BURNT_NFT_OWNER = 0xdead000000000000000000000000000000000000000000000000000000000000;
-
-    // Non-fungible bit. If an id has this bit set, it is a non-fungible (either collection or token)
-    uint256 internal constant _NF_BIT = 1 << 255;
-
-    // Mask for non-fungible collection (including the nf bit)
-    uint256 internal constant _NF_COLLECTION_MASK = uint256(type(uint32).max) << 224;
-    uint256 internal constant _NF_TOKEN_MASK = ~_NF_COLLECTION_MASK;
 
     /* owner => operator => approved */
     mapping(address => mapping(address => bool)) internal _operators;
@@ -46,9 +62,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
     /* collection ID => creator */
     mapping(uint256 => address) internal _creators;
 
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
+    /// @dev See {IERC165-supportsInterface}.
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == _ERC165_INTERFACE_ID ||
@@ -59,23 +73,19 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
 
     //================================== ERC1155 =======================================/
 
-    /**
-     * @dev See {IERC1155-balanceOf}.
-     */
+    /// @dev See {IERC1155-balanceOf(address,uint256)}.
     function balanceOf(address owner, uint256 id) public view virtual override returns (uint256) {
         require(owner != address(0), "Inventory: zero address");
 
-        if (isNFT(id)) {
+        if (id.isNonFungibleToken()) {
             return address(_owners[id]) == owner ? 1 : 0;
         }
 
         return _balances[id][owner];
     }
 
-    /**
-     * @dev See {IERC1155-balanceOfBatch}.
-     */
-    function balanceOfBatch(address[] memory owners, uint256[] memory ids) public view virtual override returns (uint256[] memory) {
+    /// @dev See {IERC1155-balanceOfBatch(address[],uint256[])}.
+    function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view virtual override returns (uint256[] memory) {
         require(owners.length == ids.length, "Inventory: inconsistent arrays");
 
         uint256[] memory balances = new uint256[](owners.length);
@@ -87,9 +97,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         return balances;
     }
 
-    /**
-     * @dev See {IERC1155-setApprovalForAll}.
-     */
+    /// @dev See {IERC1155-setApprovalForAll(address,bool)}.
     function setApprovalForAll(address operator, bool approved) public virtual override {
         address sender = _msgSender();
         require(operator != sender, "Inventory: self-approval");
@@ -97,53 +105,41 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         emit ApprovalForAll(sender, operator, approved);
     }
 
-    /**
-     * @dev See {IERC1155-isApprovedForAll}.
-     */
+    /// @dev See {IERC1155-isApprovedForAll(address,address)}.
     function isApprovedForAll(address tokenOwner, address operator) public view virtual override returns (bool) {
         return _operators[tokenOwner][operator];
     }
 
     //================================== ERC1155MetadataURI =======================================/
 
-    /**
-     * @dev See {IERC1155MetadataURI-uri}.
-     */
+    /// @dev See {IERC1155MetadataURI-uri(uint256)}.
     function uri(uint256 id) external view virtual override returns (string memory) {
         return _uri(id);
     }
 
     //================================== ERC1155Inventory =======================================/
 
-    /**
-     * @dev See {IERC1155Inventory-isFungible}.
-     */
-    function isFungible(uint256 id) public pure virtual override returns (bool) {
-        return id & _NF_BIT == 0;
+    /// @dev See {IERC1155Inventory-isFungible(uint256)}.
+    function isFungible(uint256 id) external pure virtual override returns (bool) {
+        return id.isFungibleToken();
     }
 
-    /**
-     * @dev See {IERC1155Inventory-collectionOf}.
-     */
-    function collectionOf(uint256 nftId) public pure virtual override returns (uint256) {
-        require(isNFT(nftId), "Inventory: not an NFT");
-        return nftId & _NF_COLLECTION_MASK;
+    /// @dev See {IERC1155Inventory-collectionOf(uint256)}.
+    function collectionOf(uint256 nftId) external pure virtual override returns (uint256) {
+        require(nftId.isNonFungibleToken(), "Inventory: not an NFT");
+        return nftId.getNonFungibleCollection();
     }
 
-    /**
-     * @dev See {IERC1155Inventory-ownerOf}.
-     */
+    /// @dev See {IERC1155Inventory-ownerOf(uint256)}.
     function ownerOf(uint256 nftId) public view virtual override returns (address) {
         address owner = address(_owners[nftId]);
         require(owner != address(0), "Inventory: non-existing NFT");
         return owner;
     }
 
-    /**
-     * @dev See {IERC1155Inventory-totalSupply}.
-     */
-    function totalSupply(uint256 id) public view virtual override returns (uint256) {
-        if (isNFT(id)) {
+    /// @dev See {IERC1155Inventory-totalSupply(uint256)}.
+    function totalSupply(uint256 id) external view virtual override returns (uint256) {
+        if (id.isNonFungibleToken()) {
             return address(_owners[id]) == address(0) ? 0 : 1;
         } else {
             return _supplies[id];
@@ -157,8 +153,8 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      * @param id Identifier to query.
      * @return True if `id` represents an non-fungible token.
      */
-    function isNFT(uint256 id) public pure virtual returns (bool) {
-        return (id & _NF_BIT) != 0 && (id & _NF_TOKEN_MASK != 0);
+    function isNFT(uint256 id) external pure virtual returns (bool) {
+        return id.isNonFungibleToken();
     }
 
     //================================== Inventory ABI-level Internal Functions =======================================/
@@ -171,17 +167,17 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
      * @param collectionId Identifier of the collection.
      */
     function _createCollection(uint256 collectionId) internal virtual {
-        require(!isNFT(collectionId), "Inventory: not a collection");
+        require(!collectionId.isNonFungibleToken(), "Inventory: not a collection");
         require(_creators[collectionId] == address(0), "Inventory: existing collection");
         _creators[collectionId] = _msgSender();
-        emit CollectionCreated(collectionId, isFungible(collectionId));
+        emit CollectionCreated(collectionId, collectionId.isFungibleToken());
     }
 
     /**
      * @dev See {IERC1155InventoryCreator-creator(uint256)}.
      */
     function _creator(uint256 collectionId) internal view virtual returns (address) {
-        require(!isNFT(collectionId), "Inventory: not a collection");
+        require(!collectionId.isNonFungibleToken(), "Inventory: not a collection");
         return _creators[collectionId];
     }
 

@@ -20,9 +20,9 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
         address sender = _msgSender();
         require(_isOperatable(from, sender), "Inventory: non-approved sender");
 
-        if (isFungible(id)) {
+        if (id.isFungibleToken()) {
             _burnFungible(from, id, value);
-        } else if (id & _NF_TOKEN_MASK != 0) {
+        } else if (id.isNonFungibleToken()) {
             _burnNFT(from, id, value, false);
         } else {
             revert("Inventory: not a token id");
@@ -50,11 +50,11 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
         for (uint256 i; i < length; i++) {
             uint256 id = ids[i];
             uint256 value = values[i];
-            if (isFungible(id)) {
+            if (id.isFungibleToken()) {
                 _burnFungible(from, id, value);
-            } else if (id & _NF_TOKEN_MASK != 0) {
+            } else if (id.isNonFungibleToken()) {
                 _burnNFT(from, id, value, true);
-                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                uint256 nextCollectionId = id.getNonFungibleCollection();
                 if (nfCollectionId == 0) {
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
@@ -105,7 +105,7 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
         _owners[id] = _BURNT_NFT_OWNER;
 
         if (!isBatch) {
-            uint256 collectionId = id & _NF_COLLECTION_MASK;
+            uint256 collectionId = id.getNonFungibleCollection();
             // cannot underflow as balance is confirmed through ownership
             --_balances[collectionId][from];
             // Cannot underflow

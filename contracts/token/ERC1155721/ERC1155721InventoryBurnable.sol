@@ -18,9 +18,9 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
-        if (isFungible(id)) {
+        if (id.isFungibleToken()) {
             _burnFungible(from, id, value, operatable);
-        } else if (id & _NF_TOKEN_MASK != 0) {
+        } else if (id.isNonFungibleToken()) {
             _burnNFT(from, id, value, operatable, false);
             emit Transfer(from, address(0), id);
         } else {
@@ -47,12 +47,12 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         uint256 nftsCount;
         for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
-            if (isFungible(id)) {
+            if (id.isFungibleToken()) {
                 _burnFungible(from, id, values[i], operatable);
-            } else if (id & _NF_TOKEN_MASK != 0) {
+            } else if (id.isNonFungibleToken()) {
                 _burnNFT(from, id, values[i], operatable, true);
                 emit Transfer(from, address(0), id);
-                uint256 nextCollectionId = id & _NF_COLLECTION_MASK;
+                uint256 nextCollectionId = id.getNonFungibleCollection();
                 if (nfCollectionId == 0) {
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
@@ -93,11 +93,11 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         uint256 nfCollectionCount;
         for (uint256 i; i != length; ++i) {
             uint256 nftId = nftIds[i];
-            require(isNFT(nftId), "Inventory: not an NFT");
+            require(nftId.isNonFungibleToken(), "Inventory: not an NFT");
             values[i] = 1;
             _burnNFT(from, nftId, values[i], operatable, true);
             emit Transfer(from, address(0), nftId);
-            uint256 nextCollectionId = nftId & _NF_COLLECTION_MASK;
+            uint256 nextCollectionId = nftId.getNonFungibleCollection();
             if (nfCollectionId == 0) {
                 nfCollectionId = nextCollectionId;
                 nfCollectionCount = 1;
@@ -161,7 +161,7 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         _owners[id] = _BURNT_NFT_OWNER;
 
         if (!isBatch) {
-            _burnNFTUpdateCollection(from, id & _NF_COLLECTION_MASK, 1);
+            _burnNFTUpdateCollection(from, id.getNonFungibleCollection(), 1);
 
             // cannot underflow as balance is verified through NFT ownership
             --_nftBalances[from];
