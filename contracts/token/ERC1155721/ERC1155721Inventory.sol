@@ -168,7 +168,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
                 nfCollectionCount = 1;
             } else {
                 if (nextCollectionId != nfCollectionId) {
-                    _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                    _transferNFTUpdateCollection(from, to, nfCollectionId, nfCollectionCount);
                     nfCollectionId = nextCollectionId;
                     nfCollectionCount = 1;
                 } else {
@@ -178,7 +178,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         }
 
         if (nfCollectionId != 0) {
-            _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+            _transferNFTUpdateCollection(from, to, nfCollectionId, nfCollectionCount);
             _transferNFTUpdateBalances(from, to, length);
         }
 
@@ -186,6 +186,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         if (to.isContract() && _isERC1155TokenReceiver(to)) {
             _callOnERC1155BatchReceived(from, to, nftIds, values, "");
         }
+    }
+
+    /// @dev See {IERC721Metadata-tokenURI(uint256)}.
+    function tokenURI(uint256 nftId) external view virtual override returns (string memory) {
+        require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
+        return uri(nftId);
     }
 
     //================================== ERC1155 =======================================/
@@ -235,13 +241,41 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         _safeBatchTransferFrom(from, to, ids, values, data);
     }
 
-    /// @dev See {IERC721Metadata-tokenURI(uint256)}.
-    function tokenURI(uint256 nftId) external view virtual override returns (string memory) {
-        require(address(_owners[nftId]) != address(0), "Inventory: non-existing NFT");
-        return _uri(nftId);
-    }
+    //================================== ERC1155MetadataURI =======================================/
 
-    //================================== Transfer Core Internal Helpers =======================================/
+    /// @dev See {IERC1155MetadataURI-uri(uint256)}.
+    function uri(uint256) public view virtual override returns (string memory);
+
+    //================================== ABI-level Internal Functions =======================================/
+
+    /**
+     * Safely or unsafely transfers some token (ERC721-compatible).
+     * @dev For `safe` transfer, see {IERC1155721-transferFrom(address,address,uint256)}.
+     * @dev For un`safe` transfer, see {IERC1155721-safeTransferFrom(address,address,uint256,bytes)}.
+     */
+    function _transferFrom(
+        address from,
+        address to,
+        uint256 nftId,
+        bytes memory data,
+        bool safe
+    ) internal {
+        require(to != address(0), "Inventory: transfer to zero");
+        address sender = _msgSender();
+        bool operatable = _isOperatable(from, sender);
+
+        _transferNFT(from, to, nftId, 1, operatable, false);
+
+        emit Transfer(from, to, nftId);
+        emit TransferSingle(sender, from, to, nftId, 1);
+        if (to.isContract()) {
+            if (_isERC1155TokenReceiver(to)) {
+                _callOnERC1155Received(from, to, nftId, 1, data);
+            } else if (safe) {
+                _callOnERC721Received(from, to, nftId, data);
+            }
+        }
+    }
 
     /**
      * Safely transfers a batch of tokens (ERC1155-compatible).
@@ -276,7 +310,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
                     nfCollectionCount = 1;
                 } else {
                     if (nextCollectionId != nfCollectionId) {
-                        _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+                        _transferNFTUpdateCollection(from, to, nfCollectionId, nfCollectionCount);
                         nfCollectionId = nextCollectionId;
                         nftsCount += nfCollectionCount;
                         nfCollectionCount = 1;
@@ -290,7 +324,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         }
 
         if (nfCollectionId != 0) {
-            _transferNFTUpdateCollectionBalances(from, to, nfCollectionId, nfCollectionCount);
+            _transferNFTUpdateCollection(from, to, nfCollectionId, nfCollectionCount);
             nftsCount += nfCollectionCount;
             _transferNFTUpdateBalances(from, to, nftsCount);
         }
@@ -300,136 +334,6 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
             _callOnERC1155BatchReceived(from, to, ids, values, data);
         }
     }
-
-    function _transferFungible(
-        address from,
-        address to,
-        uint256 id,
-        uint256 value,
-        bool operatable
-    ) internal {
-        require(operatable, "Inventory: non-approved sender");
-        require(value != 0, "Inventory: zero value");
-        uint256 balance = _balances[id][from];
-        require(balance >= value, "Inventory: not enough balance");
-        _balances[id][from] = balance - value;
-        // cannot overflow as supply cannot overflow
-        _balances[id][to] += value;
-    }
-
-    function _transferNFT(
-        address from,
-        address to,
-        uint256 id,
-        uint256 value,
-        bool operatable,
-        bool isBatch
-    ) internal virtual {
-        require(value == 1, "Inventory: wrong NFT value");
-        uint256 owner = _owners[id];
-        require(from == address(owner), "Inventory: non-owned NFT");
-        if (!operatable) {
-            require((owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id], "Inventory: non-approved sender");
-        }
-        _owners[id] = uint256(to);
-        if (!isBatch) {
-            _transferNFTUpdateBalances(from, to, 1);
-            _transferNFTUpdateCollectionBalances(from, to, id.getNonFungibleCollection(), 1);
-        }
-    }
-
-    function _transferNFTUpdateBalances(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual {
-        // cannot underflow as balance is verified through ownership
-        _nftBalances[from] -= amount;
-        //  cannot overflow as supply cannot overflow
-        _nftBalances[to] += amount;
-    }
-
-    function _transferNFTUpdateCollectionBalances(
-        address from,
-        address to,
-        uint256 collectionId,
-        uint256 amount
-    ) internal virtual {
-        // cannot underflow as balance is verified through ownership
-        _balances[collectionId][from] -= amount;
-        // cannot overflow as supply cannot overflow
-        _balances[collectionId][to] += amount;
-    }
-
-    //============================== Transfer Internal Functions =======================================/
-
-    /**
-     * Safely or unsafely transfers some token (ERC721-compatible).
-     * @dev For `safe` transfer, see {IERC1155721-transferFrom(address,address,uint256)}.
-     * @dev For un`safe` transfer, see {IERC1155721-safeTransferFrom(address,address,uint256,bytes)}.
-     */
-    function _transferFrom(
-        address from,
-        address to,
-        uint256 nftId,
-        bytes memory data,
-        bool safe
-    ) internal {
-        require(to != address(0), "Inventory: transfer to zero");
-        address sender = _msgSender();
-        bool operatable = _isOperatable(from, sender);
-
-        _transferNFT(from, to, nftId, 1, operatable, false);
-
-        emit Transfer(from, to, nftId);
-        emit TransferSingle(sender, from, to, nftId, 1);
-        if (to.isContract()) {
-            if (_isERC1155TokenReceiver(to)) {
-                _callOnERC1155Received(from, to, nftId, 1, data);
-            } else if (safe) {
-                _callOnERC721Received(from, to, nftId, data);
-            }
-        }
-    }
-
-    //================================== Minting Core Internal Helpers =======================================/
-
-    function _mintFungible(
-        address to,
-        uint256 id,
-        uint256 value
-    ) internal {
-        require(value != 0, "Inventory: zero value");
-        uint256 supply = _supplies[id];
-        uint256 newSupply = supply + value;
-        require(newSupply > supply, "Inventory: supply overflow");
-        _supplies[id] = newSupply;
-        // cannot overflow as supply cannot overflow
-        _balances[id][to] += value;
-    }
-
-    function _mintNFT(
-        address to,
-        uint256 id,
-        uint256 value,
-        bool isBatch
-    ) internal {
-        require(value == 1, "Inventory: wrong NFT value");
-        require(_owners[id] == 0, "Inventory: existing/burnt NFT");
-
-        _owners[id] = uint256(to);
-
-        if (!isBatch) {
-            uint256 collectionId = id.getNonFungibleCollection();
-            // it is virtually impossible that a non-fungible collection supply
-            // overflows due to the cost of minting individual tokens
-            ++_supplies[collectionId];
-            ++_balances[collectionId][to];
-            ++_nftBalances[to];
-        }
-    }
-
-    //================================== Minting Internal Functions =======================================/
 
     /**
      * Safely or unsafely mints some token (ERC721-compatible).
@@ -585,6 +489,103 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         if (to.isContract()) {
             _callOnERC1155BatchReceived(address(0), to, ids, values, data);
         }
+    }
+
+    //============================== Internal Helper Functions =======================================/
+
+    function _mintFungible(
+        address to,
+        uint256 id,
+        uint256 value
+    ) internal {
+        require(value != 0, "Inventory: zero value");
+        uint256 supply = _supplies[id];
+        uint256 newSupply = supply + value;
+        require(newSupply > supply, "Inventory: supply overflow");
+        _supplies[id] = newSupply;
+        // cannot overflow as supply cannot overflow
+        _balances[id][to] += value;
+    }
+
+    function _mintNFT(
+        address to,
+        uint256 id,
+        uint256 value,
+        bool isBatch
+    ) internal {
+        require(value == 1, "Inventory: wrong NFT value");
+        require(_owners[id] == 0, "Inventory: existing/burnt NFT");
+
+        _owners[id] = uint256(to);
+
+        if (!isBatch) {
+            uint256 collectionId = id.getNonFungibleCollection();
+            // it is virtually impossible that a non-fungible collection supply
+            // overflows due to the cost of minting individual tokens
+            ++_supplies[collectionId];
+            ++_balances[collectionId][to];
+            ++_nftBalances[to];
+        }
+    }
+
+    function _transferFungible(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bool operatable
+    ) internal {
+        require(operatable, "Inventory: non-approved sender");
+        require(value != 0, "Inventory: zero value");
+        uint256 balance = _balances[id][from];
+        require(balance >= value, "Inventory: not enough balance");
+        _balances[id][from] = balance - value;
+        // cannot overflow as supply cannot overflow
+        _balances[id][to] += value;
+    }
+
+    function _transferNFT(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bool operatable,
+        bool isBatch
+    ) internal virtual {
+        require(value == 1, "Inventory: wrong NFT value");
+        uint256 owner = _owners[id];
+        require(from == address(owner), "Inventory: non-owned NFT");
+        if (!operatable) {
+            require((owner & _APPROVAL_BIT_TOKEN_OWNER_ != 0) && _msgSender() == _nftApprovals[id], "Inventory: non-approved sender");
+        }
+        _owners[id] = uint256(to);
+        if (!isBatch) {
+            _transferNFTUpdateBalances(from, to, 1);
+            _transferNFTUpdateCollection(from, to, id.getNonFungibleCollection(), 1);
+        }
+    }
+
+    function _transferNFTUpdateBalances(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {
+        // cannot underflow as balance is verified through ownership
+        _nftBalances[from] -= amount;
+        //  cannot overflow as supply cannot overflow
+        _nftBalances[to] += amount;
+    }
+
+    function _transferNFTUpdateCollection(
+        address from,
+        address to,
+        uint256 collectionId,
+        uint256 amount
+    ) internal virtual {
+        // cannot underflow as balance is verified through ownership
+        _balances[collectionId][from] -= amount;
+        // cannot overflow as supply cannot overflow
+        _balances[collectionId][to] += amount;
     }
 
     ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////

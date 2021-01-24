@@ -14,6 +14,7 @@ interface IERC721BatchTransfer {
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if one of `tokenIds` is not owned by `from`.
+     * @dev Resets the token approval for each of `tokenIds`.
      * @dev Emits an {IERC721-Transfer} event for each of `tokenIds`.
      * @param from Current tokens owner.
      * @param to Address of the new token owner.

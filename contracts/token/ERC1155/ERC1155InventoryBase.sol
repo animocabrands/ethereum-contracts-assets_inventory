@@ -9,6 +9,18 @@ import "./../ERC1155/IERC1155MetadataURI.sol";
 import "./../ERC1155/IERC1155Inventory.sol";
 import "./../ERC1155/IERC1155TokenReceiver.sol";
 
+/**
+ * @title ERC1155InventoryIdentifiersLib, a library to introspect inventory identifiers.
+ * @dev With N=32, representing the Non-Fungible Collection mask length, identifiers are represented as follow:
+ * (a) a Fungible Token:
+ *     - most significant bit == 0
+ * (b) a Non-Fungible Collection:
+ *     - most significant bit == 1
+ *     - (256-N) least significant bits == 0
+ * (c) a Non-Fungible Token:
+ *     - most significant bit == 1
+ *     - (256-N) least significant bits != 0
+ */
 library ERC1155InventoryIdentifiersLib {
     // Non-fungible bit. If an id has this bit set, it is a non-fungible (either collection or token)
     uint256 internal constant _NF_BIT = 1 << 255;
@@ -110,13 +122,6 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         return _operators[tokenOwner][operator];
     }
 
-    //================================== ERC1155MetadataURI =======================================/
-
-    /// @dev See {IERC1155MetadataURI-uri(uint256)}.
-    function uri(uint256 id) external view virtual override returns (string memory) {
-        return _uri(id);
-    }
-
     //================================== ERC1155Inventory =======================================/
 
     /// @dev See {IERC1155Inventory-isFungible(uint256)}.
@@ -146,18 +151,7 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         }
     }
 
-    //================================== ERC1155Inventory Non-standard helpers =======================================/
-
-    /**
-     * @dev Introspects whether an identifier represents an non-fungible token.
-     * @param id Identifier to query.
-     * @return True if `id` represents an non-fungible token.
-     */
-    function isNFT(uint256 id) external pure virtual returns (bool) {
-        return id.isNonFungibleToken();
-    }
-
-    //================================== Inventory ABI-level Internal Functions =======================================/
+    //================================== ABI-level Internal Functions =======================================/
 
     /**
      * Creates a collection (optional).
@@ -173,22 +167,13 @@ abstract contract ERC1155InventoryBase is IERC1155, IERC1155MetadataURI, IERC115
         emit CollectionCreated(collectionId, collectionId.isFungibleToken());
     }
 
-    /**
-     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
-     */
+    /// @dev See {IERC1155InventoryCreator-creator(uint256)}.
     function _creator(uint256 collectionId) internal view virtual returns (address) {
         require(!collectionId.isNonFungibleToken(), "Inventory: not a collection");
         return _creators[collectionId];
     }
 
-    /**
-     * @dev (abstract) Returns an URI for a given identifier.
-     * @param id Identifier to query the URI of.
-     * @return The metadata URI for `id`.
-     */
-    function _uri(uint256 id) internal view virtual returns (string memory);
-
-    //================================== Inventory Internal Functions =======================================/
+    //================================== Internal Helper Functions =======================================/
 
     /**
      * Returns whether `sender` is authorised to make a transfer on behalf of `from`.

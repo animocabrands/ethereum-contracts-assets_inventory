@@ -96,4 +96,56 @@ interface IERC1155Inventory {
      *  If `id` represents a non-fungible token, 1 if the token is owned by `owner`, else 0.
      */
     // function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view returns (uint256[] memory);
+
+    /**
+     * @notice this documentation overrides its {IERC1155-safeTransferFrom(address,address,uint256,uint256,bytes)}.
+     * Safely transfers some token.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if the sender is not approved.
+     * @dev Reverts if `id` does not represent a token.
+     * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
+     * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
+     * @dev Reverts if `id` represents a fungible token and `value` is 0.
+     * @dev Reverts if `id` represents a fungible token and `from` has an insufficient balance.
+     * @dev Reverts if `to` is a contract and the call to {IERC1155TokenReceiver-onERC1155received} fails or is refused.
+     * @dev Emits an {IERC1155-TransferSingle} event.
+     * @param from Current token owner.
+     * @param to Address of the new token owner.
+     * @param id Identifier of the token to transfer.
+     * @param value Amount of token to transfer.
+     * @param data Optional data to pass to the receiver contract.
+     */
+    // function safeTransferFrom(
+    //     address from,
+    //     address to,
+    //     uint256 id,
+    //     uint256 value,
+    //     bytes calldata data
+    // ) external;
+
+    /**
+     * @notice this documentation overrides its {IERC1155-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
+     * Safely transfers a batch of tokens.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if the sender is not approved.
+     * @dev Reverts if one of `ids` does not represent a token.
+     * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
+     * @dev Reverts if one of `ids` represents a non-fungible token and is not owned by `from`.
+     * @dev Reverts if one of `ids` represents a fungible token and `value` is 0.
+     * @dev Reverts if one of `ids` represents a fungible token and `from` has an insufficient balance.
+     * @dev Reverts if one of `to` is a contract and the call to {IERC1155TokenReceiver-onERC1155batchReceived} fails or is refused.
+     * @dev Emits an {IERC1155-TransferBatch} event.
+     * @param from Current tokens owner.
+     * @param to Address of the new tokens owner.
+     * @param ids Identifiers of the tokens to transfer.
+     * @param values Amounts of tokens to transfer.
+     * @param data Optional data to pass to the receiver contract.
+     */
+    // function safeBatchTransferFrom(
+    //     address from,
+    //     address to,
+    //     uint256[] calldata ids,
+    //     uint256[] calldata values,
+    //     bytes calldata data
+    // ) external;
 }

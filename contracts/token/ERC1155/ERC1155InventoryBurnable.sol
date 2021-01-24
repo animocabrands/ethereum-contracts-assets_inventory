@@ -9,7 +9,10 @@ import "./IERC1155InventoryBurnable.sol";
  * @title ERC1155InventoryBurnable, a burnable ERC1155Inventory
  */
 abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155Inventory {
+    //================================== ERC1155InventoryBurnable =======================================/
+
     /**
+     * Burns some token.
      * @dev See {IERC1155InventoryBurnable-burnFrom(address,uint256,uint256)}.
      */
     function burnFrom(
@@ -32,6 +35,7 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
     }
 
     /**
+     * Burns a batch of tokens.
      * @dev See {IERC1155InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
      */
     function batchBurnFrom(
@@ -80,6 +84,8 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
 
         emit TransferBatch(sender, from, address(0), ids, values);
     }
+
+    //================================== Internal Helper Functions =======================================/
 
     function _burnFungible(
         address from,

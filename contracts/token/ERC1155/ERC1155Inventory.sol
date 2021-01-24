@@ -7,17 +7,6 @@ import "./ERC1155InventoryBase.sol";
 
 /**
  * @title ERC1155Inventory, a contract which manages up to multiple Collections of Fungible and Non-Fungible Tokens
- * @dev In this implementation, with N representing the Non-Fungible Collection mask length, identifiers can represent either:
- * (a) a Fungible Token:
- *     - most significant bit == 0
- * (b) a Non-Fungible Collection:
- *     - most significant bit == 1
- *     - (256-N) least significant bits == 0
- * (c) a Non-Fungible Token:
- *     - most significant bit == 1
- *     - (256-N) least significant bits != 0
- * with N = 32.
- *
  */
 abstract contract ERC1155Inventory is ERC1155InventoryBase {
     using Address for address;
@@ -62,7 +51,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         _safeBatchTransferFrom(from, to, ids, values, data);
     }
 
-    //============================== Transfer Core Internal Helpers =================================/
+    //============================== ABI-level Internal Functions ====================================/
 
     /// @dev See {IERC1155Inventory-safeBatchTransferFrom(address,address,uint256,uint256,bytes)}.
     function _safeBatchTransferFrom(
@@ -116,78 +105,6 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
             _callOnERC1155BatchReceived(from, to, ids, values, data);
         }
     }
-
-    function _transferFungible(
-        address from,
-        address to,
-        uint256 id,
-        uint256 value
-    ) internal {
-        require(value != 0, "Inventory: zero value");
-        uint256 balance = _balances[id][from];
-        require(balance >= value, "Inventory: not enough balance");
-        _balances[id][from] = balance - value;
-        // cannot overflow as supply cannot overflow
-        _balances[id][to] += value;
-    }
-
-    function _transferNFT(
-        address from,
-        address to,
-        uint256 id,
-        uint256 value,
-        bool isBatch
-    ) internal {
-        require(value == 1, "Inventory: wrong NFT value");
-        require(from == address(_owners[id]), "Inventory: non-owned NFT");
-        _owners[id] = uint256(to);
-        if (!isBatch) {
-            uint256 collectionId = id.getNonFungibleCollection();
-            // cannot underflow as balance is verified through ownership
-            _balances[collectionId][from] -= 1;
-            // cannot overflow as supply cannot overflow
-            _balances[collectionId][to] += 1;
-        }
-    }
-
-    //============================== Minting Core Internal Helpers =================================/
-
-    function _mintFungible(
-        address to,
-        uint256 id,
-        uint256 value
-    ) internal {
-        require(value != 0, "Inventory: zero value");
-        uint256 supply = _supplies[id];
-        uint256 newSupply = supply + value;
-        require(newSupply > supply, "Inventory: supply overflow");
-        _supplies[id] = newSupply;
-        // cannot overflow as any balance is bounded up by the supply which cannot overflow
-        _balances[id][to] += value;
-    }
-
-    function _mintNFT(
-        address to,
-        uint256 id,
-        uint256 value,
-        bool isBatch
-    ) internal {
-        require(value == 1, "Inventory: wrong NFT value");
-        require(_owners[id] == 0, "Inventory: existing/burnt NFT");
-
-        _owners[id] = uint256(to);
-
-        if (!isBatch) {
-            uint256 collectionId = id.getNonFungibleCollection();
-            // it is virtually impossible that a non-fungible collection supply
-            // overflows due to the cost of minting individual tokens
-            ++_supplies[collectionId];
-            // cannot overflow as supply cannot overflow
-            ++_balances[collectionId][to];
-        }
-    }
-
-    //============================== Minting Internal Functions ====================================/
 
     /// @dev See {IERC1155InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
     function _safeMint(
@@ -259,6 +176,76 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         emit TransferBatch(_msgSender(), address(0), to, ids, values);
         if (to.isContract()) {
             _callOnERC1155BatchReceived(address(0), to, ids, values, data);
+        }
+    }
+
+    //============================== Internal Helper Functions =================================/
+
+    function _mintFungible(
+        address to,
+        uint256 id,
+        uint256 value
+    ) internal {
+        require(value != 0, "Inventory: zero value");
+        uint256 supply = _supplies[id];
+        uint256 newSupply = supply + value;
+        require(newSupply > supply, "Inventory: supply overflow");
+        _supplies[id] = newSupply;
+        // cannot overflow as any balance is bounded up by the supply which cannot overflow
+        _balances[id][to] += value;
+    }
+
+    function _mintNFT(
+        address to,
+        uint256 id,
+        uint256 value,
+        bool isBatch
+    ) internal {
+        require(value == 1, "Inventory: wrong NFT value");
+        require(_owners[id] == 0, "Inventory: existing/burnt NFT");
+
+        _owners[id] = uint256(to);
+
+        if (!isBatch) {
+            uint256 collectionId = id.getNonFungibleCollection();
+            // it is virtually impossible that a non-fungible collection supply
+            // overflows due to the cost of minting individual tokens
+            ++_supplies[collectionId];
+            // cannot overflow as supply cannot overflow
+            ++_balances[collectionId][to];
+        }
+    }
+
+    function _transferFungible(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value
+    ) internal {
+        require(value != 0, "Inventory: zero value");
+        uint256 balance = _balances[id][from];
+        require(balance >= value, "Inventory: not enough balance");
+        _balances[id][from] = balance - value;
+        // cannot overflow as supply cannot overflow
+        _balances[id][to] += value;
+    }
+
+    function _transferNFT(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bool isBatch
+    ) internal {
+        require(value == 1, "Inventory: wrong NFT value");
+        require(from == address(_owners[id]), "Inventory: non-owned NFT");
+        _owners[id] = uint256(to);
+        if (!isBatch) {
+            uint256 collectionId = id.getNonFungibleCollection();
+            // cannot underflow as balance is verified through ownership
+            _balances[collectionId][from] -= 1;
+            // cannot overflow as supply cannot overflow
+            _balances[collectionId][to] += 1;
         }
     }
 }

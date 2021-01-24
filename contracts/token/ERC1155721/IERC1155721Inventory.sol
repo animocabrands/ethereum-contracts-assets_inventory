@@ -9,11 +9,11 @@ import "../ERC1155/IERC1155Inventory.sol";
  */
 interface IERC1155721Inventory is IERC1155Inventory {
     /**
-     * @notice this documentation overrides its IERC1155Inventory counterpart.
+     * @notice this documentation overrides {IERC1155Inventory-safeTransferFrom(address,address,uint256,uint256,bytes)}.
      * Safely transfers some token.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
-     * @dev Reverts if `id` represents a non-fungible collection.
+     * @dev Reverts if `id` does not represent a token.
      * @dev Reverts if `id` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if `id` represents a non-fungible token and is not owned by `from`.
      * @dev Reverts if `id` represents a fungible token and `value` is 0.
@@ -35,13 +35,12 @@ interface IERC1155721Inventory is IERC1155Inventory {
     //     uint256 value,
     //     bytes calldata data
     // ) external;
-
     /**
-     * @notice this documentation overrides its IERC1155Inventory counterpart.
+     * @notice this documentation overrides {IERC1155Inventory-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
      * Safely transfers a batch of tokens.
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
-     * @dev Reverts if one of `ids` represents a non-fungible collection.
+     * @dev Reverts if one of `ids` does not represent a token.
      * @dev Reverts if one of `ids` represents a non-fungible token and `value` is not 1.
      * @dev Reverts if one of `ids` represents a non-fungible token and is not owned by `from`.
      * @dev Reverts if one of `ids` represents a fungible token and `value` is 0.
@@ -63,7 +62,6 @@ interface IERC1155721Inventory is IERC1155Inventory {
     //     uint256[] calldata values,
     //     bytes calldata data
     // ) external;
-
     /**
      * @notice this documentation overrides its IERC721 counterpart.
      * Unsafely transfers a Non-Fungible Token.
@@ -84,7 +82,6 @@ interface IERC1155721Inventory is IERC1155Inventory {
     //     address to,
     //     uint256 nftId
     // ) external;
-
     /**
      * @notice this documentation overrides its IERC721 counterpart.
      * Safely transfers a Non-Fungible Token.
@@ -106,7 +103,6 @@ interface IERC1155721Inventory is IERC1155Inventory {
     //     address to,
     //     uint256 nftId
     // ) external;
-
     /**
      * @notice this documentation overrides its IERC721 counterpart.
      * Safely transfers a Non-Fungible Token.

@@ -14,7 +14,6 @@ interface IERC1155721BatchTransfer is IERC721BatchTransfer {
      * @dev Usage of this method is discouraged, use `safeTransferFrom` whenever possible
      * @dev Reverts if `to` is the zero address.
      * @dev Reverts if the sender is not approved.
-     * // @dev Reverts if one of `nftIds` does not represent a non-fungible token.
      * @dev Reverts if one of `nftIds` is not owned by `from`.
      * @dev Reverts if `to` is an IERC1155TokenReceiver which refuses the transfer.
      * @dev Resets the token approval for each of `nftIds`.

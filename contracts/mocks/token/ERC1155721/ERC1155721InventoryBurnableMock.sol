@@ -16,8 +16,11 @@ contract ERC1155721InventoryBurnableMock is
     MinterRole
 {
     // ===================================================================================================
-    //                                 ERC721Metadata
+    //                                 User Public Functions
     // ===================================================================================================
+
+    //================================== ERC721Metadata =======================================/
+
     /// @dev See {IERC721Metadata-name()}.
     function name() external view virtual override returns (string memory) {
         return "ERC1155721InventoryBurnableMock";
@@ -26,6 +29,20 @@ contract ERC1155721InventoryBurnableMock is
     /// @dev See {IERC721Metadata-symbol()}.
     function symbol() external view virtual override returns (string memory) {
         return "INVB";
+    }
+
+    //================================== ERC1155MetadataURI =======================================/
+
+    /// @dev See {IERC1155MetadataURI-uri(uint256)}.
+    function uri(uint256 id) public view virtual override returns (string memory) {
+        return _uri(id);
+    }
+
+    //================================== ERC1155InventoryCreator =======================================/
+
+    /// @dev See {IERC1155InventoryCreator-creator(uint256)}.
+    function creator(uint256 collectionId) external view override returns (address) {
+        return _creator(collectionId);
     }
 
     // ===================================================================================================
@@ -42,6 +59,8 @@ contract ERC1155721InventoryBurnableMock is
     function createCollection(uint256 collectionId) external onlyOwner {
         _createCollection(collectionId);
     }
+
+    //================================== ERC1155721InventoryMintable =======================================/
 
     /**
      * Unsafely mints a Non-Fungible Token (ERC721-compatible).
@@ -63,7 +82,11 @@ contract ERC1155721InventoryBurnableMock is
      * Safely mints a Non-Fungible Token (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,bytes)}.
      */
-    function safeMint(address to, uint256 nftId, bytes calldata data) external override onlyMinter {
+    function safeMint(
+        address to,
+        uint256 nftId,
+        bytes calldata data
+    ) external override onlyMinter {
         _mint(to, nftId, data, true);
     }
 
@@ -91,22 +114,5 @@ contract ERC1155721InventoryBurnableMock is
         bytes calldata data
     ) external override onlyMinter {
         _safeBatchMint(to, ids, values, data);
-    }
-
-    // ===================================================================================================
-    //                                 User Public Functions
-    // ===================================================================================================
-
-    /// @dev See {IERC1155InventoryCreator-creator(uint256)}.
-    function creator(uint256 collectionId) external view override returns (address) {
-        return _creator(collectionId);
-    }
-
-    // ===================================================================================================
-    //                                  ERC1155 Internal Functions
-    // ===================================================================================================
-
-    function _uri(uint256 id) internal view override(ERC1155InventoryBase, BaseMetadataURI) returns (string memory) {
-        return BaseMetadataURI._uri(id);
     }
 }

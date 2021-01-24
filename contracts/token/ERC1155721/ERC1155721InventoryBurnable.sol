@@ -9,7 +9,12 @@ import "./IERC1155721InventoryBurnable.sol";
  * @title ERC1155721InventoryBurnable, a burnable ERC1155721Inventory.
  */
 abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, ERC1155721Inventory {
-    /// @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
+    //============================== ERC1155721InventoryBurnable =======================================/
+
+    /**
+     * Burns some token (ERC1155-compatible).
+     * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
+     */
     function burnFrom(
         address from,
         uint256 id,
@@ -30,7 +35,10 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         emit TransferSingle(sender, from, address(0), id, value);
     }
 
-    /// @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
+    /**
+     * Burns a batch of token (ERC1155-compatible).
+     * @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
+     */
     function batchBurnFrom(
         address from,
         uint256[] calldata ids,
@@ -81,7 +89,10 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         emit TransferBatch(sender, from, address(0), ids, values);
     }
 
-    /// @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[])}.
+    /**
+     * Burns a batch of token (ERC721-compatible).
+     * @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[])}.
+     */
     function batchBurnFrom(address from, uint256[] calldata nftIds) external virtual override {
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
@@ -120,15 +131,7 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         emit TransferBatch(sender, from, address(0), nftIds, values);
     }
 
-    function _burnNFTUpdateCollection(
-        address from,
-        uint256 collectionId,
-        uint256 amount
-    ) internal virtual {
-        // cannot underflow as balance is verified through NFT ownership
-        _balances[collectionId][from] -= amount;
-        _supplies[collectionId] -= amount;
-    }
+    //============================== Internal Helper Functions =======================================/
 
     function _burnFungible(
         address from,
@@ -166,5 +169,15 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
             // cannot underflow as balance is verified through NFT ownership
             --_nftBalances[from];
         }
+    }
+
+    function _burnNFTUpdateCollection(
+        address from,
+        uint256 collectionId,
+        uint256 amount
+    ) internal virtual {
+        // cannot underflow as balance is verified through NFT ownership
+        _balances[collectionId][from] -= amount;
+        _supplies[collectionId] -= amount;
     }
 }

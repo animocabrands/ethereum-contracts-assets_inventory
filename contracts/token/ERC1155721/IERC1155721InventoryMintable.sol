@@ -81,7 +81,6 @@ interface IERC1155721InventoryMintable {
      */
     function batchMint(address to, uint256[] calldata nftIds) external;
 
-
     /**
      * Safely mints a token (ERC721-compatible).
      * @dev Reverts if `to` is the zero address.
@@ -94,5 +93,9 @@ interface IERC1155721InventoryMintable {
      * @param nftId Identifier of the token to mint.
      * @param data Optional data to pass along to the receiver call.
      */
-    function safeMint(address to, uint256 nftId, bytes calldata data) external;
+    function safeMint(
+        address to,
+        uint256 nftId,
+        bytes calldata data
+    ) external;
 }

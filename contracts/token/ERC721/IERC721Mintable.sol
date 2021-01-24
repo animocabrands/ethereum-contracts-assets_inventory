@@ -37,5 +37,9 @@ interface IERC721Mintable {
      * @param tokenId Identifier of the token to mint.
      * @param data Optional data to pass along to the receiver call.
      */
-    function safeMint(address to, uint256 tokenId, bytes calldata data) external;
+    function safeMint(
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 }
