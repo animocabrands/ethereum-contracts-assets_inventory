@@ -2,7 +2,7 @@ const {artifacts} = require('hardhat');
 const {shouldBehaveLikeERC1155Inventory} = require('./behaviors/ERC1155Inventory.behavior');
 
 const implementation = {
-  contractName: 'ERC1155BurnableInventoryMock',
+  contractName: 'ERC1155InventoryBurnableMock',
   nfMaskLength: 32,
   suppliesManagement: true,
   revertMessages: {
@@ -33,21 +33,21 @@ const implementation = {
   safeBatchMint: async function (contract, to, ids, values, data, overrides) {
     return contract.safeBatchMint(to, ids, values, data, overrides);
   },
-  burnFrom_ERC1155: async function (contract, to, id, value, overrides) {
-    return contract.burnFrom(to, id, value, overrides);
+  burnFrom_ERC1155: async function (contract, from, id, value, overrides) {
+    return contract.burnFrom(from, id, value, overrides);
   },
-  batchBurnFrom_ERC1155: async function (contract, to, ids, values, overrides) {
-    return contract.batchBurnFrom(to, ids, values, overrides);
+  batchBurnFrom_ERC1155: async function (contract, from, ids, values, overrides) {
+    return contract.batchBurnFrom(from, ids, values, overrides);
   },
   deploy: async function (deployer) {
-    return artifacts.require('ERC1155BurnableInventoryMock').new({from: deployer});
+    return artifacts.require('ERC1155InventoryBurnableMock').new({from: deployer});
   },
   creator_ERC1155Inventory: async function (contract, collectionId, overrides) {
     return contract.creator(collectionId, overrides);
   },
 };
 
-describe('ERC1155BurnableInventoryMock', function () {
+describe('ERC1155InventoryBurnableMock', function () {
   this.timeout(0);
   shouldBehaveLikeERC1155Inventory(implementation);
 });

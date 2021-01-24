@@ -7,7 +7,7 @@ const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata
 
 const ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC721Mintable({nfMaskLength, deploy, mint_ERC721, safeMint_ERC721, batchMint_ERC721, revertMessages}) {
+function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, deploy, revertMessages, mint_ERC721, safeMint_ERC721, batchMint_ERC721}) {
   const [deployer, minter, nonMinter, owner] = accounts;
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
@@ -22,11 +22,33 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, deploy, mint_ERC721, safe
       await this.token.addMinter(minter, {from: deployer});
       this.receiver = await ReceiverMock.new(true, {from: deployer});
     };
+    if (mint_ERC721 === undefined) {
+      console.log(
+        `ERC721Mintable: non-standard ERC721 method mint(address,uint256)` + ` is not supported by ${contractName}, associated tests will be skipped`
+      );
+    }
+    if (batchMint_ERC721 === undefined) {
+      console.log(
+        `ERC721Mintable: non-standard ERC721 method batchMint(address,uint256[])` +
+          `is not supported by ${contractName}, associated tests will be skipped`
+      );
+    }
+    if (safeMint_ERC721 === undefined) {
+      console.log(
+        `ERC721Mintable: non-standard ERC721 method safeMint(address,uint256,bytes)` +
+          ` is not supported by ${contractName}, associated tests will be skipped`
+      );
+    }
+
     beforeEach(async function () {
       await fixtureLoader(fixture, this);
     });
 
     context('mint(address,uint256)', function () {
+      if (mint_ERC721 === undefined) {
+        return;
+      }
+
       it('reverts if the sender is not a Minter', async function () {
         await expectRevert(mint_ERC721(this.token, owner, nft1, {from: nonMinter}), revertMessages.NotMinter);
       });
@@ -76,6 +98,10 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, deploy, mint_ERC721, safe
     });
 
     context('safeMint(address,uint256)', function () {
+      if (safeMint_ERC721 === undefined) {
+        return;
+      }
+
       it('reverts if the sender is not a Minter', async function () {
         await expectRevert(safeMint_ERC721(this.token, owner, nft1, '0x', {from: nonMinter}), revertMessages.NotMinter);
       });
@@ -138,6 +164,10 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, deploy, mint_ERC721, safe
     });
 
     context('batchMint(address,uint256[])', function () {
+      if (batchMint_ERC721 === undefined) {
+        return;
+      }
+
       it('reverts if the sender is not a Minter', async function () {
         await expectRevert(batchMint_ERC721(this.token, owner, [nft1], {from: nonMinter}), revertMessages.NotMinter);
       });

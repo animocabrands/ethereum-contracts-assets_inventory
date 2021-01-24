@@ -9,8 +9,18 @@ import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
 contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMintable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
-    string public constant override name = "ERC1155721InventoryMock";
-    string public constant override symbol = "INV";
+    // ===================================================================================================
+    //                                 ERC721Metadata
+    // ===================================================================================================
+    /// @dev See {IERC721Metadata-name()}.
+    function name() external view virtual override returns (string memory) {
+        return "ERC1155721InventoryMock";
+    }
+
+    /// @dev See {IERC721Metadata-symbol()}.
+    function symbol() external view virtual override returns (string memory) {
+        return "INV";
+    }
 
     // ===================================================================================================
     //                               Admin Public Functions
@@ -27,34 +37,22 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
         _createCollection(collectionId);
     }
 
-    /**
-     * @dev See {IERC1155721InventoryMintable-mint(address,uint256)}.
-     */
+    /// @dev See {IERC1155721InventoryMintable-mint(address,uint256)}.
     function mint(address to, uint256 nftId) external override onlyMinter {
-        _mint_ERC721(to, nftId, "", false);
+        _mint(to, nftId, "", false);
     }
 
-    /**
-     * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
-     */
+    /// @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
     function batchMint(address to, uint256[] calldata nftIds) external override onlyMinter {
-        _batchMint_ERC721(to, nftIds);
+        _batchMint(to, nftIds);
     }
 
-    /**
-     * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,bytes)}.
-     */
-    function safeMint(
-        address to,
-        uint256 nftId,
-        bytes calldata data
-    ) external override onlyMinter {
-        _mint_ERC721(to, nftId, data, true);
+    /// @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,bytes)}.
+    function safeMint(address to, uint256 nftId, bytes calldata data) external override onlyMinter {
+        _mint(to, nftId, data, true);
     }
 
-    /**
-     * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
-     */
+    /// @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
     function safeMint(
         address to,
         uint256 id,
@@ -64,9 +62,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
         _safeMint(to, id, value, data);
     }
 
-    /**
-     * @dev See {IERC1155721InventoryMintable-safeBatchMint(address,uint256[],uint256[],bytes)}.
-     */
+    /// @dev See {IERC1155721InventoryMintable-safeBatchMint(address,uint256[],uint256[],bytes)}.
     function safeBatchMint(
         address to,
         uint256[] calldata ids,
@@ -80,15 +76,13 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
     //                                 User Public Functions
     // ===================================================================================================
 
-    /**
-     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
-     */
+    /// @dev See {IERC1155InventoryCreator-creator(uint256)}.
     function creator(uint256 collectionId) external view override returns (address) {
         return _creator(collectionId);
     }
 
     // ===================================================================================================
-    //                                  ERC1155 Internal Functions
+    //                                  Internal Functions
     // ===================================================================================================
 
     function _uri(uint256 id) internal view override(ERC1155InventoryBase, BaseMetadataURI) returns (string memory) {

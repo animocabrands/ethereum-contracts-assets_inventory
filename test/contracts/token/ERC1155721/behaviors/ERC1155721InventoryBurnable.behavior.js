@@ -8,7 +8,7 @@ const {
 } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const {ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
 
-function shouldBehaveLikeERC1155721BurnableInventory({
+function shouldBehaveLikeERC1155721InventoryBurnable({
   nfMaskLength,
   contractName,
   revertMessages,
@@ -21,13 +21,13 @@ function shouldBehaveLikeERC1155721BurnableInventory({
 
   if (burnFrom_ERC1155 === undefined) {
     console.log(
-      `ERC1155721BurnableInventory: non-standard ERC1155 method burnFrom(address,uint256,uint256)` +
+      `ERC1155721InventoryBurnable: non-standard ERC1155 method burnFrom(address,uint256,uint256)` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
   if (batchBurnFrom_ERC1155 === undefined) {
     console.log(
-      `ERC1155721BurnableInventory: non-standard ERC1155 method batchBurnFrom(address,uint256[],uint256[])` +
+      `ERC1155721InventoryBurnable: non-standard ERC1155 method batchBurnFrom(address,uint256[],uint256[])` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
@@ -208,5 +208,5 @@ function shouldBehaveLikeERC1155721BurnableInventory({
 }
 
 module.exports = {
-  shouldBehaveLikeERC1155721BurnableInventory,
+  shouldBehaveLikeERC1155721InventoryBurnable,
 };

@@ -34,6 +34,24 @@
           "type": "address"
         },
         {
+          "internalType": "uint256[]",
+          "name": "nftIds",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "batchBurnFrom",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
           "internalType": "uint256",
           "name": "id",
           "type": "uint256"

@@ -5,7 +5,7 @@
     "compiler-version": ["error", "^0.6.8"],
     "prettier/prettier": "error",
     "max-line-length": ["warn", 150],
-    "code-complexity": ["error", 7],
+    "code-complexity": ["error", 8],
     "func-visibility": "error",
     "constructor-syntax": "error",
     "not-rely-on-time": "off",

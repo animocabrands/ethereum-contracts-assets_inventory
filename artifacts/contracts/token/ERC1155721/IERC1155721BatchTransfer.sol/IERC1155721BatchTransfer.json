@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IERC721BatchTransfer",
-  "sourceName": "contracts/token/ERC721/IERC721BatchTransfer.sol",
+  "contractName": "IERC1155721BatchTransfer",
+  "sourceName": "contracts/token/ERC1155721/IERC1155721BatchTransfer.sol",
   "abi": [
     {
       "inputs": [

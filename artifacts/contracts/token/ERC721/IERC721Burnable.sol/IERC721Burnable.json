@@ -1,13 +1,13 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IERC721Mintable",
-  "sourceName": "contracts/token/ERC721/IERC721Mintable.sol",
+  "contractName": "IERC721Burnable",
+  "sourceName": "contracts/token/ERC721/IERC721Burnable.sol",
   "abi": [
     {
       "inputs": [
         {
           "internalType": "address",
-          "name": "to",
+          "name": "from",
           "type": "address"
         },
         {
@@ -16,7 +16,7 @@
           "type": "uint256[]"
         }
       ],
-      "name": "batchMint",
+      "name": "batchBurnFrom",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -25,7 +25,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "to",
+          "name": "from",
           "type": "address"
         },
         {
@@ -34,30 +34,7 @@
           "type": "uint256"
         }
       ],
-      "name": "mint",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "data",
-          "type": "bytes"
-        }
-      ],
-      "name": "safeMint",
+      "name": "burnFrom",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

@@ -15,7 +15,7 @@ const Mock = artifacts.require('ERC1155InventoryMock');
 const ReceiverMock = artifacts.require('ERC1155721ReceiverMock');
 const ReceiverMock721 = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC1155721MintableInventory({
+function shouldBehaveLikeERC1155721InventoryMintable({
   nfMaskLength,
   contractName,
   revertMessages,
@@ -30,19 +30,19 @@ function shouldBehaveLikeERC1155721MintableInventory({
 
   if (mint_ERC721 === undefined) {
     console.log(
-      `ERC1155721MintableInventory: non-standard ERC721 method mint(address,uint256)` +
+      `ERC1155721InventoryMintable: non-standard ERC721 method mint(address,uint256)` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
   if (safeMint_ERC721 === undefined) {
     console.log(
-      `ERC1155721MintableInventory: non-standard ERC721 method safeMint(address,uint256,bytes)` +
+      `ERC1155721InventoryMintable: non-standard ERC721 method safeMint(address,uint256,bytes)` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
   if (batchMint_ERC721 === undefined) {
     console.log(
-      `ERC1155721MintableInventory: non-standard ERC721 method batchMint(address,uint256[])` +
+      `ERC1155721InventoryMintable: non-standard ERC721 method batchMint(address,uint256[])` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
@@ -667,5 +667,5 @@ function shouldBehaveLikeERC1155721MintableInventory({
 }
 
 module.exports = {
-  shouldBehaveLikeERC1155721MintableInventory,
+  shouldBehaveLikeERC1155721InventoryMintable,
 };

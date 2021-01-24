@@ -8,41 +8,34 @@ pragma solidity 0.6.8;
  */
 interface IERC721Mintable {
     /**
-     * Unsafely mints an NFT.
+     * Unsafely mints a token.
      * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if `nftId` does not represent a non-fungible token.
-     * @dev Reverts if `nftId` has already ben minted.
-     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Reverts if `tokenId` has already been minted.
+     * @dev Emits an {IERC721-Transfer} event from the zero address.
      * @param to Address of the new token owner.
-     * @param nftId Identifier of the token to mint.
+     * @param tokenId Identifier of the token to mint.
      */
-    function mint(address to, uint256 nftId) external;
+    function mint(address to, uint256 tokenId) external;
 
     /**
-     * Unsafely mints a batch of NFTs.
+     * Unsafely mints a batch of tokens.
      * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if one of `nftIds` does not represent a non-fungible token.
-     * @dev Reverts if one of `nftIds` has already been minted.
-     * @dev Emits up to several {IERC721-Transfer} events.
-     * @param to Address of the new token owner.
-     * @param nftIds Identifiers of the tokens to mint.
+     * @dev Reverts if one of `tokenIds` has already been minted.
+     * @dev Emits an {IERC721-Transfer} event from the zero address for each of `tokenIds`.
+     * @param to Address of the new tokens owner.
+     * @param tokenIds Identifiers of the tokens to mint.
      */
-    function batchMint(address to, uint256[] calldata nftIds) external;
+    function batchMint(address to, uint256[] calldata tokenIds) external;
 
     /**
-     * Safely mints an NFT.
+     * Safely mints a token.
      * @dev Reverts if `to` is the zero address.
-     * @dev Reverts if `nftId` does not represent a non-fungible token.
-     * @dev Reverts if `nftId` has already ben minted.
+     * @dev Reverts if `tokenId` has already ben minted.
      * @dev Reverts if `to` is a contract and the call to {IERC721TokenReceiver-onERC721Received} fails or is refused.
-     * @dev Emits an {IERC721-Transfer} event.
+     * @dev Emits an {IERC721-Transfer} event from the zero address.
      * @param to Address of the new token owner.
-     * @param nftId Identifier of the token to mint.
+     * @param tokenId Identifier of the token to mint.
      * @param data Optional data to pass along to the receiver call.
      */
-    function safeMint(
-        address to,
-        uint256 nftId,
-        bytes calldata data
-    ) external;
+    function safeMint(address to, uint256 tokenId, bytes calldata data) external;
 }

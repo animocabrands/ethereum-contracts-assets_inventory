@@ -13,7 +13,7 @@ const {
 
 const ReceiverMock = artifacts.require('ERC1155721ReceiverMock');
 
-function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, deploy, safeMint, safeBatchMint, revertMessages}) {
+function shouldBehaveLikeERC1155InventoryMintable({nfMaskLength, deploy, safeMint, safeBatchMint, revertMessages}) {
   const [deployer, minter, owner, _operator, _approved, other] = accounts;
 
   const fCollection1 = makeFungibleCollectionId(111);
@@ -201,6 +201,10 @@ function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, deploy, safeMin
         );
       });
 
+      it('reverts if sent to the zero address', async function () {
+        await expectRevert(safeBatchMint(this.token, ZeroAddress, [nft1], [1], '0x', {from: minter}), revertMessages.TransferToZero);
+      });
+
       it('reverts if the fungible quantity is less than 1', async function () {
         await expectRevert(safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: minter}), revertMessages.ZeroValue);
       });
@@ -349,10 +353,26 @@ function shouldBehaveLikeERC1155MintableInventory({nfMaskLength, deploy, safeMin
           });
         });
       });
+
+      context('with an empty list of tokens', function () {
+        const from = owner;
+        beforeEach(async function () {
+          this.receipt = await safeBatchMint(this.token, owner, [], [], '0x', {from: minter});
+        });
+        it('emits the TransferBatch event', async function () {
+          expectEvent(this.receipt, 'TransferBatch', {
+            _operator: minter,
+            _from: ZeroAddress,
+            _to: owner,
+            _ids: [],
+            _values: [],
+          });
+        });
+      });
     });
   });
 }
 
 module.exports = {
-  shouldBehaveLikeERC1155MintableInventory,
+  shouldBehaveLikeERC1155InventoryMintable,
 };

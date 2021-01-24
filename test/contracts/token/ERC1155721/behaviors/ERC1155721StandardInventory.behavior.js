@@ -142,11 +142,11 @@ function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName
 
       describe('transferFrom', function () {
         it('reverts with a Fungible Token id', async function () {
-          await expectRevert(this.token.transferFrom(owner, other, fCollection1.id, {from: owner}), revertMessages.NotNFT);
+          await expectRevert(this.token.transferFrom(owner, other, fCollection1.id, {from: owner}), revertMessages.NonOwnedNFT);
         });
 
         it('reverts with a Non-Fungible Collection id', async function () {
-          await expectRevert(this.token.transferFrom(owner, other, nfCollection, {from: owner}), revertMessages.NotNFT);
+          await expectRevert(this.token.transferFrom(owner, other, nfCollection, {from: owner}), revertMessages.NonOwnedNFT);
         });
         // const data = '0x42';
 
@@ -269,22 +269,22 @@ function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName
       describe('safeTransferFrom(address,address,uint256)', function () {
         const method = 'safeTransferFrom(address,address,uint256)';
         it('reverts with a Fungible Token id', async function () {
-          await expectRevert(this.token.methods[method](owner, other, fCollection1.id, {from: owner}), revertMessages.NotNFT);
+          await expectRevert(this.token.methods[method](owner, other, fCollection1.id, {from: owner}), revertMessages.NonOwnedNFT);
         });
 
         it('reverts with a Non-Fungible Collection id', async function () {
-          await expectRevert(this.token.methods[method](owner, other, nfCollection, {from: owner}), revertMessages.NotNFT);
+          await expectRevert(this.token.methods[method](owner, other, nfCollection, {from: owner}), revertMessages.NonOwnedNFT);
         });
       });
 
       describe('safeTransferFrom(address,address,uint256,bytes)', function () {
         const method = 'safeTransferFrom(address,address,uint256,bytes)';
         it('reverts with a Fungible Token id', async function () {
-          await expectRevert(this.token.methods[method](owner, other, fCollection1.id, '0x0', {from: owner}), revertMessages.NotNFT);
+          await expectRevert(this.token.methods[method](owner, other, fCollection1.id, '0x0', {from: owner}), revertMessages.NonOwnedNFT);
         });
 
         it('reverts with a Non-Fungible Collection id', async function () {
-          await expectRevert(this.token.methods[method](owner, other, nfCollection, '0x0', {from: owner}), revertMessages.NotNFT);
+          await expectRevert(this.token.methods[method](owner, other, nfCollection, '0x0', {from: owner}), revertMessages.NonOwnedNFT);
         });
       });
 
@@ -294,11 +294,11 @@ function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName
         }
 
         it('reverts with a Fungible Token id', async function () {
-          await expectRevert(batchTransferFrom_ERC721(this.token, owner, other, [nft1, fCollection1.id], {from: owner}), revertMessages.NotNFT);
+          await expectRevert(batchTransferFrom_ERC721(this.token, owner, other, [nft1, fCollection1.id], {from: owner}), revertMessages.NonOwnedNFT);
         });
 
         it('reverts with a Non-Fungible Collection id', async function () {
-          await expectRevert(batchTransferFrom_ERC721(this.token, owner, other, [nft1, nfCollection], {from: owner}), revertMessages.NotNFT);
+          await expectRevert(batchTransferFrom_ERC721(this.token, owner, other, [nft1, nfCollection], {from: owner}), revertMessages.NonOwnedNFT);
         });
       });
     });

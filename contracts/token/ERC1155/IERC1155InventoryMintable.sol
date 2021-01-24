@@ -15,7 +15,6 @@ interface IERC1155InventoryMintable {
      * @dev Reverts if `id` represents a non-fungible token which has already been minted.
      * @dev Reverts if `id` represents a fungible token and `value` is 0.
      * @dev Reverts if `id` represents a fungible token and there is an overflow of supply.
-     * @dev Reverts if `id` represents a fungible token and there is an overflow of supply.
      * @dev Reverts if `to` is a contract and the call to {IERC1155TokenReceiver-onERC1155Received} fails or is refused.
      * @dev Emits an {IERC1155-TransferSingle} event.
      * @param to Address of the new token owner.

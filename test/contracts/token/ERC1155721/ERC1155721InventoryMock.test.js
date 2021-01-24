@@ -32,9 +32,9 @@ const implementation = {
   mint_ERC721: async function (contract, to, nftId, overrides) {
     return contract.mint(to, nftId, overrides);
   },
-  safeMint_ERC721: async function (contract, to, nftId, data, overrides) {
-    return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
-  },
+  // safeMint_ERC721: async function (contract, to, nftId, data, overrides) {
+  //   return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
+  // },
   batchMint_ERC721: async function (contract, to, nftIds, overrides) {
     return contract.batchMint(to, nftIds, overrides);
   },

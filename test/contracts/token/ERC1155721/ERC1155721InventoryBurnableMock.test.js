@@ -2,11 +2,11 @@ const {artifacts} = require('hardhat');
 const {shouldBehaveLikeERC1155721Inventory} = require('./behaviors/ERC1155721Inventory.behavior');
 
 const implementation = {
-  contractName: 'ERC1155721BurnableInventoryMock',
+  contractName: 'ERC1155721InventoryBurnableMock',
   nfMaskLength: 32,
   suppliesManagement: true,
-  name: 'ERC1155721InventoryMock',
-  symbol: 'INV',
+  name: 'ERC1155721InventoryBurnableMock',
+  symbol: 'INVB',
   revertMessages: {
     NonApproved: 'Inventory: non-approved sender',
     NonApproved_Batch: 'Inventory: non-approved sender',
@@ -32,9 +32,9 @@ const implementation = {
   mint_ERC721: async function (contract, to, nftId, overrides) {
     return contract.mint(to, nftId, overrides);
   },
-  safeMint_ERC721: async function (contract, to, nftId, data, overrides) {
-    return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
-  },
+  // safeMint_ERC721: async function (contract, to, nftId, data, overrides) {
+  //   return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
+  // },
   batchMint_ERC721: async function (contract, to, nftIds, overrides) {
     return contract.batchMint(to, nftIds, overrides);
   },
@@ -47,21 +47,21 @@ const implementation = {
   batchTransferFrom_ERC721: async function (contract, from, to, nftIds, overrides) {
     return contract.batchTransferFrom(from, to, nftIds, overrides);
   },
-  burnFrom_ERC1155: async function (contract, to, id, value, overrides) {
-    return contract.burnFrom(to, id, value, overrides);
+  burnFrom_ERC1155: async function (contract, from, id, value, overrides) {
+    return contract.burnFrom(from, id, value, overrides);
   },
-  batchBurnFrom_ERC1155: async function (contract, to, ids, values, overrides) {
-    return contract.batchBurnFrom(to, ids, values, overrides);
+  batchBurnFrom_ERC1155: async function (contract, from, ids, values, overrides) {
+    return contract.batchBurnFrom(from, ids, values, overrides);
   },
   deploy: async function (deployer) {
-    return artifacts.require('ERC1155721BurnableInventoryMock').new({from: deployer});
+    return artifacts.require('ERC1155721InventoryBurnableMock').new({from: deployer});
   },
   creator_ERC1155Inventory: async function (contract, collectionId, overrides) {
     return contract.creator(collectionId, overrides);
   },
 };
 
-describe('ERC1155721BurnableInventoryMock', function () {
+describe('ERC1155721InventoryBurnableMock', function () {
   this.timeout(0);
   shouldBehaveLikeERC1155721Inventory(implementation);
 });
