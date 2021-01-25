@@ -27,23 +27,28 @@ const implementation = {
     NotMinter: 'MinterRole: caller does not have the Minter role',
     SupplyOverflow: 'Inventory: supply overflow',
   },
-  safeMint: async function (contract, to, id, value, data, overrides) {
-    return contract.safeMint(to, id, value, data, overrides);
-  },
-  safeBatchMint: async function (contract, to, ids, values, data, overrides) {
-    return contract.safeBatchMint(to, ids, values, data, overrides);
-  },
-  burnFrom_ERC1155: async function (contract, from, id, value, overrides) {
-    return contract.burnFrom(from, id, value, overrides);
-  },
-  batchBurnFrom_ERC1155: async function (contract, from, ids, values, overrides) {
-    return contract.batchBurnFrom(from, ids, values, overrides);
+  methods: {
+    'creator(uint256)': async function (contract, collectionId, overrides) {
+      return contract.creator(collectionId, overrides);
+    },
+    'safeMint(address,uint256,uint256,bytes)': async function (contract, to, id, value, data, overrides) {
+      return contract.safeMint(to, id, value, data, overrides);
+    },
+    'safeBatchMint(address,uint256[],uint256[],bytes)': async function (contract, to, ids, values, data, overrides) {
+      return contract.safeBatchMint(to, ids, values, data, overrides);
+    },
+    'burnFrom(address,uint256,uint256)': async function (contract, from, id, value, overrides) {
+      return contract.burnFrom(from, id, value, overrides);
+    },
+    'batchBurnFrom(address,uint256[],uint256[])': async function (contract, from, ids, values, overrides) {
+      return contract.batchBurnFrom(from, ids, values, overrides);
+    },
   },
   deploy: async function (deployer) {
     return artifacts.require('ERC1155InventoryBurnableMock').new({from: deployer});
   },
-  creator_ERC1155Inventory: async function (contract, collectionId, overrides) {
-    return contract.creator(collectionId, overrides);
+  mint: async function (contract, to, id, value, overrides) {
+    return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, '0x', overrides);
   },
 };
 

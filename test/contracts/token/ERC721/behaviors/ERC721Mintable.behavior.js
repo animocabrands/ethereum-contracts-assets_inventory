@@ -7,8 +7,32 @@ const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata
 
 const ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, deploy, revertMessages, mint_ERC721, safeMint_ERC721, batchMint_ERC721}) {
+function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessages, methods, deploy}) {
   const [deployer, minter, nonMinter, owner] = accounts;
+
+  const {
+    'mint(address,uint256)': mint_ERC721,
+    'batchMint(address,uint256[])': batchMint_ERC721,
+    'safeMint(address,uint256,bytes)': safeMint_ERC721,
+  } = methods;
+
+  if (mint_ERC721 === undefined) {
+    console.log(
+      `ERC721Mintable: non-standard ERC721 method mint(address,uint256)` + ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
+  if (batchMint_ERC721 === undefined) {
+    console.log(
+      `ERC721Mintable: non-standard ERC721 method batchMint(address,uint256[])` +
+        `is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
+  if (safeMint_ERC721 === undefined) {
+    console.log(
+      `ERC721Mintable: non-standard ERC721 method safeMint(address,uint256,bytes)` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
   const nft2 = makeNonFungibleTokenId(2, 1, nfMaskLength);
@@ -22,23 +46,6 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, deploy, rev
       await this.token.addMinter(minter, {from: deployer});
       this.receiver = await ReceiverMock.new(true, {from: deployer});
     };
-    if (mint_ERC721 === undefined) {
-      console.log(
-        `ERC721Mintable: non-standard ERC721 method mint(address,uint256)` + ` is not supported by ${contractName}, associated tests will be skipped`
-      );
-    }
-    if (batchMint_ERC721 === undefined) {
-      console.log(
-        `ERC721Mintable: non-standard ERC721 method batchMint(address,uint256[])` +
-          `is not supported by ${contractName}, associated tests will be skipped`
-      );
-    }
-    if (safeMint_ERC721 === undefined) {
-      console.log(
-        `ERC721Mintable: non-standard ERC721 method safeMint(address,uint256,bytes)` +
-          ` is not supported by ${contractName}, associated tests will be skipped`
-      );
-    }
 
     beforeEach(async function () {
       await fixtureLoader(fixture, this);

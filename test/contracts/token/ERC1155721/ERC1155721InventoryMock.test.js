@@ -29,29 +29,37 @@ const implementation = {
     NotMinter: 'MinterRole: caller does not have the Minter role',
     SupplyOverflow: 'Inventory: supply overflow',
   },
-  mint_ERC721: async function (contract, to, nftId, overrides) {
-    return contract.mint(to, nftId, overrides);
-  },
-  // safeMint_ERC721: async function (contract, to, nftId, data, overrides) {
-  //   return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
-  // },
-  batchMint_ERC721: async function (contract, to, nftIds, overrides) {
-    return contract.batchMint(to, nftIds, overrides);
-  },
-  safeMint: async function (contract, to, id, value, data, overrides) {
-    return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, data, overrides);
-  },
-  safeBatchMint: async function (contract, to, ids, values, data, overrides) {
-    return contract.safeBatchMint(to, ids, values, data, overrides);
-  },
-  batchTransferFrom_ERC721: async function (contract, from, to, nftIds, overrides) {
-    return contract.batchTransferFrom(from, to, nftIds, overrides);
+  methods: {
+    // ERC721
+    'batchTransferFrom(address,address,uint256[])': async function (contract, from, to, nftIds, overrides) {
+      return contract.batchTransferFrom(from, to, nftIds, overrides);
+    },
+    'mint(address,uint256)': async function (contract, to, nftId, overrides) {
+      return contract.mint(to, nftId, overrides);
+    },
+    'safeMint(address,uint256,bytes)': async function (contract, to, nftId, data, overrides) {
+      return contract.methods['safeMint(address,uint256,bytes)'](to, nftId, data, overrides);
+    },
+    'batchMint(address,uint256[])': async function (contract, to, nftIds, overrides) {
+      return contract.batchMint(to, nftIds, overrides);
+    },
+
+    // ERC1155
+    'creator(uint256)': async function (contract, collectionId, overrides) {
+      return contract.creator(collectionId, overrides);
+    },
+    'safeMint(address,uint256,uint256,bytes)': async function (contract, to, id, value, data, overrides) {
+      return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, data, overrides);
+    },
+    'safeBatchMint(address,uint256[],uint256[],bytes)': async function (contract, to, ids, values, data, overrides) {
+      return contract.safeBatchMint(to, ids, values, data, overrides);
+    },
   },
   deploy: async function (deployer) {
     return artifacts.require('ERC1155721InventoryMock').new({from: deployer});
   },
-  creator_ERC1155Inventory: async function (contract, collectionId, overrides) {
-    return contract.creator(collectionId, overrides);
+  mint: async function (contract, to, id, value, overrides) {
+    return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, '0x', overrides);
   },
 };
 

@@ -8,16 +8,14 @@ const {
 } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const {ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
 
-function shouldBehaveLikeERC1155721InventoryBurnable({
-  nfMaskLength,
-  contractName,
-  revertMessages,
-  deploy,
-  safeMint,
-  burnFrom_ERC1155,
-  batchBurnFrom_ERC1155,
-}) {
+function shouldBehaveLikeERC1155721InventoryBurnable({nfMaskLength, contractName, revertMessages, methods, deploy, mint}) {
   const [deployer, owner, operator, other] = accounts;
+
+  const {
+    'burnFrom(address,uint256,uint256)': burnFrom_ERC1155,
+    'batchBurnFrom(address,uint256[],uint256[])': batchBurnFrom_ERC1155,
+    'batchBurnFrom(address,uint256[])': batchBurnFrom_ERC721,
+  } = methods;
 
   if (burnFrom_ERC1155 === undefined) {
     console.log(
@@ -28,6 +26,12 @@ function shouldBehaveLikeERC1155721InventoryBurnable({
   if (batchBurnFrom_ERC1155 === undefined) {
     console.log(
       `ERC1155721InventoryBurnable: non-standard ERC1155 method batchBurnFrom(address,uint256[],uint256[])` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
+  if (batchBurnFrom_ERC721 === undefined) {
+    console.log(
+      `ERC1155721InventoryBurnable: non-standard ERC721 method batchBurnFrom(address,uint256[])` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
@@ -45,8 +49,8 @@ function shouldBehaveLikeERC1155721InventoryBurnable({
       this.token = await deploy(deployer);
       await this.token.createCollection(fCollection.id, {from: deployer});
       await this.token.createCollection(nfCollection, {from: deployer});
-      await safeMint(this.token, owner, fCollection.id, fCollection.supply, '0x', {from: deployer});
-      await safeMint(this.token, owner, nft, 1, '0x', {from: deployer});
+      await mint(this.token, owner, fCollection.id, fCollection.supply, {from: deployer});
+      await mint(this.token, owner, nft, 1, {from: deployer});
     };
 
     beforeEach(async function () {

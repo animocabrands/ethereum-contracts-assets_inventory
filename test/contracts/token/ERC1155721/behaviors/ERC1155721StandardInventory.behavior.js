@@ -14,8 +14,10 @@ const {
 const ReceiverMock = artifacts.require('ERC1155721ReceiverMock');
 const ReceiverMock721 = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName, revertMessages, deploy, safeMint, batchTransferFrom_ERC721}) {
+function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName, revertMessages, deploy, methods, mint}) {
   const [deployer, owner, approved, operator, other] = accounts;
+
+  const {'batchTransferFrom(address,address,uint256[])': batchTransferFrom_ERC721} = methods;
 
   if (batchTransferFrom_ERC721 === undefined) {
     console.log(
@@ -51,12 +53,12 @@ function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
       this.token = await deploy(deployer);
-      await safeMint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: deployer});
-      await safeMint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: deployer});
-      await safeMint(this.token, owner, fCollection3.id, fCollection3.supply, '0x', {from: deployer});
-      await safeMint(this.token, owner, nft1, 1, '0x', {from: deployer});
-      await safeMint(this.token, owner, nft2, 1, '0x', {from: deployer});
-      await safeMint(this.token, owner, nft3, 1, '0x', {from: deployer});
+      await mint(this.token, owner, fCollection1.id, fCollection1.supply, {from: deployer});
+      await mint(this.token, owner, fCollection2.id, fCollection2.supply, {from: deployer});
+      await mint(this.token, owner, fCollection3.id, fCollection3.supply, {from: deployer});
+      await mint(this.token, owner, nft1, 1, {from: deployer});
+      await mint(this.token, owner, nft2, 1, {from: deployer});
+      await mint(this.token, owner, nft3, 1, {from: deployer});
 
       this.receiver = await ReceiverMock.new(true, true);
       this.receiver721 = await ReceiverMock721.new(true);
@@ -71,8 +73,8 @@ function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName
 
     describe('ERC721 functions on non-NFT ids', function () {
       beforeEach(async function () {
-        await safeMint(this.token, owner, fCollection1.id, fCollection1.supply, '0x', {from: deployer});
-        await safeMint(this.token, owner, fCollection2.id, fCollection2.supply, '0x', {from: deployer});
+        await mint(this.token, owner, fCollection1.id, fCollection1.supply, {from: deployer});
+        await mint(this.token, owner, fCollection2.id, fCollection2.supply, {from: deployer});
         this.toWhom = other; // default to anyone for toWhom in context-dependent tests
       });
 
@@ -1552,17 +1554,6 @@ function shouldBehaveLikeERC1155721StandardInventory({nfMaskLength, contractName
               (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.collection1BalanceOwner.subn(collection1Nfts.length));
               (await this.token.balanceOf(owner, nfCollection2)).should.be.bignumber.equal(this.collection2BalanceOwner.subn(collection2Nfts.length));
             });
-
-            // it("should emit the Transfer event", async function() {
-            //     for (let index = 0; index != nfts.length; ++index) {
-            //         const nft = nfts[index];
-            //         expectEvent(this.receipt, "Transfer", {
-            //             _from: owner,
-            //             _to: this.toWhom,
-            //             _tokenId: nft
-            //         });
-            //     }
-            // });
 
             it('should emit the TransferBatch event', async function () {
               expectEvent(this.receipt, 'TransferBatch', {

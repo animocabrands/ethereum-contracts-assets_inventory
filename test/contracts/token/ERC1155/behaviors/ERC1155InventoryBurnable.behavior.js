@@ -8,16 +8,10 @@ const {
 } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 const {ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
 
-function shouldBehaveLikeERC1155InventoryBurnable({
-  nfMaskLength,
-  contractName,
-  revertMessages,
-  deploy,
-  safeMint,
-  burnFrom_ERC1155,
-  batchBurnFrom_ERC1155,
-}) {
+function shouldBehaveLikeERC1155InventoryBurnable({nfMaskLength, contractName, revertMessages, methods, deploy, mint}) {
   const [deployer, _minter, owner, operator, _approved, other] = accounts;
+
+  const {'burnFrom(address,uint256,uint256)': burnFrom_ERC1155, 'batchBurnFrom(address,uint256[],uint256[])': batchBurnFrom_ERC1155} = methods;
 
   if (burnFrom_ERC1155 === undefined) {
     console.log(
@@ -48,10 +42,10 @@ function shouldBehaveLikeERC1155InventoryBurnable({
       await this.token.setApprovalForAll(operator, true, {from: owner});
       await this.token.createCollection(fCollection.id, {from: deployer});
       await this.token.createCollection(nfCollection, {from: deployer});
-      await safeMint(this.token, owner, fCollection.id, fCollection.supply, '0x', {from: deployer});
-      await safeMint(this.token, owner, nft1, 1, '0x', {from: deployer});
-      await safeMint(this.token, owner, nft2, 1, '0x', {from: deployer});
-      await safeMint(this.token, owner, otherNft, 1, '0x', {from: deployer});
+      await mint(this.token, owner, fCollection.id, fCollection.supply, {from: deployer});
+      await mint(this.token, owner, nft1, 1, {from: deployer});
+      await mint(this.token, owner, nft2, 1, {from: deployer});
+      await mint(this.token, owner, otherNft, 1, {from: deployer});
     };
 
     beforeEach(async function () {

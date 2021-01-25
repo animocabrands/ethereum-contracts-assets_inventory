@@ -9,7 +9,7 @@ const {expect} = require('chai');
 
 const ERC1155ReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 
-function shouldBehaveLikeERC1155({revertMessages, deploy, safeMint}) {
+function shouldBehaveLikeERC1155({revertMessages, deploy, mint}) {
   const [deployer, minter, firstTokenHolder, secondTokenHolder, multiTokenHolder, other, proxy] = accounts;
 
   const firstTokenId = new BN(1);
@@ -47,10 +47,10 @@ function shouldBehaveLikeERC1155({revertMessages, deploy, safeMint}) {
 
       context('when accounts own some tokens', function () {
         beforeEach(async function () {
-          await safeMint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
+          await mint(this.token, firstTokenHolder, firstTokenId, firstAmount, {
             from: minter,
           });
-          await safeMint(this.token, secondTokenHolder, secondTokenId, secondAmount, '0x', {
+          await mint(this.token, secondTokenHolder, secondTokenId, secondAmount, {
             from: minter,
           });
         });
@@ -103,10 +103,10 @@ function shouldBehaveLikeERC1155({revertMessages, deploy, safeMint}) {
 
       context('when accounts own some tokens', function () {
         beforeEach(async function () {
-          await safeMint(this.token, firstTokenHolder, firstTokenId, firstAmount, '0x', {
+          await mint(this.token, firstTokenHolder, firstTokenId, firstAmount, {
             from: minter,
           });
-          await safeMint(this.token, secondTokenHolder, secondTokenId, secondAmount, '0x', {
+          await mint(this.token, secondTokenHolder, secondTokenId, secondAmount, {
             from: minter,
           });
         });
@@ -162,11 +162,11 @@ function shouldBehaveLikeERC1155({revertMessages, deploy, safeMint}) {
 
     describe('safeTransferFrom', function () {
       beforeEach(async function () {
-        await safeMint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
+        await mint(this.token, multiTokenHolder, firstTokenId, firstAmount, {
           from: minter,
         });
 
-        await safeMint(this.token, multiTokenHolder, secondTokenId, secondAmount, '0x', {
+        await mint(this.token, multiTokenHolder, secondTokenId, secondAmount, {
           from: minter,
         });
       });
@@ -424,10 +424,10 @@ function shouldBehaveLikeERC1155({revertMessages, deploy, safeMint}) {
 
     describe('safeBatchTransferFrom', function () {
       beforeEach(async function () {
-        await safeMint(this.token, multiTokenHolder, firstTokenId, firstAmount, '0x', {
+        await mint(this.token, multiTokenHolder, firstTokenId, firstAmount, {
           from: minter,
         });
-        await safeMint(this.token, multiTokenHolder, secondTokenId, secondAmount, '0x', {
+        await mint(this.token, multiTokenHolder, secondTokenId, secondAmount, {
           from: minter,
         });
       });

@@ -8,8 +8,10 @@ const {
 const {ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
 const expectRevert = require('@openzeppelin/test-helpers/src/expectRevert');
 
-function shouldBehaveLikeERC1155InventoryCreator({nfMaskLength, contractName, revertMessages, deploy, creator_ERC1155Inventory, safeMint}) {
+function shouldBehaveLikeERC1155InventoryCreator({nfMaskLength, contractName, revertMessages, methods, deploy, mint}) {
   const [deployer] = accounts;
+
+  const {'creator(uint256)': creator_ERC1155Inventory} = methods;
 
   const nonFungibleToken = makeNonFungibleTokenId(999, 999, nfMaskLength);
 
@@ -46,7 +48,7 @@ function shouldBehaveLikeERC1155InventoryCreator({nfMaskLength, contractName, re
         await expectRevert(creator_ERC1155Inventory(this.token, nonFungibleToken), revertMessages.NotCollection);
       });
       it('reverts for a minted Non-Fungible Token', async function () {
-        await safeMint(this.token, deployer, nonFungibleToken, 1, '0x', {from: deployer});
+        await mint(this.token, deployer, nonFungibleToken, 1, {from: deployer});
         await expectRevert(creator_ERC1155Inventory(this.token, nonFungibleToken), revertMessages.NotCollection);
       });
       it('returns the creator for a created Fungible Token', async function () {

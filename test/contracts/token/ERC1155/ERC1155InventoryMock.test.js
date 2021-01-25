@@ -27,17 +27,22 @@ const implementation = {
     NotMinter: 'MinterRole: caller does not have the Minter role',
     SupplyOverflow: 'Inventory: supply overflow',
   },
-  safeMint: async function (contract, to, id, value, data, overrides) {
-    return contract.safeMint(to, id, value, data, overrides);
-  },
-  safeBatchMint: async function (contract, to, ids, values, data, overrides) {
-    return contract.safeBatchMint(to, ids, values, data, overrides);
+  methods: {
+    'safeMint(address,uint256,uint256,bytes)': async function (contract, to, id, value, data, overrides) {
+      return contract.safeMint(to, id, value, data, overrides);
+    },
+    'safeBatchMint(address,uint256[],uint256[],bytes)': async function (contract, to, ids, values, data, overrides) {
+      return contract.safeBatchMint(to, ids, values, data, overrides);
+    },
+    'creator(uint256)': async function (contract, collectionId, overrides) {
+      return contract.creator(collectionId, overrides);
+    },
   },
   deploy: async function (deployer) {
     return artifacts.require('ERC1155InventoryMock').new({from: deployer});
   },
-  creator_ERC1155Inventory: async function (contract, collectionId, overrides) {
-    return contract.creator(collectionId, overrides);
+  mint: async function (contract, to, id, value, overrides) {
+    return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, '0x', overrides);
   },
 };
 

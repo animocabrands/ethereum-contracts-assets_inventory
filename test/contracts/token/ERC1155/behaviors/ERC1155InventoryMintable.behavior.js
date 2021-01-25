@@ -13,8 +13,23 @@ const {
 
 const ReceiverMock = artifacts.require('ERC1155721ReceiverMock');
 
-function shouldBehaveLikeERC1155InventoryMintable({nfMaskLength, deploy, safeMint, safeBatchMint, revertMessages}) {
+function shouldBehaveLikeERC1155InventoryMintable({nfMaskLength, revertMessages, methods, deploy}) {
   const [deployer, minter, owner, _operator, _approved, other] = accounts;
+
+  const {'safeMint(address,uint256,uint256,bytes)': safeMint, 'safeBatchMint(address,uint256[],uint256[],bytes)': safeBatchMint} = methods;
+
+  if (safeMint === undefined) {
+    console.log(
+      `ERC1155721InventoryMintable: non-standard ERC1155 method safeMint(address,uint256,uint256,bytes)` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
+  if (safeBatchMint === undefined) {
+    console.log(
+      `ERC1155721InventoryMintable: non-standard ERC1155 method safeBatchMint(address,uint256[],uint256[],bytes)` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
 
   const fCollection1 = makeFungibleCollectionId(111);
   const fCollection2 = makeFungibleCollectionId(222);
@@ -42,6 +57,10 @@ function shouldBehaveLikeERC1155InventoryMintable({nfMaskLength, deploy, safeMin
     });
 
     context('safeMint(address,uint256,uint256,bytes)', function () {
+      if (safeMint === undefined) {
+        return;
+      }
+
       it('reverts if trying to send a Non-Fungible Collection', async function () {
         await expectRevert(safeMint(this.token, owner, nfCollection1, 1, '0x', {from: deployer}), revertMessages.NotTokenId);
       });
@@ -192,6 +211,10 @@ function shouldBehaveLikeERC1155InventoryMintable({nfMaskLength, deploy, safeMin
     });
 
     context('safeBatchMint(address,uint256[],uint256[],bytes)', function () {
+      if (safeBatchMint === undefined) {
+        return;
+      }
+
       it('reverts if the sender is not a Minter', async function () {
         await expectRevert(
           safeBatchMint(this.token, owner, tokensToBatchMint.ids, tokensToBatchMint.supplies, '0x', {

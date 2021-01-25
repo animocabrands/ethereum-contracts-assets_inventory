@@ -10,8 +10,10 @@ const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata
 
 const ERC721ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC721({nfMaskLength, contractName, revertMessages, deploy, mint_ERC721, batchTransferFrom_ERC721}) {
+function shouldBehaveLikeERC721({nfMaskLength, contractName, revertMessages, methods, deploy, mint}) {
   const [deployer, owner, approved, anotherApproved, operator, other] = accounts;
+
+  const {'batchTransfer(address,uint256[])': batchTransferFrom_ERC721} = methods;
 
   if (batchTransferFrom_ERC721 === undefined) {
     console.log(
@@ -28,9 +30,9 @@ function shouldBehaveLikeERC721({nfMaskLength, contractName, revertMessages, dep
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
       this.token = await deploy(deployer);
-      await mint_ERC721(this.token, owner, nft1, {from: deployer});
-      await mint_ERC721(this.token, owner, nft2, {from: deployer});
-      await mint_ERC721(this.token, owner, nft3, {from: deployer});
+      await mint(this.token, owner, nft1, 1, {from: deployer});
+      await mint(this.token, owner, nft2, 1, {from: deployer});
+      await mint(this.token, owner, nft3, 1, {from: deployer});
     };
 
     beforeEach(async function () {

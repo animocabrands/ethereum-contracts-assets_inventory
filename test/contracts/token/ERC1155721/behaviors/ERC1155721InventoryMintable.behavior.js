@@ -15,18 +15,16 @@ const Mock = artifacts.require('ERC1155InventoryMock');
 const ReceiverMock = artifacts.require('ERC1155721ReceiverMock');
 const ReceiverMock721 = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC1155721InventoryMintable({
-  nfMaskLength,
-  contractName,
-  revertMessages,
-  deploy,
-  safeMint,
-  safeBatchMint,
-  mint_ERC721,
-  safeMint_ERC721,
-  batchMint_ERC721,
-}) {
+function shouldBehaveLikeERC1155721InventoryMintable({nfMaskLength, contractName, revertMessages, methods, deploy}) {
   const [deployer, minter, nonMinter, owner] = accounts;
+
+  const {
+    'mint(address,uint256)': mint_ERC721,
+    'safeMint(address,uint256,bytes)': safeMint_ERC721,
+    'batchMint(address,uint256[])': batchMint_ERC721,
+    'safeMint(address,uint256,uint256,bytes)': safeMint_ERC1155,
+    'safeBatchMint(address,uint256[],uint256[],bytes)': safeBatchMint_ERC1155,
+  } = methods;
 
   if (mint_ERC721 === undefined) {
     console.log(
@@ -43,6 +41,18 @@ function shouldBehaveLikeERC1155721InventoryMintable({
   if (batchMint_ERC721 === undefined) {
     console.log(
       `ERC1155721InventoryMintable: non-standard ERC721 method batchMint(address,uint256[])` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
+  if (safeMint_ERC1155 === undefined) {
+    console.log(
+      `ERC1155721InventoryMintable: non-standard ERC1155 method safeMint(address,uint256,uint256,bytes)` +
+        ` is not supported by ${contractName}, associated tests will be skipped`
+    );
+  }
+  if (safeBatchMint_ERC1155 === undefined) {
+    console.log(
+      `ERC1155721InventoryMintable: non-standard ERC1155 method safeBatchMint(address,uint256[],uint256[],bytes)` +
         ` is not supported by ${contractName}, associated tests will be skipped`
     );
   }
@@ -71,8 +81,12 @@ function shouldBehaveLikeERC1155721InventoryMintable({
 
     context('ERC1155 minting', function () {
       context('safeMint(address,uint256,uint256,bytes)', function () {
+        if (safeMint_ERC1155 === undefined) {
+          return;
+        }
+
         it('reverts if the caller is not a minter', async function () {
-          await expectRevert(safeMint(this.token, owner, nft1, 1, '0x', {from: nonMinter}), revertMessages.NotMinter);
+          await expectRevert(safeMint_ERC1155(this.token, owner, nft1, 1, '0x', {from: nonMinter}), revertMessages.NotMinter);
         });
 
         context('when successful', function () {
@@ -81,7 +95,7 @@ function shouldBehaveLikeERC1155721InventoryMintable({
               this.nftBalance = await this.token.balanceOf(this.toWhom);
               this.supply = await this.token.totalSupply(nfCollection1);
               this.nftSupply = await this.token.totalSupply(nft1);
-              this.receipt = await safeMint(this.token, this.toWhom, nft1, 1, '0x', {from: minter});
+              this.receipt = await safeMint_ERC1155(this.token, this.toWhom, nft1, 1, '0x', {from: minter});
             });
 
             it('should increase the non-fungible token balance of the target account', async function () {
@@ -134,25 +148,32 @@ function shouldBehaveLikeERC1155721InventoryMintable({
       });
 
       context('safeBatchMint(address,uint256[],uint256[],bytes)', function () {
+        if (safeBatchMint_ERC1155 === undefined) {
+          return;
+        }
+
         it('reverts if the caller is not a minter', async function () {
-          await expectRevert(safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: nonMinter}), revertMessages.NotMinter);
+          await expectRevert(
+            safeBatchMint_ERC1155(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: nonMinter}),
+            revertMessages.NotMinter
+          );
         });
 
         it('reverts if the fungible quantity is less than 1', async function () {
-          await expectRevert(safeBatchMint(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: minter}), revertMessages.ZeroValue);
+          await expectRevert(safeBatchMint_ERC1155(this.token, owner, [fCollection1], [new BN(0)], '0x', {from: minter}), revertMessages.ZeroValue);
         });
 
         it('reverts if the non-fungible quantity is greater than 1', async function () {
-          await expectRevert(safeBatchMint(this.token, owner, [nft1], [Two], '0x', {from: minter}), revertMessages.WrongNFTValue);
+          await expectRevert(safeBatchMint_ERC1155(this.token, owner, [nft1], [Two], '0x', {from: minter}), revertMessages.WrongNFTValue);
         });
 
         it('reverts if the non-fungible quantity is less than 1', async function () {
-          await expectRevert(safeBatchMint(this.token, owner, [nft1], [Zero], '0x', {from: minter}), revertMessages.WrongNFTValue);
+          await expectRevert(safeBatchMint_ERC1155(this.token, owner, [nft1], [Zero], '0x', {from: minter}), revertMessages.WrongNFTValue);
         });
 
         it('reverts if there is a mismatch in the param array lengths', async function () {
           await expectRevert(
-            safeBatchMint(this.token, owner, [nft1, nft2, nft3], [new BN(1), new BN(1)], '0x', {
+            safeBatchMint_ERC1155(this.token, owner, [nft1, nft2, nft3], [new BN(1), new BN(1)], '0x', {
               from: minter,
             }),
             revertMessages.InconsistentArrays
@@ -160,12 +181,12 @@ function shouldBehaveLikeERC1155721InventoryMintable({
         });
 
         it('reverts if minting a collection', async function () {
-          await expectRevert(safeBatchMint(this.token, owner, [nfCollection1], [new BN(1)], '0x', {from: minter}), revertMessages.NotTokenId);
+          await expectRevert(safeBatchMint_ERC1155(this.token, owner, [nfCollection1], [new BN(1)], '0x', {from: minter}), revertMessages.NotTokenId);
         });
 
         it('reverts if minting a non-fungible token that already has been minted', async function () {
           await expectRevert(
-            safeBatchMint(this.token, owner, [nft1, nft2, nft2], [new BN(1), new BN(1), new BN(1)], '0x', {
+            safeBatchMint_ERC1155(this.token, owner, [nft1, nft2, nft2], [new BN(1), new BN(1), new BN(1)], '0x', {
               from: minter,
             }),
             revertMessages.ExistingOrBurntNFT
@@ -190,7 +211,7 @@ function shouldBehaveLikeERC1155721InventoryMintable({
                 nft2: await this.token.totalSupply(nft2),
                 nft3: await this.token.totalSupply(nft3),
               };
-              this.receipt = await safeBatchMint(this.token, this.toWhom, this.tokensToBatchMint.ids, this.tokensToBatchMint.supplies, '0x', {
+              this.receipt = await safeBatchMint_ERC1155(this.token, this.toWhom, this.tokensToBatchMint.ids, this.tokensToBatchMint.supplies, '0x', {
                 from: minter,
               });
             });
