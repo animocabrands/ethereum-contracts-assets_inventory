@@ -2,12 +2,23 @@
 
 pragma solidity 0.6.8;
 
+import "../ERC721/IERC721.sol";
+import "../ERC1155/IERC1155.sol";
 import "../ERC1155/IERC1155Inventory.sol";
 
 /**
  * @title IERC1155721Inventory interface.
  */
-interface IERC1155721Inventory is IERC1155Inventory {
+interface IERC1155721Inventory is IERC1155Inventory, IERC1155, IERC721 {
+    /// @dev See {IERC721-isApprovedForAll(address,address)} and {IERC1155-isApprovedForAll(address,address)}
+    function isApprovedForAll(address tokenOwner, address operator) external view override(IERC721, IERC1155) returns (bool);
+
+    /// @dev See {IERC721-isApprovedForAll(address,address)} and {IERC1155-isApprovedForAll(address,address)}
+    function setApprovalForAll(address operator, bool approved) external override(IERC721, IERC1155);
+
+    /// @dev See {IERC721-ownerOf(uint256)} and {IERC1155Inventory-ownerOf(uint256)}.
+    function ownerOf(uint256 nftId) external view override(IERC721, IERC1155Inventory) returns (address);
+
     /**
      * @notice this documentation overrides {IERC1155Inventory-safeTransferFrom(address,address,uint256,uint256,bytes)}.
      * Safely transfers some token.
@@ -89,8 +100,7 @@ interface IERC1155721Inventory is IERC1155Inventory {
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if `nftId` is not owned by `from`.
      * @dev Reverts if `to` is a contract which does not implement IERC1155TokenReceiver or IERC721Receiver.
-     * @dev Reverts if `to` is an IERC1155TokenReceiver which refuses the receiver call.
-     * @dev Reverts if `to` is an IERC721Receiver which refuses the receiver call.
+     * @dev Reverts if `to` is an IERC1155TokenReceiver or IERC721Receiver contract which refuses the transfer.
      * @dev Resets the ERC721 single token approval.
      * @dev Emits an {IERC721-Transfer} event.
      * @dev Emits an {IERC1155-TransferSingle} event.
@@ -110,7 +120,7 @@ interface IERC1155721Inventory is IERC1155Inventory {
      * @dev Reverts if the sender is not approved.
      * @dev Reverts if `nftId` is not owned by `from`.
      * @dev Reverts if `to` is a contract which does not implement IERC1155TokenReceiver or IERC721Receiver.
-     * @dev Reverts if `to` is an IERC1155TokenReceiver or IERC721Receiver which refuses the receiver call.
+     * @dev Reverts if `to` is an IERC1155TokenReceiver or IERC721Receiver contract which refuses the transfer.
      * @dev Resets the ERC721 single token approval.
      * @dev Emits an {IERC721-Transfer} event.
      * @dev Emits an {IERC1155-TransferSingle} event.

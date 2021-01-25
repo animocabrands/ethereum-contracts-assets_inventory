@@ -83,7 +83,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Unsafely transfers a Non-Fungible Token (ERC721-compatible).
-     * @dev See {IERC1155721-transferFrom(address,address,uint256)}.
+     * @dev See {IERC1155721Inventory-transferFrom(address,address,uint256)}.
      */
     function transferFrom(
         address from,
@@ -102,7 +102,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely transfers a Non-Fungible Token (ERC721-compatible).
-     * @dev See {IERC1155721-safeTransferFrom(address,address,uint256)}.
+     * @dev See {IERC1155721Inventory-safeTransferFrom(address,address,uint256)}.
      */
     function safeTransferFrom(
         address from,
@@ -121,7 +121,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely transfers a Non-Fungible Token (ERC721-compatible).
-     * @dev See {IERC1155721-safeTransferFrom(address,address,uint256,bytes)}.
+     * @dev See {IERC1155721Inventory-safeTransferFrom(address,address,uint256,bytes)}.
      */
     function safeTransferFrom(
         address from,
@@ -198,7 +198,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely transfers some token (ERC1155-compatible).
-     * @dev See {IERC1155721-safeTransferFrom(address,address,uint256,uint256,bytes)}.
+     * @dev See {IERC1155721Inventory-safeTransferFrom(address,address,uint256,uint256,bytes)}.
      */
     function safeTransferFrom(
         address from,
@@ -228,7 +228,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely transfers a batch of tokens (ERC1155-compatible).
-     * @dev See {IERC1155721-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
+     * @dev See {IERC1155721Inventory-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
      */
     function safeBatchTransferFrom(
         address from,
@@ -250,8 +250,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely or unsafely transfers some token (ERC721-compatible).
-     * @dev For `safe` transfer, see {IERC1155721-transferFrom(address,address,uint256)}.
-     * @dev For un`safe` transfer, see {IERC1155721-safeTransferFrom(address,address,uint256,bytes)}.
+     * @dev For `safe` transfer, see {IERC1155721Inventory-transferFrom(address,address,uint256)}.
+     * @dev For un`safe` transfer, see {IERC1155721Inventory-safeTransferFrom(address,address,uint256,bytes)}.
      */
     function _transferFrom(
         address from,
@@ -279,7 +279,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely transfers a batch of tokens (ERC1155-compatible).
-     * @dev See {IERC1155721-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
+     * @dev See {IERC1155721Inventory-safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)}.
      */
     function _safeBatchTransferFrom(
         address from,
@@ -337,8 +337,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely or unsafely mints some token (ERC721-compatible).
-     * @dev For `safe` mint, see {IERC1155721-mint(address,uint256)}.
-     * @dev For un`safe` mint, see {IERC1155721-safeMint(address,uint256,bytes)}.
+     * @dev For `safe` mint, see {IERC1155721InventoryMintable-mint(address,uint256)}.
+     * @dev For un`safe` mint, see {IERC1155721InventoryMintable-safeMint(address,uint256,bytes)}.
      */
     function _mint(
         address to,
@@ -364,7 +364,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Unsafely mints a batch of Non-Fungible Tokens (ERC721-compatible).
-     * @dev See {IERC1155721Mintable-batchMint(address,uint256[])}.
+     * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
      */
     function _batchMint(address to, uint256[] memory nftIds) internal {
         require(to != address(0), "Inventory: transfer to zero");
@@ -408,7 +408,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely mints some token (ERC1155-compatible).
-     * @dev See {IERC1155721Mintable-safeMint(address,uint256,uint256,bytes)}.
+     * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
      */
     function _safeMint(
         address to,
@@ -435,7 +435,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
 
     /**
      * Safely mints a batch of tokens (ERC1155-compatible).
-     * @dev See {IERC1155721Mintable-safeBatchMint(address,uint256[],uint256[],bytes)}.
+     * @dev See {IERC1155721InventoryMintable-safeBatchMint(address,uint256[],uint256[],bytes)}.
      */
     function _safeBatchMint(
         address to,
