@@ -104,7 +104,6 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         uint256 nfCollectionCount;
         for (uint256 i; i != length; ++i) {
             uint256 nftId = nftIds[i];
-            require(nftId.isNonFungibleToken(), "Inventory: not an NFT");
             values[i] = 1;
             _burnNFT(from, nftId, values[i], operatable, true);
             emit Transfer(from, address(0), nftId);

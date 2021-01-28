@@ -15,7 +15,6 @@ function shouldBehaveLikeERC1155MetadataURI({nfMaskLength, deploy}) {
   const nfCollection = makeNonFungibleCollectionId(1, nfMaskLength);
   const nft = makeNonFungibleTokenId(1, 1, nfMaskLength);
 
-  // todo make a real test
   describe('like an ERC1155MetadataURI', function () {
     const fixtureLoader = createFixtureLoader(accounts, web3.eth.currentProvider);
     const fixture = async function () {
@@ -26,15 +25,15 @@ function shouldBehaveLikeERC1155MetadataURI({nfMaskLength, deploy}) {
       await fixtureLoader(fixture, this);
     });
 
-    it('uri()', async function () {
-      (await this.token.uri(fCollection)).should.not.be.equal('');
-      (await this.token.uri(nfCollection)).should.not.be.equal('');
-      (await this.token.uri(nft)).should.not.be.equal('');
+    describe('uri(uint256)', function () {
+      it('should return a non-empty URI', async function () {
+        (await this.token.uri(fCollection)).should.not.be.equal('');
+        (await this.token.uri(nfCollection)).should.not.be.equal('');
+        (await this.token.uri(nft)).should.not.be.equal('');
+      });
     });
 
-    describe('ERC165 interfaces support', function () {
-      behaviors.shouldSupportInterfaces([interfaces.ERC1155MetadataURI]);
-    });
+    behaviors.shouldSupportInterfaces([interfaces.ERC1155MetadataURI]);
   });
 }
 

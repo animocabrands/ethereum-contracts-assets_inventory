@@ -1,5 +1,5 @@
 const {artifacts} = require('hardhat');
-const {shouldBehaveLikeERC1155Inventory} = require('./behaviors/ERC1155Inventory.behavior');
+const {shouldBehaveLikeERC1155} = require('./behaviors/ERC1155.behavior');
 
 const implementation = {
   contractName: 'ERC1155InventoryBurnableMock',
@@ -7,30 +7,26 @@ const implementation = {
   suppliesManagement: true,
   revertMessages: {
     NonApproved: 'Inventory: non-approved sender',
-    NonApproved_Batch: 'Inventory: non-approved sender',
     SelfApproval: 'Inventory: self-approval',
     ZeroAddress: 'Inventory: zero address',
     TransferToZero: 'Inventory: transfer to zero',
     InconsistentArrays: 'Inventory: inconsistent arrays',
     InsufficientBalance: 'Inventory: not enough balance',
     TransferRejected: 'Inventory: transfer refused',
-    transfer_NonExistingNFT: 'Inventory: non-owned NFT',
-    transfer_NonOwnedNFT: 'Inventory: non-approved sender',
     NonExistingNFT: 'Inventory: non-existing NFT',
     NonOwnedNFT: 'Inventory: non-owned NFT',
     WrongNFTValue: 'Inventory: wrong NFT value',
     ZeroValue: 'Inventory: zero value',
-    NotTokenId: 'Inventory: not a token id',
+    NotToken: 'Inventory: not a token id',
     NotNFT: 'Inventory: not an NFT',
     NotCollection: 'Inventory: not a collection',
+    ExistingCollection: 'Inventory: existing collection',
     ExistingOrBurntNFT: 'Inventory: existing/burnt NFT',
     NotMinter: 'MinterRole: caller does not have the Minter role',
     SupplyOverflow: 'Inventory: supply overflow',
   },
+  interfaces: {ERC1155: true, ERC1155MetadataURI: true, ERC1155Inventory: true, ERC1155InventoryCreator: true},
   methods: {
-    'creator(uint256)': async function (contract, collectionId, overrides) {
-      return contract.creator(collectionId, overrides);
-    },
     'safeMint(address,uint256,uint256,bytes)': async function (contract, to, id, value, data, overrides) {
       return contract.safeMint(to, id, value, data, overrides);
     },
@@ -43,6 +39,9 @@ const implementation = {
     'batchBurnFrom(address,uint256[],uint256[])': async function (contract, from, ids, values, overrides) {
       return contract.batchBurnFrom(from, ids, values, overrides);
     },
+    'createCollection(uint256)': async function (contract, collectionId, overrides) {
+      return contract.createCollection(collectionId, overrides);
+    },
   },
   deploy: async function (deployer) {
     return artifacts.require('ERC1155InventoryBurnableMock').new({from: deployer});
@@ -54,5 +53,5 @@ const implementation = {
 
 describe('ERC1155InventoryBurnableMock', function () {
   this.timeout(0);
-  shouldBehaveLikeERC1155Inventory(implementation);
+  shouldBehaveLikeERC1155(implementation);
 });

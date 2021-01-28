@@ -539,9 +539,11 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         require(value != 0, "Inventory: zero value");
         uint256 balance = _balances[id][from];
         require(balance >= value, "Inventory: not enough balance");
-        _balances[id][from] = balance - value;
-        // cannot overflow as supply cannot overflow
-        _balances[id][to] += value;
+        if (from != to) {
+            _balances[id][from] = balance - value;
+            // cannot overflow as supply cannot overflow
+            _balances[id][to] += value;
+        }
     }
 
     function _transferNFT(
@@ -570,10 +572,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address to,
         uint256 amount
     ) internal virtual {
-        // cannot underflow as balance is verified through ownership
-        _nftBalances[from] -= amount;
-        //  cannot overflow as supply cannot overflow
-        _nftBalances[to] += amount;
+        if (from != to) {
+            // cannot underflow as balance is verified through ownership
+            _nftBalances[from] -= amount;
+            //  cannot overflow as supply cannot overflow
+            _nftBalances[to] += amount;
+        }
     }
 
     function _transferNFTUpdateCollection(
@@ -582,10 +586,12 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         uint256 collectionId,
         uint256 amount
     ) internal virtual {
-        // cannot underflow as balance is verified through ownership
-        _balances[collectionId][from] -= amount;
-        // cannot overflow as supply cannot overflow
-        _balances[collectionId][to] += amount;
+        if (from != to) {
+            // cannot underflow as balance is verified through ownership
+            _balances[collectionId][from] -= amount;
+            // cannot overflow as supply cannot overflow
+            _balances[collectionId][to] += amount;
+        }
     }
 
     ///////////////////////////////////// Receiver Calls Internal /////////////////////////////////////

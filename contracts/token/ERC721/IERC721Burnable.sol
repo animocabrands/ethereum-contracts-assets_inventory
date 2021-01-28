@@ -3,7 +3,7 @@
 pragma solidity 0.6.8;
 
 /**
- * @title ERC721 Non-Fungible Token Standard, optional batchBurnFrom interface
+ * @title ERC721 Non-Fungible Token Standard, optional burning interface
  * @dev See https://eips.ethereum.org/EIPS/eip-721
  * Note: The ERC-165 identifier for this interface is.
  */

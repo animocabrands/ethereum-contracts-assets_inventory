@@ -82,8 +82,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
                     nfCollectionCount = 1;
                 } else {
                     if (nextCollectionId != nfCollectionId) {
-                        _balances[nfCollectionId][from] -= nfCollectionCount;
-                        _balances[nfCollectionId][to] += nfCollectionCount;
+                        _transferNFTUpdateCollection(from, to, nfCollectionId, nfCollectionCount);
                         nfCollectionId = nextCollectionId;
                         nfCollectionCount = 1;
                     } else {
@@ -96,8 +95,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         }
 
         if (nfCollectionId != 0) {
-            _balances[nfCollectionId][from] -= nfCollectionCount;
-            _balances[nfCollectionId][to] += nfCollectionCount;
+            _transferNFTUpdateCollection(from, to, nfCollectionId, nfCollectionCount);
         }
 
         emit TransferBatch(sender, from, to, ids, values);
@@ -225,9 +223,11 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         require(value != 0, "Inventory: zero value");
         uint256 balance = _balances[id][from];
         require(balance >= value, "Inventory: not enough balance");
-        _balances[id][from] = balance - value;
-        // cannot overflow as supply cannot overflow
-        _balances[id][to] += value;
+        if (from != to) {
+            _balances[id][from] = balance - value;
+            // cannot overflow as supply cannot overflow
+            _balances[id][to] += value;
+        }
     }
 
     function _transferNFT(
@@ -246,6 +246,20 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
             _balances[collectionId][from] -= 1;
             // cannot overflow as supply cannot overflow
             _balances[collectionId][to] += 1;
+        }
+    }
+
+    function _transferNFTUpdateCollection(
+        address from,
+        address to,
+        uint256 collectionId,
+        uint256 amount
+    ) internal virtual {
+        if (from != to) {
+            // cannot underflow as balance is verified through ownership
+            _balances[collectionId][from] -= amount;
+            // cannot overflow as supply cannot overflow
+            _balances[collectionId][to] += amount;
         }
     }
 }

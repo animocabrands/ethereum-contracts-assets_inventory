@@ -41,9 +41,7 @@ function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, min
       });
     });
 
-    describe('ERC165 interfaces support', function () {
-      behaviors.shouldSupportInterfaces([interfaces.ERC721Metadata]);
-    });
+    behaviors.shouldSupportInterfaces([interfaces.ERC721Metadata]);
   });
 }
 

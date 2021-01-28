@@ -1,5 +1,6 @@
 const {artifacts} = require('hardhat');
-const {shouldBehaveLikeERC1155721Inventory} = require('./behaviors/ERC1155721Inventory.behavior');
+const {shouldBehaveLikeERC721} = require('../ERC721/behaviors/ERC721.behavior');
+const {shouldBehaveLikeERC1155} = require('../ERC1155/behaviors/ERC1155.behavior');
 
 const implementation = {
   contractName: 'ERC1155721InventoryMock',
@@ -9,7 +10,6 @@ const implementation = {
   symbol: 'INV',
   revertMessages: {
     NonApproved: 'Inventory: non-approved sender',
-    NonApproved_Batch: 'Inventory: non-approved sender',
     SelfApproval: 'Inventory: self-approval',
     ZeroAddress: 'Inventory: zero address',
     TransferToZero: 'Inventory: transfer to zero',
@@ -18,17 +18,17 @@ const implementation = {
     TransferRejected: 'Inventory: transfer refused',
     NonExistingNFT: 'Inventory: non-existing NFT',
     NonOwnedNFT: 'Inventory: non-owned NFT',
-    transfer_NonExistingNFT: 'Inventory: non-owned NFT',
-    transfer_NonOwnedNFT: 'Inventory: non-owned NFT',
     WrongNFTValue: 'Inventory: wrong NFT value',
     ZeroValue: 'Inventory: zero value',
-    NotTokenId: 'Inventory: not a token id',
+    NotToken: 'Inventory: not a token id',
     NotNFT: 'Inventory: not an NFT',
     NotCollection: 'Inventory: not a collection',
+    ExistingCollection: 'Inventory: existing collection',
     ExistingOrBurntNFT: 'Inventory: existing/burnt NFT',
     NotMinter: 'MinterRole: caller does not have the Minter role',
     SupplyOverflow: 'Inventory: supply overflow',
   },
+  interfaces: {ERC721: true, ERC721Metadata: true, ERC1155: true, ERC1155MetadataURI: true, ERC1155Inventory: true, ERC1155InventoryCreator: true},
   methods: {
     // ERC721
     'batchTransferFrom(address,address,uint256[])': async function (contract, from, to, nftIds, overrides) {
@@ -45,14 +45,16 @@ const implementation = {
     },
 
     // ERC1155
-    'creator(uint256)': async function (contract, collectionId, overrides) {
-      return contract.creator(collectionId, overrides);
-    },
     'safeMint(address,uint256,uint256,bytes)': async function (contract, to, id, value, data, overrides) {
       return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, data, overrides);
     },
     'safeBatchMint(address,uint256[],uint256[],bytes)': async function (contract, to, ids, values, data, overrides) {
       return contract.safeBatchMint(to, ids, values, data, overrides);
+    },
+
+    // ERC1155InventoryCreator
+    'createCollection(uint256)': async function (contract, collectionId, overrides) {
+      return contract.createCollection(collectionId, overrides);
     },
   },
   deploy: async function (deployer) {
@@ -65,5 +67,6 @@ const implementation = {
 
 describe('ERC1155721InventoryMock', function () {
   this.timeout(0);
-  shouldBehaveLikeERC1155721Inventory(implementation);
+  shouldBehaveLikeERC721(implementation);
+  shouldBehaveLikeERC1155(implementation);
 });
