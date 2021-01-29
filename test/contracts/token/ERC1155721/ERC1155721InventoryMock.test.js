@@ -5,7 +5,6 @@ const {shouldBehaveLikeERC1155} = require('../ERC1155/behaviors/ERC1155.behavior
 const implementation = {
   contractName: 'ERC1155721InventoryMock',
   nfMaskLength: 32,
-  suppliesManagement: true,
   name: 'ERC1155721InventoryMock',
   symbol: 'INV',
   revertMessages: {

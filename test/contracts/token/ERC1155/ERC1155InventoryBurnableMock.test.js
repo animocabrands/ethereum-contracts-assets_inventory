@@ -4,7 +4,6 @@ const {shouldBehaveLikeERC1155} = require('./behaviors/ERC1155.behavior');
 const implementation = {
   contractName: 'ERC1155InventoryBurnableMock',
   nfMaskLength: 32,
-  suppliesManagement: true,
   revertMessages: {
     NonApproved: 'Inventory: non-approved sender',
     SelfApproval: 'Inventory: self-approval',
