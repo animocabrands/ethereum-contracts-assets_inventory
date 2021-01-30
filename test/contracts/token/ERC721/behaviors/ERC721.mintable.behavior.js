@@ -1,5 +1,6 @@
 const {artifacts, accounts, web3} = require('hardhat');
 const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
+const {expectEventWithParamsOverride} = require('@animoca/ethereum-contracts-core_library/test/utils/events');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 const {One, ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
 
@@ -14,7 +15,7 @@ const ReceiverType = require('../../ReceiverType');
 const ERC721ReceiverMock = artifacts.require('ERC721ReceiverMock');
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 
-function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessages, interfaces, methods, deploy}) {
+function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessages, eventParamsOverrides, interfaces, methods, deploy}) {
   const [deployer, minter, owner] = accounts;
 
   const {
@@ -82,34 +83,49 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
       it('emits Transfer event(s)', function () {
         const nftIds = Array.isArray(ids) ? ids : [ids];
         for (const id of nftIds) {
-          expectEvent(receipt, 'Transfer', {
-            _from: ZeroAddress,
-            _to: this.toWhom,
-            _tokenId: id,
-          });
+          expectEventWithParamsOverride(
+            receipt,
+            'Transfer',
+            {
+              _from: ZeroAddress,
+              _to: this.toWhom,
+              _tokenId: id,
+            },
+            eventParamsOverrides
+          );
         }
       });
 
       if (interfaces.ERC1155) {
         if (Array.isArray(ids)) {
           it('[ERC1155] emits a TransferBatch event', function () {
-            expectEvent(receipt, 'TransferBatch', {
-              _operator: options.from,
-              _from: ZeroAddress,
-              _to: this.toWhom,
-              _ids: ids,
-              _values: ids.map(() => 1),
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'TransferBatch',
+              {
+                _operator: options.from,
+                _from: ZeroAddress,
+                _to: this.toWhom,
+                _ids: ids,
+                _values: ids.map(() => 1),
+              },
+              eventParamsOverrides
+            );
           });
         } else {
           it('[ERC1155] emits a TransferSingle event', function () {
-            expectEvent(receipt, 'TransferSingle', {
-              _operator: options.from,
-              _from: ZeroAddress,
-              _to: this.toWhom,
-              _id: ids,
-              _value: 1,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'TransferSingle',
+              {
+                _operator: options.from,
+                _from: ZeroAddress,
+                _to: this.toWhom,
+                _id: ids,
+                _value: 1,
+              },
+              eventParamsOverrides
+            );
           });
         }
       }
@@ -172,12 +188,18 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
       }
     };
 
-    const shouldMintTokenToRecipient = function (mintFunction, ids, data, safe) {
-      const options = {from: minter};
-
+    const shouldRevertOnPreconditions = function (mintFunction, safe) {
       describe('Pre-conditions', function () {
+        const data = '0x42';
+        const options = {from: minter};
+        if (interfaces.Pausable) {
+          it('[Pausable] reverts when paused', async function () {
+            await this.token.pause({from: deployer});
+            await expectRevert(mintFunction.call(this, owner, nft1, data, options), revertMessages.Paused);
+          });
+        }
         it('reverts if minted to the zero address', async function () {
-          await expectRevert(mintFunction.call(this, ZeroAddress, nft1, data, options), revertMessages.TransferToZero);
+          await expectRevert(mintFunction.call(this, ZeroAddress, nft1, data, options), revertMessages.MintToZero);
         });
 
         it('reverts if the token already exist', async function () {
@@ -194,11 +216,15 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
             await expectRevert.unspecified(mintFunction.call(this, this.token.address, nft1, data, options));
           });
           it('reverts when sent to an ERC721Receiver which refuses the transfer', async function () {
-            await expectRevert(mintFunction.call(this, this.refusingReceiver721.address, ids, data, options), revertMessages.TransferRejected);
+            await expectRevert(mintFunction.call(this, this.refusingReceiver721.address, nft1, data, options), revertMessages.TransferRejected);
           });
           if (interfaces.ERC1155) {
             it('reverts when sent to an ERC1155TokenReceiver which refuses the transfer', async function () {
-              await expectRevert(mintFunction.call(this, this.refusingReceiver1155.address, ids, data, options), revertMessages.TransferRejected);
+              await expectRevert(mintFunction.call(this, this.refusingReceiver1155.address, nft1, data, options), revertMessages.TransferRejected);
+            });
+          } else {
+            it('reverts when sent to an ERC1155TokenReceiver', async function () {
+              await expectRevert.unspecified(mintFunction.call(this, this.receiver1155.address, nft1, data, options));
             });
           }
         }
@@ -215,6 +241,10 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
           });
         }
       });
+    };
+
+    const shouldMintTokenToRecipient = function (mintFunction, ids, data, safe) {
+      const options = {from: minter};
 
       context('when sent to a wallet', function () {
         beforeEach(async function () {
@@ -224,6 +254,18 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
         mintWasSuccessful(ids, data, options, safe, ReceiverType.WALLET);
       });
 
+      if (interfaces.Pausable) {
+        context('[Pausable] when called after unpausing', function () {
+          beforeEach(async function () {
+            await this.token.pause({from: deployer});
+            await this.token.unpause({from: deployer});
+            this.toWhom = owner;
+            receipt = await mintFunction.call(this, this.toWhom, ids, data, options);
+          });
+          mintWasSuccessful(ids, data, options, safe, ReceiverType.WALLET);
+        });
+      }
+
       context('when sent to an ERC721Receiver contract', function () {
         beforeEach(async function () {
           this.toWhom = this.receiver721.address;
@@ -232,13 +274,15 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
         mintWasSuccessful(ids, data, options, safe, ReceiverType.ERC721_RECEIVER);
       });
 
-      context('when sent to an ERC1155TokenReceiver contract', function () {
-        beforeEach(async function () {
-          this.toWhom = this.receiver1155.address;
-          receipt = await mintFunction.call(this, this.toWhom, ids, data, options);
+      if (interfaces.ERC1155) {
+        context('when sent to an ERC1155TokenReceiver contract', function () {
+          beforeEach(async function () {
+            this.toWhom = this.receiver1155.address;
+            receipt = await mintFunction.call(this, this.toWhom, ids, data, options);
+          });
+          mintWasSuccessful(ids, data, options, safe, ReceiverType.ERC1155_RECEIVER);
         });
-        mintWasSuccessful(ids, data, options, safe, ReceiverType.ERC1155_RECEIVER);
-      });
+      }
     };
 
     context('mint(address,uint256)', function () {
@@ -250,6 +294,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
         return mint_ERC721(this.token, to, tokenId, options);
       };
       const safe = false;
+      shouldRevertOnPreconditions(mintFn, safe);
       shouldMintTokenToRecipient(mintFn, nft1, undefined, safe);
     });
 
@@ -263,6 +308,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
         return batchMint_ERC721(this.token, to, ids, options);
       };
       const safe = false;
+      shouldRevertOnPreconditions(mintFn, safe);
       context('with an empty list of tokens', function () {
         shouldMintTokenToRecipient(mintFn, [], undefined, safe);
       });
@@ -291,6 +337,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
         return safeMint_ERC721(this.token, to, tokenId, data, options);
       };
       const safe = true;
+      shouldRevertOnPreconditions(mintFn, safe);
       shouldMintTokenToRecipient(mintFn, nft1, '0x42', safe);
     });
   });

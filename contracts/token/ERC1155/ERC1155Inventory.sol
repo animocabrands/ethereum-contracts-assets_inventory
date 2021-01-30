@@ -19,8 +19,8 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
         address to,
         uint256 id,
         uint256 value,
-        bytes calldata data
-    ) external virtual override {
+        bytes memory data
+    ) public virtual override {
         address sender = _msgSender();
         require(to != address(0), "Inventory: transfer to zero");
         require(_isOperatable(from, sender), "Inventory: non-approved sender");
@@ -43,10 +43,10 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
     function safeBatchTransferFrom(
         address from,
         address to,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external virtual override {
+        uint256[] memory ids,
+        uint256[] memory values,
+        bytes memory data
+    ) public virtual override {
         // internal function to avoid stack too deep error
         _safeBatchTransferFrom(from, to, ids, values, data);
     }

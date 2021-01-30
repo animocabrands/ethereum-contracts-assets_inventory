@@ -100,7 +100,7 @@ describe('InventoryMetadata', function () {
         indices: [0],
       };
 
-      itReverts(1, layout, 'UInt256Extract: position out of bond');
+      itReverts(1, layout, 'UInt256Extract: out of bond');
     });
 
     context('out of bond position #1', function () {
@@ -110,7 +110,7 @@ describe('InventoryMetadata', function () {
         indices: [256],
       };
 
-      itReverts(1, layout, 'UInt256Extract: position out of bond');
+      itReverts(1, layout, 'UInt256Extract: out of bond');
     });
 
     context('out of bond position #2', function () {
@@ -120,7 +120,7 @@ describe('InventoryMetadata', function () {
         indices: [1],
       };
 
-      itReverts(1, layout, 'UInt256Extract: position out of bond');
+      itReverts(1, layout, 'UInt256Extract: out of bond');
     });
 
     context('working example #1', function () {

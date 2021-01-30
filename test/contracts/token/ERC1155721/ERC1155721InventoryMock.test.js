@@ -8,24 +8,31 @@ const implementation = {
   name: 'ERC1155721InventoryMock',
   symbol: 'INV',
   revertMessages: {
-    NonApproved: 'Inventory: non-approved sender',
+    // ERC721
     SelfApproval: 'Inventory: self-approval',
+
+    // ERC1155
+    SelfApprovalForAll: 'Inventory: self-approval',
     ZeroAddress: 'Inventory: zero address',
+    NonApproved: 'Inventory: non-approved sender',
     TransferToZero: 'Inventory: transfer to zero',
+    MintToZero: 'Inventory: transfer to zero',
+    ZeroValue: 'Inventory: zero value',
     InconsistentArrays: 'Inventory: inconsistent arrays',
     InsufficientBalance: 'Inventory: not enough balance',
     TransferRejected: 'Inventory: transfer refused',
+    SupplyOverflow: 'Inventory: supply overflow',
+    NotMinter: 'Inventory: not a minter',
+
+    // ERC1155Inventory
+    ExistingCollection: 'Inventory: existing collection',
+    ExistingOrBurntNFT: 'Inventory: existing/burnt NFT',
+    NotCollection: 'Inventory: not a collection',
+    NotToken: 'Inventory: not a token id',
     NonExistingNFT: 'Inventory: non-existing NFT',
     NonOwnedNFT: 'Inventory: non-owned NFT',
     WrongNFTValue: 'Inventory: wrong NFT value',
-    ZeroValue: 'Inventory: zero value',
-    NotToken: 'Inventory: not a token id',
     NotNFT: 'Inventory: not an NFT',
-    NotCollection: 'Inventory: not a collection',
-    ExistingCollection: 'Inventory: existing collection',
-    ExistingOrBurntNFT: 'Inventory: existing/burnt NFT',
-    NotMinter: 'MinterRole: caller does not have the Minter role',
-    SupplyOverflow: 'Inventory: supply overflow',
   },
   interfaces: {ERC721: true, ERC721Metadata: true, ERC1155: true, ERC1155MetadataURI: true, ERC1155Inventory: true, ERC1155InventoryCreator: true},
   methods: {

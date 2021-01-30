@@ -1,5 +1,6 @@
 const {artifacts, accounts, web3} = require('hardhat');
 const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
+const {expectEventWithParamsOverride} = require('@animoca/ethereum-contracts-core_library/test/utils/events');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 const interfaces1155 = require('../../../../../src/interfaces/ERC165/ERC1155');
 const {behaviors, constants, interfaces: interfaces165} = require('@animoca/ethereum-contracts-core_library');
@@ -18,7 +19,7 @@ const {Zero, One} = require('@animoca/ethereum-contracts-core_library/src/consta
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 const ERC721ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfaces, deploy, mint}) {
+function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventParamsOverrides, interfaces, deploy, mint}) {
   const [deployer, minter, owner, operator, approved, other] = accounts;
 
   const fCollection1 = {
@@ -226,7 +227,7 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
       });
 
       it('emits an ApprovalForAll event', function () {
-        expectEvent(receipt, 'ApprovalForAll', {_owner: owner, _operator: other, _approved: true});
+        expectEventWithParamsOverride(receipt, 'ApprovalForAll', {_owner: owner, _operator: other, _approved: true}, eventParamsOverrides);
       });
 
       it('can unset approval for an operator', async function () {
@@ -235,7 +236,7 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
       });
 
       it('reverts if attempting to approve self as an operator', async function () {
-        await expectRevert(this.token.setApprovalForAll(owner, true, {from: owner}), revertMessages.SelfApproval);
+        await expectRevert(this.token.setApprovalForAll(owner, true, {from: owner}), revertMessages.SelfApprovalForAll);
       });
     });
 
@@ -271,23 +272,33 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
 
         if (Array.isArray(tokenIds)) {
           it('emits a TransferBatch event', function () {
-            expectEvent(receipt, 'TransferBatch', {
-              _operator: options.from,
-              _from: owner,
-              _to: this.toWhom,
-              _ids: tokenIds,
-              _values: values,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'TransferBatch',
+              {
+                _operator: options.from,
+                _from: owner,
+                _to: this.toWhom,
+                _ids: tokenIds,
+                _values: values,
+              },
+              eventParamsOverrides
+            );
           });
         } else {
           it('emits a TransferSingle event', function () {
-            expectEvent(receipt, 'TransferSingle', {
-              _operator: options.from,
-              _from: owner,
-              _to: this.toWhom,
-              _id: tokenIds,
-              _value: values,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'TransferSingle',
+              {
+                _operator: options.from,
+                _from: owner,
+                _to: this.toWhom,
+                _id: tokenIds,
+                _value: values,
+              },
+              eventParamsOverrides
+            );
           });
         }
 
@@ -296,11 +307,16 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
             const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
             for (const id of ids) {
               if (isNonFungibleToken(id, nfMaskLength)) {
-                expectEvent(receipt, 'Transfer', {
-                  _from: owner,
-                  _to: this.toWhom,
-                  _tokenId: id,
-                });
+                expectEventWithParamsOverride(
+                  receipt,
+                  'Transfer',
+                  {
+                    _from: owner,
+                    _to: this.toWhom,
+                    _tokenId: id,
+                  },
+                  eventParamsOverrides
+                );
               }
             }
           });
@@ -446,6 +462,18 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
           transferWasSuccessful(tokenIds, values, data, options, receiverType);
         });
 
+        if (interfaces.Pausable) {
+          context('[Pausable] when called after unpausing', function () {
+            const options = {from: owner};
+            beforeEach(async function () {
+              await this.token.pause({from: deployer});
+              await this.token.unpause({from: deployer});
+              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, values, data, options);
+            });
+            transferWasSuccessful(tokenIds, values, data, options, receiverType);
+          });
+        }
+
         context('when called by an operator', function () {
           const options = {from: operator};
           beforeEach(async function () {
@@ -470,10 +498,17 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
         }
       };
 
-      const shouldTransferTokenToRecipient = function (transferFunction, ids, values, data) {
+      const shouldRevertOnePreconditions = function (transferFunction) {
         describe('Pre-conditions', function () {
+          const data = '0x42';
+          if (interfaces.Pausable) {
+            it('[Pausable] reverts when paused', async function () {
+              await this.token.pause({from: deployer});
+              await expectRevert(transferFunction.call(this, owner, other, nft1, 1, data, {from: owner}), revertMessages.Paused);
+            });
+          }
           it('reverts if transferred to the zero address', async function () {
-            await expectRevert(transferFunction.call(this, owner, ZeroAddress, ids, values, data, {from: owner}), revertMessages.TransferToZero);
+            await expectRevert(transferFunction.call(this, owner, ZeroAddress, nft1, 1, data, {from: owner}), revertMessages.TransferToZero);
           });
 
           it('reverts if the sender is not approved', async function () {
@@ -494,21 +529,16 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
             await expectRevert(transferFunction.call(this, owner, other, unknownNft, 1, data, {from: owner}), revertMessages.NonOwnedNFT);
           });
 
-          if (!(Array.isArray(ids) && ids.length == 0)) {
-            const tokenIds = Array.isArray(ids) ? ids : [ids];
-            if (isNonFungibleToken(tokenIds[0], nfMaskLength)) {
-              it('reverts if from is not the owner for a Non-Fungible Token', async function () {
-                await expectRevert(transferFunction.call(this, other, approved, ids, values, data, {from: other}), revertMessages.NonOwnedNFT);
-              });
-            } else {
-              it('reverts if from has insufficient balance for a Fungible Token', async function () {
-                await expectRevert(
-                  transferFunction.call(this, other, approved, ids, values, data, {from: other}),
-                  revertMessages.InsufficientBalance
-                );
-              });
-            }
-          }
+          it('reverts if from is not the owner for a Non-Fungible Token', async function () {
+            await expectRevert(transferFunction.call(this, other, approved, nft1, 1, data, {from: other}), revertMessages.NonOwnedNFT);
+          });
+
+          it('reverts if from has insufficient balance for a Fungible Token', async function () {
+            await expectRevert(
+              transferFunction.call(this, other, approved, fCollection1.id, 1, data, {from: other}),
+              revertMessages.InsufficientBalance
+            );
+          });
 
           if (interfaces.ERC721) {
             it('[ERC721] reverts if the sender is not authorized for the token', async function () {
@@ -523,19 +553,21 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
           }
 
           it('reverts when sent to a non-receiver contract', async function () {
-            await expectRevert.unspecified(transferFunction.call(this, owner, this.token.address, ids, values, data, {from: owner}));
+            await expectRevert.unspecified(transferFunction.call(this, owner, this.token.address, nft1, 1, data, {from: owner}));
           });
           it('reverts when sent to an ERC721Receiver', async function () {
-            await expectRevert.unspecified(transferFunction.call(this, owner, this.receiver721.address, ids, values, data, {from: owner}));
+            await expectRevert.unspecified(transferFunction.call(this, owner, this.receiver721.address, nft1, 1, data, {from: owner}));
           });
           it('reverts when sent to an ERC1155TokenReceiver which refuses the transfer', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, this.refusingReceiver1155.address, ids, values, data, {from: owner}),
+              transferFunction.call(this, owner, this.refusingReceiver1155.address, nft1, 1, data, {from: owner}),
               revertMessages.TransferRejected
             );
           });
         });
+      };
 
+      const shouldTransferTokenToRecipient = function (transferFunction, ids, values, data) {
         context('when sent to another wallet', function () {
           beforeEach(async function () {
             this.toWhom = other;
@@ -563,6 +595,7 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
           return this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](from, to, id, value, data, options);
         };
 
+        shouldRevertOnePreconditions(transferFn);
         context('with a Fungible Token', function () {
           context('partial balance transfer', function () {
             shouldTransferTokenToRecipient(transferFn, fCollection1.id, 1, '0x42');
@@ -582,6 +615,8 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, interfac
           const vals = Array.isArray(values) ? values : [values];
           return this.token.methods['safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)'](from, to, tokenIds, vals, data, options);
         };
+        shouldRevertOnePreconditions(transferFn);
+
         it('reverts with inconsistent arrays', async function () {
           await expectRevert(transferFn.call(this, owner, other, [nft1, nft2], [1], '0x42', {from: owner}), revertMessages.InconsistentArrays);
         });

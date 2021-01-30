@@ -19,7 +19,7 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
         address from,
         uint256 id,
         uint256 value
-    ) external virtual override {
+    ) public virtual override {
         address sender = _msgSender();
         require(_isOperatable(from, sender), "Inventory: non-approved sender");
 
@@ -40,9 +40,9 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
      */
     function batchBurnFrom(
         address from,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external virtual override {
+        uint256[] memory ids,
+        uint256[] memory values
+    ) public virtual override {
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 

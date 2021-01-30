@@ -95,7 +95,7 @@ describe('CoreMetadata', function () {
         indices: [0],
       };
 
-      itReverts(layout, 'UInt256Extract: position out of bond');
+      itReverts(layout, 'UInt256Extract: out of bond');
     });
 
     context('out of bond position #1', function () {
@@ -105,7 +105,7 @@ describe('CoreMetadata', function () {
         indices: [256],
       };
 
-      itReverts(layout, 'UInt256Extract: position out of bond');
+      itReverts(layout, 'UInt256Extract: out of bond');
     });
 
     context('out of bond position #2', function () {
@@ -115,7 +115,7 @@ describe('CoreMetadata', function () {
         indices: [1],
       };
 
-      itReverts(layout, 'UInt256Extract: position out of bond');
+      itReverts(layout, 'UInt256Extract: out of bond');
     });
 
     context('working example #1', function () {

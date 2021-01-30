@@ -1,5 +1,6 @@
 const {artifacts, accounts, web3} = require('hardhat');
 const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
+const {expectEventWithParamsOverride} = require('@animoca/ethereum-contracts-core_library/test/utils/events');
 const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
 
 const {behaviors, constants, interfaces: interfaces165} = require('@animoca/ethereum-contracts-core_library');
@@ -17,7 +18,7 @@ const ReceiverType = require('../../ReceiverType');
 const ERC721ReceiverMock = artifacts.require('ERC721ReceiverMock');
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 
-function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessages, interfaces, methods, deploy, mint}) {
+function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessages, eventParamsOverrides, interfaces, methods, deploy, mint}) {
   const [deployer, minter, owner, approved, anotherApproved, operator, other] = accounts;
 
   const {'batchTransferFrom(address,address,uint256[])': batchTransferFrom_ERC721} = methods;
@@ -73,7 +74,9 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
     describe('balanceOf(address)', function () {
       context('when the given address owns some tokens', function () {
         it('returns the amount of tokens owned by the given address', async function () {
-          (await this.token.balanceOf(owner)).should.be.bignumber.equal('4');
+          // fungible minting is interpreted as non-fungible minting in ERC721-only implementations
+          const balance = interfaces.ERC1155Inventory ? '4' : '5';
+          (await this.token.balanceOf(owner)).should.be.bignumber.equal(balance);
         });
       });
 
@@ -125,34 +128,49 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
         it('emits Transfer event(s)', function () {
           const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
           for (const id of ids) {
-            expectEvent(receipt, 'Transfer', {
-              _from: owner,
-              _to: this.toWhom,
-              _tokenId: id,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'Transfer',
+              {
+                _from: owner,
+                _to: this.toWhom,
+                _tokenId: id,
+              },
+              eventParamsOverrides
+            );
           }
         });
 
         if (interfaces.ERC1155) {
           if (Array.isArray(tokenIds)) {
             it('[ERC1155] emits a TransferBatch event', function () {
-              expectEvent(receipt, 'TransferBatch', {
-                _operator: options.from,
-                _from: owner,
-                _to: this.toWhom,
-                _ids: tokenIds,
-                _values: tokenIds.map(() => 1),
-              });
+              expectEventWithParamsOverride(
+                receipt,
+                'TransferBatch',
+                {
+                  _operator: options.from,
+                  _from: owner,
+                  _to: this.toWhom,
+                  _ids: tokenIds,
+                  _values: tokenIds.map(() => 1),
+                },
+                eventParamsOverrides
+              );
             });
           } else {
             it('[ERC1155] emits a TransferSingle event', function () {
-              expectEvent(receipt, 'TransferSingle', {
-                _operator: options.from,
-                _from: owner,
-                _to: this.toWhom,
-                _id: tokenIds,
-                _value: 1,
-              });
+              expectEventWithParamsOverride(
+                receipt,
+                'TransferSingle',
+                {
+                  _operator: options.from,
+                  _from: owner,
+                  _to: this.toWhom,
+                  _id: tokenIds,
+                  _value: 1,
+                },
+                eventParamsOverrides
+              );
             });
           }
         }
@@ -238,6 +256,18 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           transferWasSuccessful(ids, data, options, safe, receiverType);
         });
 
+        if (interfaces.Pausable) {
+          context('[Pausable] when called after unpausing', function () {
+            const options = {from: owner};
+            beforeEach(async function () {
+              await this.token.pause({from: deployer});
+              await this.token.unpause({from: deployer});
+              receipt = await transferFunction.call(this, owner, this.toWhom, ids, data, options);
+            });
+            transferWasSuccessful(ids, data, options, safe, receiverType);
+          });
+        }
+
         context('when called by a wallet with single token approval', function () {
           const options = {from: approved};
           beforeEach(async function () {
@@ -255,21 +285,26 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
         });
       };
 
-      const shouldTransferTokenToRecipient = function (transferFunction, ids, data, safe) {
+      const shouldRevertOnPreconditions = function (transferFunction, safe) {
         describe('Pre-conditions', function () {
+          const data = '0x42';
+          if (interfaces.Pausable) {
+            it('[Pausable] reverts when paused', async function () {
+              await this.token.pause({from: deployer});
+              await expectRevert(transferFunction.call(this, owner, other, nft1, data, {from: owner}), revertMessages.Paused);
+            });
+          }
           it('reverts if transferred to the zero address', async function () {
-            await expectRevert(transferFunction.call(this, owner, ZeroAddress, ids, data, {from: owner}), revertMessages.TransferToZero);
+            await expectRevert(transferFunction.call(this, owner, ZeroAddress, nft1, data, {from: owner}), revertMessages.TransferToZero);
           });
 
           it('reverts if the token does not exist', async function () {
             await expectRevert(transferFunction.call(this, owner, other, unknownNFT, data, {from: owner}), revertMessages.NonOwnedNFT);
           });
 
-          if (!(Array.isArray(ids) && ids.length == 0)) {
-            it('reverts if `from` is not the token owner', async function () {
-              await expectRevert(transferFunction.call(this, other, other, ids, data, {from: other}), revertMessages.NonOwnedNFT);
-            });
-          }
+          it('reverts if `from` is not the token owner', async function () {
+            await expectRevert(transferFunction.call(this, other, other, nft1, data, {from: other}), revertMessages.NonOwnedNFT);
+          });
 
           it('reverts if the sender is not authorized for the token', async function () {
             await expectRevert(transferFunction.call(this, owner, other, nft1, data, {from: other}), revertMessages.NonApproved);
@@ -293,25 +328,27 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
             });
             it('reverts when sent to an ERC721Receiver which refuses the transfer', async function () {
               await expectRevert(
-                transferFunction.call(this, owner, this.refusingReceiver721.address, ids, data, {from: owner}),
+                transferFunction.call(this, owner, this.refusingReceiver721.address, nft1, data, {from: owner}),
                 revertMessages.TransferRejected
               );
             });
             if (interfaces.ERC1155) {
               it('[ERC1155] reverts when sent to an ERC1155TokenReceiver which refuses the transfer', async function () {
                 await expectRevert(
-                  transferFunction.call(this, owner, this.refusingReceiver1155.address, ids, data, {from: owner}),
+                  transferFunction.call(this, owner, this.refusingReceiver1155.address, nft1, data, {from: owner}),
                   revertMessages.TransferRejected
                 );
               });
             } else {
               it('reverts when sent to an ERC1155TokenReceiver', async function () {
-                await expectRevert.unspecified(transferFunction.call(this, owner, this.receiver1155.address, ids, data, {from: owner}));
+                await expectRevert.unspecified(transferFunction.call(this, owner, this.receiver1155.address, nft1, data, {from: owner}));
               });
             }
           }
         });
+      };
 
+      const shouldTransferTokenToRecipient = function (transferFunction, ids, data, safe) {
         context('when sent to another wallet', function () {
           beforeEach(async function () {
             this.toWhom = other;
@@ -333,12 +370,14 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           shouldTransferTokenBySender(transferFunction, ids, data, safe, ReceiverType.ERC721_RECEIVER);
         });
 
-        context('when sent to an ERC1155TokenReceiver contract', function () {
-          beforeEach(async function () {
-            this.toWhom = this.receiver1155.address;
+        if (interfaces.ERC1155) {
+          context('[ERC1155] when sent to an ERC1155TokenReceiver contract', function () {
+            beforeEach(async function () {
+              this.toWhom = this.receiver1155.address;
+            });
+            shouldTransferTokenBySender(transferFunction, ids, data, safe, ReceiverType.ERC1155_RECEIVER);
           });
-          shouldTransferTokenBySender(transferFunction, ids, data, safe, ReceiverType.ERC1155_RECEIVER);
-        });
+        }
       };
 
       describe('transferFrom(address,address,uint256)', function () {
@@ -346,6 +385,7 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           return this.token.transferFrom(from, to, tokenId, options);
         };
         const safe = false;
+        shouldRevertOnPreconditions(transferFn, safe);
         shouldTransferTokenToRecipient(transferFn, nft1, undefined, safe);
       });
 
@@ -359,6 +399,7 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           return batchTransferFrom_ERC721(this.token, from, to, ids, options);
         };
         const safe = false;
+        shouldRevertOnPreconditions(transferFn, safe);
         context('with an empty list of tokens', function () {
           shouldTransferTokenToRecipient(transferFn, [], undefined, safe);
         });
@@ -383,6 +424,7 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           return this.token.methods['safeTransferFrom(address,address,uint256)'](from, to, tokenId, options);
         };
         const safe = true;
+        shouldRevertOnPreconditions(transferFn, safe);
         shouldTransferTokenToRecipient(transferFn, nft1, undefined, safe);
       });
 
@@ -391,6 +433,7 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           return this.token.methods['safeTransferFrom(address,address,uint256,bytes)'](from, to, tokenId, data, options);
         };
         const safe = true;
+        shouldRevertOnPreconditions(transferFn, safe);
         shouldTransferTokenToRecipient(transferFn, nft1, '0x42', safe);
       });
     });
@@ -413,12 +456,17 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
       };
 
       const itEmitsApprovalEvent = function (address) {
-        it('emits an approval event', async function () {
-          expectEvent(receipt, 'Approval', {
-            _owner: owner,
-            _approved: address,
-            _tokenId: tokenId,
-          });
+        it('emits an Approval event', async function () {
+          expectEventWithParamsOverride(
+            receipt,
+            'Approval',
+            {
+              _owner: owner,
+              _approved: address,
+              _tokenId: tokenId,
+            },
+            eventParamsOverrides
+          );
         });
       };
 
@@ -513,12 +561,16 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
 
           it('emits an approval event', async function () {
             const receipt = await this.token.setApprovalForAll(operator, true, {from: owner});
-
-            expectEvent(receipt, 'ApprovalForAll', {
-              _owner: owner,
-              _operator: operator,
-              _approved: true,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'ApprovalForAll',
+              {
+                _owner: owner,
+                _operator: operator,
+                _approved: true,
+              },
+              eventParamsOverrides
+            );
           });
         });
 
@@ -536,11 +588,16 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           it('emits an approval event', async function () {
             receipt = await this.token.setApprovalForAll(operator, true, {from: owner});
 
-            expectEvent(receipt, 'ApprovalForAll', {
-              _owner: owner,
-              _operator: operator,
-              _approved: true,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'ApprovalForAll',
+              {
+                _owner: owner,
+                _operator: operator,
+                _approved: true,
+              },
+              eventParamsOverrides
+            );
           });
 
           it('can unset the operator approval', async function () {
@@ -564,17 +621,22 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
           it('emits an approval event', async function () {
             const receipt = await this.token.setApprovalForAll(operator, true, {from: owner});
 
-            expectEvent(receipt, 'ApprovalForAll', {
-              _owner: owner,
-              _operator: operator,
-              _approved: true,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'ApprovalForAll',
+              {
+                _owner: owner,
+                _operator: operator,
+                _approved: true,
+              },
+              eventParamsOverrides
+            );
           });
         });
       });
 
       it('reverts in case self-operator-approval', async function () {
-        await expectRevert(this.token.setApprovalForAll(owner, true, {from: owner}), revertMessages.SelfApproval);
+        await expectRevert(this.token.setApprovalForAll(owner, true, {from: owner}), revertMessages.SelfApprovalForAll);
       });
     });
 

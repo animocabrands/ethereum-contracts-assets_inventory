@@ -52,8 +52,9 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
         address to,
         uint256 id,
         uint256 value,
-        bytes calldata data
-    ) external override onlyMinter {
+        bytes memory data
+    ) public override virtual {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeMint(to, id, value, data);
     }
 
@@ -63,10 +64,11 @@ contract ERC1155InventoryMock is ERC1155Inventory, IERC1155InventoryMintable, IE
      */
     function safeBatchMint(
         address to,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external override onlyMinter {
+        uint256[] memory ids,
+        uint256[] memory values,
+        bytes memory data
+    ) public override virtual {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeBatchMint(to, ids, values, data);
     }
 }

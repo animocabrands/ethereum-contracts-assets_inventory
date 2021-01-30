@@ -89,7 +89,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address from,
         address to,
         uint256 nftId
-    ) external virtual override {
+    ) public virtual override {
         _transferFrom(
             from,
             to,
@@ -108,7 +108,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address from,
         address to,
         uint256 nftId
-    ) external virtual override {
+    ) public virtual override {
         _transferFrom(
             from,
             to,
@@ -127,8 +127,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address from,
         address to,
         uint256 nftId,
-        bytes calldata data
-    ) external virtual override {
+        bytes memory data
+    ) public virtual override {
         _transferFrom(
             from,
             to,
@@ -146,8 +146,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     function batchTransferFrom(
         address from,
         address to,
-        uint256[] calldata nftIds
-    ) external virtual override {
+        uint256[] memory nftIds
+    ) public virtual override {
         require(to != address(0), "Inventory: transfer to zero");
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
@@ -205,8 +205,8 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
         address to,
         uint256 id,
         uint256 value,
-        bytes calldata data
-    ) external virtual override {
+        bytes memory data
+    ) public virtual override {
         address sender = _msgSender();
         require(to != address(0), "Inventory: transfer to zero");
         bool operatable = _isOperatable(from, sender);
@@ -233,10 +233,10 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     function safeBatchTransferFrom(
         address from,
         address to,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external virtual override {
+        uint256[] memory ids,
+        uint256[] memory values,
+        bytes memory data
+    ) public virtual override {
         // internal function to avoid stack too deep error
         _safeBatchTransferFrom(from, to, ids, values, data);
     }

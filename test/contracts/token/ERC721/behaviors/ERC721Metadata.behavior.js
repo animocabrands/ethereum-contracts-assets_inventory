@@ -6,7 +6,7 @@ const {makeNonFungibleTokenId} = require('@animoca/blockchain-inventory_metadata
 const {behaviors} = require('@animoca/ethereum-contracts-core_library');
 const interfaces = require('../../../../../src/interfaces/ERC165/ERC721');
 
-function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, mint}) {
+function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, revertMessages, deploy, mint}) {
   const [deployer, owner] = accounts;
 
   const nft1 = makeNonFungibleTokenId(1, 1, nfMaskLength);
@@ -36,8 +36,8 @@ function shouldBehaveLikeERC721Metadata({nfMaskLength, name, symbol, deploy, min
       });
 
       it('tokenURI()', async function () {
-        (await this.token.tokenURI(nft1)).should.not.be.equal('');
-        await expectRevert.unspecified(this.token.tokenURI(nft2));
+        await this.token.tokenURI(nft1);
+        await expectRevert(this.token.tokenURI(nft2), revertMessages.NonExistingNFT);
       });
     });
 

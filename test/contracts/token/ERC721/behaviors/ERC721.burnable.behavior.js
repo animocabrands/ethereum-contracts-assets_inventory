@@ -1,6 +1,7 @@
 const {artifacts, accounts, web3} = require('hardhat');
 const {createFixtureLoader} = require('@animoca/ethereum-contracts-core_library/test/utils/fixture');
-const {BN, expectEvent, expectRevert} = require('@openzeppelin/test-helpers');
+const {expectEventWithParamsOverride} = require('@animoca/ethereum-contracts-core_library/test/utils/events');
+const {BN, expectRevert} = require('@openzeppelin/test-helpers');
 const {One, ZeroAddress} = require('@animoca/ethereum-contracts-core_library').constants;
 
 const {
@@ -9,7 +10,7 @@ const {
   makeFungibleCollectionId,
 } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
-function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessages, interfaces, methods, deploy, mint}) {
+function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessages, eventParamsOverrides, interfaces, methods, deploy, mint}) {
   const [deployer, minter, owner, other, approved, operator] = accounts;
 
   const {'burnFrom(address,uint256)': burnFrom_ERC721, 'batchBurnFrom(address,uint256[])': batchBurnFrom_ERC721} = methods;
@@ -83,34 +84,49 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
       it('emits Transfer event(s)', function () {
         const nftIds = Array.isArray(ids) ? ids : [ids];
         for (const id of nftIds) {
-          expectEvent(receipt, 'Transfer', {
-            _from: owner,
-            _to: ZeroAddress,
-            _tokenId: id,
-          });
+          expectEventWithParamsOverride(
+            receipt,
+            'Transfer',
+            {
+              _from: owner,
+              _to: ZeroAddress,
+              _tokenId: id,
+            },
+            eventParamsOverrides
+          );
         }
       });
 
       if (interfaces.ERC1155) {
         if (Array.isArray(ids)) {
           it('[ERC1155] emits a TransferBatch event', function () {
-            expectEvent(receipt, 'TransferBatch', {
-              _operator: options.from,
-              _from: owner,
-              _to: ZeroAddress,
-              _ids: ids,
-              _values: ids.map(() => 1),
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'TransferBatch',
+              {
+                _operator: options.from,
+                _from: owner,
+                _to: ZeroAddress,
+                _ids: ids,
+                _values: ids.map(() => 1),
+              },
+              eventParamsOverrides
+            );
           });
         } else {
           it('[ERC1155] emits a TransferSingle event', function () {
-            expectEvent(receipt, 'TransferSingle', {
-              _operator: options.from,
-              _from: owner,
-              _to: ZeroAddress,
-              _id: ids,
-              _value: 1,
-            });
+            expectEventWithParamsOverride(
+              receipt,
+              'TransferSingle',
+              {
+                _operator: options.from,
+                _from: owner,
+                _to: ZeroAddress,
+                _id: ids,
+                _value: 1,
+              },
+              eventParamsOverrides
+            );
           });
         }
       }
@@ -166,19 +182,35 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
         });
         burnWasSuccessful(ids, options);
       });
+
+      if (interfaces.Pausable) {
+        context('[Pausable] when called after unpausing', function () {
+          const options = {from: owner};
+          beforeEach(async function () {
+            await this.token.pause({from: deployer});
+            await this.token.unpause({from: deployer});
+            receipt = await burnFunction.call(this, owner, ids, options);
+          });
+          burnWasSuccessful(ids, options);
+        });
+      }
     };
 
-    const shouldBurnToken = function (burnFunction, ids) {
+    const shouldRevertOnPreconditions = function (burnFunction) {
       describe('Pre-conditions', function () {
+        if (interfaces.Pausable) {
+          it('[Pausable] reverts when paused', async function () {
+            await this.token.pause({from: deployer});
+            await expectRevert(burnFunction.call(this, owner, nft1, {from: owner}), revertMessages.Paused);
+          });
+        }
         it('reverts if the token does not exist', async function () {
           await expectRevert(burnFunction.call(this, owner, unknownNFT, {from: owner}), revertMessages.NonOwnedNFT);
         });
 
-        if (!(Array.isArray(ids) && ids.length == 0)) {
-          it('reverts if `from` is not the token owner', async function () {
-            await expectRevert(burnFunction.call(this, other, ids, {from: other}), revertMessages.NonOwnedNFT);
-          });
-        }
+        it('reverts if `from` is not the token owner', async function () {
+          await expectRevert(burnFunction.call(this, other, nft1, {from: other}), revertMessages.NonOwnedNFT);
+        });
 
         it('reverts if the sender is not authorized for the token', async function () {
           await expectRevert(burnFunction.call(this, owner, nft1, {from: other}), revertMessages.NonApproved);
@@ -196,10 +228,6 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
           });
         }
       });
-
-      context('when successful', function () {
-        shouldBurnTokenBySender(burnFunction, ids);
-      });
     };
 
     describe('burnFrom(address,uint256)', function () {
@@ -210,7 +238,8 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
       const burnFn = async function (from, tokenId, options) {
         return burnFrom_ERC721(this.token, from, tokenId, options);
       };
-      shouldBurnToken(burnFn, nft1);
+      shouldRevertOnPreconditions(burnFn);
+      shouldBurnTokenBySender(burnFn, nft1);
     });
 
     describe('batchBurnFrom(address,uint256[])', function () {
@@ -222,21 +251,22 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
         const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
         return batchBurnFrom_ERC721(this.token, from, ids, options);
       };
+      shouldRevertOnPreconditions(burnFn);
       context('with an empty list of tokens', function () {
-        shouldBurnToken(burnFn, []);
+        shouldBurnTokenBySender(burnFn, []);
       });
       context('with a single token', function () {
-        shouldBurnToken(burnFn, [nft1]);
+        shouldBurnTokenBySender(burnFn, [nft1]);
       });
       context('with a list of tokens from the same collection', function () {
-        shouldBurnToken(burnFn, [nft1, nft2]);
+        shouldBurnTokenBySender(burnFn, [nft1, nft2]);
       });
       if (interfaces.ERC1155Inventory) {
         context('[ERC1155Inventory] with a list of tokens sorted by collection', function () {
-          shouldBurnToken(burnFn, [nft1, nft2, nftOtherCollection]);
+          shouldBurnTokenBySender(burnFn, [nft1, nft2, nftOtherCollection]);
         });
         context('[ERC1155Inventory] with an unsorted list of tokens from different collections', function () {
-          shouldBurnToken(burnFn, [nft1, nftOtherCollection, nft2]);
+          shouldBurnTokenBySender(burnFn, [nft1, nftOtherCollection, nft2]);
         });
       }
     });

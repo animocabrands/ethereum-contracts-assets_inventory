@@ -19,7 +19,7 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
         address from,
         uint256 id,
         uint256 value
-    ) external virtual override {
+    ) public virtual override {
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 
@@ -41,9 +41,9 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
      */
     function batchBurnFrom(
         address from,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external virtual override {
+        uint256[] memory ids,
+        uint256[] memory values
+    ) public virtual override {
         uint256 length = ids.length;
         require(length == values.length, "Inventory: inconsistent arrays");
 
@@ -93,7 +93,7 @@ abstract contract ERC1155721InventoryBurnable is IERC1155721InventoryBurnable, E
      * Burns a batch of token (ERC721-compatible).
      * @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[])}.
      */
-    function batchBurnFrom(address from, uint256[] calldata nftIds) external virtual override {
+    function batchBurnFrom(address from, uint256[] memory nftIds) public virtual override {
         address sender = _msgSender();
         bool operatable = _isOperatable(from, sender);
 

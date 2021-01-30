@@ -3,10 +3,10 @@ const {shouldBehaveLikeERC721} = require('../ERC721/behaviors/ERC721.behavior');
 const {shouldBehaveLikeERC1155} = require('../ERC1155/behaviors/ERC1155.behavior');
 
 const implementation = {
-  contractName: 'ERC1155721InventoryBurnableMock',
+  contractName: 'ERC1155721InventoryPausableMock',
   nfMaskLength: 32,
-  name: 'ERC1155721InventoryBurnableMock',
-  symbol: 'INVB',
+  name: 'ERC1155721InventoryPausableMock',
+  symbol: 'INVP',
   revertMessages: {
     // ERC721
     SelfApproval: 'Inventory: self-approval',
@@ -33,8 +33,22 @@ const implementation = {
     NonOwnedNFT: 'Inventory: non-owned NFT',
     WrongNFTValue: 'Inventory: wrong NFT value',
     NotNFT: 'Inventory: not an NFT',
+
+    // Pausable
+    Paused: 'Inventory: paused',
+    NotPauser: 'Inventory: not the owner',
+    AlreadyPaused: 'Pausable: paused',
+    AlreadyUnpaused: 'Pausable: not paused',
   },
-  interfaces: {ERC721: true, ERC721Metadata: true, ERC1155: true, ERC1155MetadataURI: true, ERC1155Inventory: true, ERC1155InventoryCreator: true},
+  interfaces: {
+    ERC721: true,
+    ERC721Metadata: true,
+    ERC1155: true,
+    ERC1155MetadataURI: true,
+    ERC1155Inventory: true,
+    ERC1155InventoryCreator: true,
+    Pausable: true,
+  },
   methods: {
     // ERC721
     'batchTransferFrom(address,address,uint256[])': async function (contract, from, to, nftIds, overrides) {
@@ -73,14 +87,14 @@ const implementation = {
     },
   },
   deploy: async function (deployer) {
-    return artifacts.require('ERC1155721InventoryBurnableMock').new({from: deployer});
+    return artifacts.require('ERC1155721InventoryPausableMock').new({from: deployer});
   },
   mint: async function (contract, to, id, value, overrides) {
     return contract.methods['safeMint(address,uint256,uint256,bytes)'](to, id, value, '0x', overrides);
   },
 };
 
-describe('ERC1155721InventoryBurnableMock', function () {
+describe('ERC1155721InventoryPausableMock', function () {
   this.timeout(0);
   shouldBehaveLikeERC721(implementation);
   shouldBehaveLikeERC1155(implementation);
