@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.0.1
+
+### Bugfixes
+ * Update to `@animoca/blockchain-inventory_metadata@0.1.0`.
+
 ## 7.0.0
 
 ### Breaking changes
