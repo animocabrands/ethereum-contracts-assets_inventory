@@ -188,12 +188,6 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
       describe('Pre-conditions', function () {
         const data = '0x42';
         const options = {from: minter};
-        if (interfaces.Pausable) {
-          it('[Pausable] reverts when paused', async function () {
-            await this.token.pause({from: deployer});
-            await expectRevert(mintFunction.call(this, owner, nft1, data, options), revertMessages.Paused);
-          });
-        }
         it('reverts if minted to the zero address', async function () {
           await expectRevert(mintFunction.call(this, ZeroAddress, nft1, data, options), revertMessages.MintToZero);
         });
