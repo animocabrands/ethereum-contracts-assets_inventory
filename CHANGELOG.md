@@ -4,10 +4,7 @@
 
 ### Breaking changes
  * Major contracts and tests code overhaul.
-### New features
- * New contracts (TBD)
-### Improvements
- * Usage of `evm_snapshot` fixtures.
+ * Migration to `ethereum-contracts-core_library@4` and `hardhat`.
 
 ## 6.0.0
 

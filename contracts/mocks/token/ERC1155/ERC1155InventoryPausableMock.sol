@@ -43,26 +43,6 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         super.safeBatchTransferFrom(from, to, ids, values, data);
     }
 
-    function safeMint(
-        address to,
-        uint256 id,
-        uint256 value,
-        bytes memory data
-    ) public virtual override {
-        require(!paused(), "Inventory: paused");
-        super.safeMint(to, id, value, data);
-    }
-
-    function safeBatchMint(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory values,
-        bytes memory data
-    ) public virtual override {
-        require(!paused(), "Inventory: paused");
-        super.safeBatchMint(to, ids, values, data);
-    }
-
     function burnFrom(
         address from,
         uint256 id,
