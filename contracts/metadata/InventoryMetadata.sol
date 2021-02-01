@@ -10,7 +10,6 @@ import "./ICoreMetadata.sol";
 import "./IInventoryMetadata.sol";
 
 abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165 {
-
     using UInt256Extract for uint256;
     using EnumMap for EnumMap.Map;
 
@@ -47,7 +46,7 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
          *   256                                                                                     0
          *    |--------------------------------------------------------------------------------------|
          *                                     ^ baseCollectionId ^
-        */
+         */
         _setAttribute(_defaultFungibleLayout, "baseCollectionId", 256, 0);
 
         /*
@@ -57,26 +56,13 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
          *   256                                                                                      0
          *    |-|-------------------------|-----------------------------------------------------------|
          *     F   ^ baseCollectionId ^                        ^ baseTokenId ^
-        */
-        _setAttribute(
-            _defaultNonFungibleLayout,
-            "baseTokenId",
-            256  - nfCollectionMaskLength,
-            0
-        );
-        _setAttribute(
-            _defaultNonFungibleLayout,
-            "baseCollectionId",
-            nfCollectionMaskLength - 1,
-            256 - nfCollectionMaskLength
-        );
+         */
+        _setAttribute(_defaultNonFungibleLayout, "baseTokenId", 256 - nfCollectionMaskLength, 0);
+        _setAttribute(_defaultNonFungibleLayout, "baseCollectionId", nfCollectionMaskLength - 1, 256 - nfCollectionMaskLength);
     }
 
     function _setInventoryMetadataDelegator(address delegator) internal {
-        require(
-            IERC165(delegator).supportsInterface(type(IERC1155Inventory).interfaceId),
-            "InventoryMetadata: delegator not IERC1155Inventory"
-        );
+        require(IERC165(delegator).supportsInterface(type(IERC1155Inventory).interfaceId), "InvMeta: invalid delegator");
         inventoryMetadataDelegator = delegator;
     }
 
@@ -84,39 +70,22 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
      * @dev Retrieves an attribute which can be either in the default fungible/non-fungible
      * layout or in the relevant collection layout.
      */
-    function getAttribute(
-        uint256 id,
-        bytes32 name
-    ) virtual override public view returns (uint256)
-    {
+    function getAttribute(uint256 id, bytes32 name) public view virtual override returns (uint256) {
         IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
 
-        EnumMap.Map storage layout =
-            delegator.isFungible(id)?
-            _defaultFungibleLayout:
-            _defaultNonFungibleLayout;
+        EnumMap.Map storage layout = delegator.isFungible(id) ? _defaultFungibleLayout : _defaultNonFungibleLayout;
 
         if (!layout.contains(name)) {
             layout = _layouts[delegator.collectionOf(id)];
-        } 
+        }
         uint256 position = uint256(layout.get(name));
 
-        return id.extract(
-            uint128(position),
-            uint128(position >> 128)
-        );
+        return id.extract(uint128(position), uint128(position >> 128));
     }
 
-    function getAttributes(
-        uint256 id,
-        bytes32[] memory names
-    ) virtual override public view returns (uint256[] memory values)
-    {
+    function getAttributes(uint256 id, bytes32[] memory names) public view virtual override returns (uint256[] memory values) {
         IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
-        EnumMap.Map storage layout =
-            delegator.isFungible(id)?
-            _defaultFungibleLayout:
-            _defaultNonFungibleLayout;
+        EnumMap.Map storage layout = delegator.isFungible(id) ? _defaultFungibleLayout : _defaultNonFungibleLayout;
 
         values = new uint256[](names.length);
 
@@ -126,10 +95,7 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
             }
             uint256 position = uint256(layout.get(names[i]));
 
-            values[i] = id.extract(
-                uint128(position),
-                uint128(position >> 128)
-            );
+            values[i] = id.extract(uint128(position), uint128(position >> 128));
         }
     }
 
@@ -137,16 +103,10 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
      * @dev Retrieves attributes from both the default fungible/non-fungible
      * layout and the relevant collection layout.
      */
-    function getAllAttributes(uint256 id) virtual override public view returns (
-        bytes32[] memory names,
-        uint256[] memory values
-    ) {
+    function getAllAttributes(uint256 id) public view virtual override returns (bytes32[] memory names, uint256[] memory values) {
         IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
 
-        EnumMap.Map storage defaultLayout =
-            delegator.isFungible(id)?
-            _defaultFungibleLayout:
-            _defaultNonFungibleLayout;
+        EnumMap.Map storage defaultLayout = delegator.isFungible(id) ? _defaultFungibleLayout : _defaultNonFungibleLayout;
 
         EnumMap.Map storage collectionLayout = _layouts[delegator.collectionOf(id)];
 
@@ -160,23 +120,17 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         bytes32 name;
         bytes32 position;
         uint256 index = 0;
-        for(uint256 i = 0; i < defaultLayoutLength; i++) {
+        for (uint256 i = 0; i < defaultLayoutLength; i++) {
             (name, position) = defaultLayout.at(i);
             names[index] = name;
-            values[index] = id.extract(
-                uint128(uint256(position)),
-                uint128(uint256(position) >> 128)
-            );
+            values[index] = id.extract(uint128(uint256(position)), uint128(uint256(position) >> 128));
             index++;
         }
 
-        for(uint256 i = 0; i < collectionLayoutLength; i++) {
+        for (uint256 i = 0; i < collectionLayoutLength; i++) {
             (name, position) = collectionLayout.at(i);
             names[index] = name;
-            values[index] = id.extract(
-                uint128(uint256(position)),
-                uint128(uint256(position) >> 128)
-            );
+            values[index] = id.extract(uint128(uint256(position)), uint128(uint256(position) >> 128));
             index++;
         }
     }
@@ -186,22 +140,23 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         bytes32 name,
         uint256 length,
         uint256 index
-    ) internal
-    {
+    ) internal {
         // Ensures extraction preconditions are met
         uint256(0).extract(length, index);
 
-        layout.set(name, bytes32(uint256(
-            index << 128 |
-            length
-        )));
+        layout.set(name, bytes32(uint256((index << 128) | length)));
     }
 
-    function _getLayout(uint256 collectionId) virtual internal view returns (
-        bytes32[] memory names,
-        uint256[] memory lengths,
-        uint256[] memory indices
-    ) {
+    function _getLayout(uint256 collectionId)
+        internal
+        view
+        virtual
+        returns (
+            bytes32[] memory names,
+            uint256[] memory lengths,
+            uint256[] memory indices
+        )
+    {
         EnumMap.Map storage layout = _layouts[collectionId];
         // require(layout.length() > 0, "InventoryMetadata: get non-existent layout");
         uint256 length = layout.length();
@@ -209,8 +164,9 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
             names = new bytes32[](length);
             lengths = new uint256[](length);
             indices = new uint256[](length);
-            for(uint256 i = 0; i < length; i++) {
-                bytes32 name; bytes32 pos;
+            for (uint256 i = 0; i < length; i++) {
+                bytes32 name;
+                bytes32 pos;
                 (name, pos) = layout.at(i);
                 uint256 position = uint256(pos);
 
@@ -226,35 +182,25 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
         bytes32[] memory names,
         uint256[] memory lengths,
         uint256[] memory indices
-    ) virtual internal
-    {
+    ) internal virtual {
         uint256 size = names.length;
-        require(
-            (lengths.length == size) && (indices.length == size),
-            "InventoryMetadata: set layout with inconsistent array lengths"
-        );
+        require((lengths.length == size) && (indices.length == size), "InvMeta: inconsistent arrays");
         EnumMap.Map storage layout = _layouts[collectionId];
         _clearLayout(layout);
 
         IERC1155Inventory delegator = IERC1155Inventory(inventoryMetadataDelegator);
-        EnumMap.Map storage defaultLayout =
-            delegator.isFungible(collectionId)?
-            _defaultFungibleLayout:
-            _defaultNonFungibleLayout;
+        EnumMap.Map storage defaultLayout = delegator.isFungible(collectionId) ? _defaultFungibleLayout : _defaultNonFungibleLayout;
 
         for (uint256 i = 0; i < size; i++) {
             bytes32 name = names[i];
-            require(
-                !defaultLayout.contains(name),
-                "InventoryMetadata: attribute name already in default layout"
-            );
+            require(!defaultLayout.contains(name), "InvMeta: override default attr");
             _setAttribute(layout, name, lengths[i], indices[i]);
         }
     }
 
     function _clearLayout(EnumMap.Map storage layout) internal {
         uint256 length = layout.length();
-        for(uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             (bytes32 key, ) = layout.at(0);
             layout.remove(key);
         }
@@ -263,8 +209,8 @@ abstract contract InventoryMetadata is IInventoryMetadata, ICoreMetadata, ERC165
     function _clearLayoutByCollectionId(uint256 collectionId) internal {
         EnumMap.Map storage layout = _layouts[collectionId];
         uint256 length = layout.length();
-        require(length != 0, "InventoryMetadata: clear a non-existing layout");
-        for(uint256 i = 0; i < length; i++) {
+        require(length != 0, "InvMeta: non-existing layout");
+        for (uint256 i = 0; i < length; i++) {
             (bytes32 key, ) = layout.at(0);
             layout.remove(key);
         }

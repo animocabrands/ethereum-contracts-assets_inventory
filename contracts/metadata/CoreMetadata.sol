@@ -8,10 +8,6 @@ import "@animoca/ethereum-contracts-core_library/contracts/algo/EnumMap.sol";
 import "./ICoreMetadata.sol";
 
 abstract contract CoreMetadata is ERC165, ICoreMetadata {
-
-    bytes4 internal constant ERC165_InterfaceId = type(IERC165).interfaceId;
-    bytes4 internal constant CoreMetadata_InterfaceId = type(ICoreMetadata).interfaceId;
-
     using UInt256Extract for uint256;
     using EnumMap for EnumMap.Map;
 
@@ -36,48 +32,28 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
         _registerInterface(type(ICoreMetadata).interfaceId);
     }
 
-    function getAttribute(
-        uint256 integer,
-        bytes32 name
-    ) virtual override public view returns (uint256 value)
-    {
+    function getAttribute(uint256 integer, bytes32 name) public view virtual override returns (uint256 value) {
         uint256 position = uint256(_bitsLayout.get(name));
-        value = integer.extract(
-            uint128(position),
-            uint128(position >> 128)
-        );
+        value = integer.extract(uint128(position), uint128(position >> 128));
     }
 
-    function getAttributes(
-        uint256 integer,
-        bytes32[] memory names
-    ) virtual override public view returns (uint256[] memory values)
-    {
+    function getAttributes(uint256 integer, bytes32[] memory names) public view virtual override returns (uint256[] memory values) {
         values = new uint256[](names.length);
         for (uint256 i = 0; i < names.length; ++i) {
             uint256 position = uint256(_bitsLayout.get(names[i]));
-            values[i] = integer.extract(
-                uint128(position),
-                uint128(position >> 128)
-            );
+            values[i] = integer.extract(uint128(position), uint128(position >> 128));
         }
     }
 
-    function getAllAttributes(uint256 integer) virtual override public view returns (
-        bytes32[] memory names,
-        uint256[] memory values
-    ) {
+    function getAllAttributes(uint256 integer) public view virtual override returns (bytes32[] memory names, uint256[] memory values) {
         uint256 length = _bitsLayout.length();
         names = new bytes32[](length);
         values = new uint256[](length);
-        for(uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             (bytes32 name, bytes32 pos) = _bitsLayout.at(i);
             uint256 position = uint256(pos);
             names[i] = name;
-            values[i] = integer.extract(
-                uint128(position),
-                uint128(position >> 128)
-            );
+            values[i] = integer.extract(uint128(position), uint128(position >> 128));
         }
     }
 
@@ -86,27 +62,28 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
         bytes32 name,
         uint256 length,
         uint256 index
-    ) internal
-    {
+    ) internal {
         // Ensures extraction preconditions are met
         uint256(0).extract(length, index);
 
-        layout.set(name, bytes32(uint256(
-            index << 128 |
-            length
-        )));
+        layout.set(name, bytes32(uint256((index << 128) | length)));
     }
 
-    function _getLayout() internal virtual view returns (
-        bytes32[] memory names,
-        uint256[] memory lengths,
-        uint256[] memory indices
-    ) {
+    function _getLayout()
+        internal
+        view
+        virtual
+        returns (
+            bytes32[] memory names,
+            uint256[] memory lengths,
+            uint256[] memory indices
+        )
+    {
         uint256 length = _bitsLayout.length();
         names = new bytes32[](length);
         lengths = new uint256[](length);
         indices = new uint256[](length);
-        for(uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             (bytes32 name, bytes32 positionBytes) = _bitsLayout.at(i);
             uint256 position = uint256(positionBytes);
 
@@ -120,13 +97,9 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
         bytes32[] memory names,
         uint256[] memory lengths,
         uint256[] memory indices
-    ) internal virtual
-    {
+    ) internal virtual {
         uint256 size = names.length;
-        require(
-            (lengths.length == size) && (indices.length == size),
-            "CoreMetadata: set layout with inconsistent array lengths"
-        );
+        require((lengths.length == size) && (indices.length == size), "CoreMeta: inconsistent arrays");
         _clearLayout();
         for (uint256 i = 0; i < size; i++) {
             _setAttribute(_bitsLayout, names[i], lengths[i], indices[i]);
@@ -135,7 +108,7 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
 
     function _clearLayout() internal virtual {
         uint256 length = _bitsLayout.length();
-        for(uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             (bytes32 key, ) = _bitsLayout.at(0);
             _bitsLayout.remove(key);
         }

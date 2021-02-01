@@ -5,14 +5,17 @@ pragma solidity 0.6.8;
 import "../../metadata/CoreMetadata.sol";
 
 contract CoreMetadataMock is CoreMetadata {
-
     constructor() public {}
 
-    function getLayout() external view returns (
-        bytes32[] memory names,
-        uint256[] memory lengths,
-        uint256[] memory indices
-    ) {
+    function getLayout()
+        external
+        view
+        returns (
+            bytes32[] memory names,
+            uint256[] memory lengths,
+            uint256[] memory indices
+        )
+    {
         return _getLayout();
     }
 
