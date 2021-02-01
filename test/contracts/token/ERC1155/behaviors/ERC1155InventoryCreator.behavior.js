@@ -60,7 +60,9 @@ function shouldBehaveLikeERC1155InventoryCreator({nfMaskLength, contractName, re
       context('when creating a fungible collection', function () {
         let receipt;
         beforeEach(async function () {
-          receipt = await createCollection_ERC1155Inventory(this.token, otherFungibleToken, {from: deployer});
+          receipt = await createCollection_ERC1155Inventory(this.token, otherFungibleToken, {
+            from: deployer,
+          });
         });
 
         it('sets the creator', async function () {
@@ -78,7 +80,9 @@ function shouldBehaveLikeERC1155InventoryCreator({nfMaskLength, contractName, re
       context('when creating a non-fungible collection', function () {
         let receipt;
         beforeEach(async function () {
-          receipt = await createCollection_ERC1155Inventory(this.token, otherNonFungibleCollection, {from: deployer});
+          receipt = await createCollection_ERC1155Inventory(this.token, otherNonFungibleCollection, {
+            from: deployer,
+          });
         });
 
         it('sets the creator', async function () {

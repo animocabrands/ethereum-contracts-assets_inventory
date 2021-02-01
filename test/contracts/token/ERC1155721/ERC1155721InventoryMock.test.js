@@ -34,7 +34,14 @@ const implementation = {
     WrongNFTValue: 'Inventory: wrong NFT value',
     NotNFT: 'Inventory: not an NFT',
   },
-  interfaces: {ERC721: true, ERC721Metadata: true, ERC1155: true, ERC1155MetadataURI: true, ERC1155Inventory: true, ERC1155InventoryCreator: true},
+  interfaces: {
+    ERC721: true,
+    ERC721Metadata: true,
+    ERC1155: true,
+    ERC1155MetadataURI: true,
+    ERC1155Inventory: true,
+    ERC1155InventoryCreator: true,
+  },
   methods: {
     // ERC721
     'batchTransferFrom(address,address,uint256[])': async function (contract, from, to, nftIds, overrides) {

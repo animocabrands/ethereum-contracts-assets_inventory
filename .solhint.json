@@ -1,16 +1,1 @@
-{
-  "extends": "solhint:recommended",
-  "plugins": ["prettier"],
-  "rules": {
-    "compiler-version": ["error", "^0.6.8"],
-    "prettier/prettier": "error",
-    "max-line-length": ["warn", 150],
-    "code-complexity": ["error", 8],
-    "func-visibility": "error",
-    "constructor-syntax": "error",
-    "not-rely-on-time": "off",
-    "no-empty-blocks": "off",
-    "no-inline-assembly": "off",
-    "reason-string": ["error", {"maxLength": 32}]
-  }
-}
+node_modules/@animoca/ethereum-contracts-core_library/.solhint.json

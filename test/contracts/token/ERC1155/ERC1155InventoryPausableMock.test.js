@@ -34,7 +34,13 @@ const implementation = {
     AlreadyPaused: 'Pausable: paused',
     AlreadyUnpaused: 'Pausable: not paused',
   },
-  interfaces: {ERC1155: true, ERC1155MetadataURI: true, ERC1155Inventory: true, ERC1155InventoryCreator: true, Pausable: true},
+  interfaces: {
+    ERC1155: true,
+    ERC1155MetadataURI: true,
+    ERC1155Inventory: true,
+    ERC1155InventoryCreator: true,
+    Pausable: true,
+  },
   methods: {
     'safeMint(address,uint256,uint256,bytes)': async function (contract, to, id, value, data, overrides) {
       return contract.safeMint(to, id, value, data, overrides);

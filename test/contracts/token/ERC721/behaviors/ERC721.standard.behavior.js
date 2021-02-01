@@ -337,20 +337,28 @@ function shouldBehaveLikeERC721Standard({nfMaskLength, contractName, revertMessa
             });
             it('reverts when sent to an ERC721Receiver which refuses the transfer', async function () {
               await expectRevert(
-                transferFunction.call(this, owner, this.refusingReceiver721.address, nft1, data, {from: owner}),
+                transferFunction.call(this, owner, this.refusingReceiver721.address, nft1, data, {
+                  from: owner,
+                }),
                 revertMessages.TransferRejected
               );
             });
             if (interfaces.ERC1155) {
               it('[ERC1155] reverts when sent to an ERC1155TokenReceiver which refuses the transfer', async function () {
                 await expectRevert(
-                  transferFunction.call(this, owner, this.refusingReceiver1155.address, nft1, data, {from: owner}),
+                  transferFunction.call(this, owner, this.refusingReceiver1155.address, nft1, data, {
+                    from: owner,
+                  }),
                   revertMessages.TransferRejected
                 );
               });
             } else {
               it('reverts when sent to an ERC1155TokenReceiver', async function () {
-                await expectRevert.unspecified(transferFunction.call(this, owner, this.receiver1155.address, nft1, data, {from: owner}));
+                await expectRevert.unspecified(
+                  transferFunction.call(this, owner, this.receiver1155.address, nft1, data, {
+                    from: owner,
+                  })
+                );
               });
             }
           }

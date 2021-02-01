@@ -1,6 +1,1 @@
-artifacts/
-cache/
-coverage*
-contracts_flattened/
-node_modules/
-package.json
+node_modules/@animoca/ethereum-contracts-core_library/.eslintignore

@@ -570,7 +570,9 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
           });
           it('reverts when sent to an ERC1155TokenReceiver which refuses the transfer', async function () {
             await expectRevert(
-              transferFunction.call(this, owner, this.refusingReceiver1155.address, nft1, 1, data, {from: owner}),
+              transferFunction.call(this, owner, this.refusingReceiver1155.address, nft1, 1, data, {
+                from: owner,
+              }),
               revertMessages.TransferRejected
             );
           });

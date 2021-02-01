@@ -18,7 +18,7 @@
   ],
   "devDependencies": {
     "@animoca/blockchain-inventory_metadata": "^0.0.1",
-    "@animoca/ethereum-contracts-core_library": "=4.0.1",
+    "@animoca/ethereum-contracts-core_library": "=4.0.2",
     "bits.js": "^0.1.1",
     "hardhat": "^2.0.8"
   },
@@ -51,13 +51,16 @@
     "doc:sol": "hardhat docgen --show-stack-traces",
     "doc": "run-s doc:sol",
     "clean:vscode": "rm -rf .vscode/extensions.json .vscode/launch.json .vscode/settings.json",
-    "clean:compile": "rm -rf artifacts cache",
+    "clean:compile": "rm -rf cache",
+    "clean:artifacts:soft": "rm -rf artifacts/@animoca artifacts/@openzeppelin artifacts/build-info artifacts/**/*.dbg.json artifacts/imports",
+    "clean:artifacts:hard": "rm -rf artifacts",
     "clean:flatten": "rm -rf contracts_flattened",
     "clean:smartcheck": "rm -rf smartcheck*",
     "clean:coverage": "rm -rf coverage* .coverage*",
     "clean:doc": "rm -rf docs",
-    "clean": "run-p clean:compile clean:flatten clean:smartcheck clean:coverage clean:doc",
-    "make:coffee": "run-s format fix compile flatten smartcheck test coverage doc",
-    "make:tiramisu": "run-s clean make:coffee gas-report"
+    "clean": "run-p clean:compile clean:artifacts:soft clean:flatten clean:smartcheck clean:coverage clean:doc",
+    "make:coffee": "run-s format fix clean clean:artifacts:hard compile flatten smartcheck test coverage doc",
+    "make:tiramisu": "run-s clean:artifacts:hard make:coffee gas-report",
+    "prepack": "run-s compile clean clean:vscode"
   }
 }

@@ -1,13 +1,1 @@
-root = true
-
-[*.js]
-end_of_line = lf
-insert_final_newline = true
-charset = utf-8
-indent_style = space
-indent_size = 2
-quote_type = single
-
-[*.sol]
-indent_style = space
-indent_size = 4
+node_modules/@animoca/ethereum-contracts-core_library/.editorconfig
