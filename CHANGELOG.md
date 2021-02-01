@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.0.0
+
+### Breaking changes
+ * Major contracts and tests code overhaul.
+ * Migration to `ethereum-contracts-core_library@4` and `hardhat`.
+
 ## 6.0.0
 
 ### Breaking changes

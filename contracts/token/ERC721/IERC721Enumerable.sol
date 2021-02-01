@@ -7,7 +7,6 @@ pragma solidity 0.6.8;
  * @dev See https://eips.ethereum.org/EIPS/eip-721
  */
 interface IERC721Enumerable {
-
     /**
      * @dev Returns the total amount of tokens stored by the contract.
      */

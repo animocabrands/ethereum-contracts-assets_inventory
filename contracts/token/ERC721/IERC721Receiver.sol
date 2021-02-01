@@ -9,7 +9,6 @@ pragma solidity 0.6.8;
     Note: The ERC-165 identifier for this interface is 0x150b7a02.
  */
 interface IERC721Receiver {
-
     /**
         @notice Handle the receipt of an NFT
         @dev The ERC721 smart contract calls this function on the recipient

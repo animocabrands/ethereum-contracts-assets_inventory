@@ -1,18 +1,13 @@
 {
   "name": "@animoca/ethereum-contracts-assets_inventory",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "Solidity assets contracts managing fungible and non-fungible tokens",
   "repository": {
     "type": "git",
     "url": "git@github.com:animocabrands/ethereum-contracts-assets_inventory.git"
   },
-  "main": "src/index.js",
-  "scripts": {
-    "compile": "./node_modules/@animoca/ethereum-contracts-core_library/scripts/oz-compile.sh",
-    "test": "./node_modules/@animoca/ethereum-contracts-core_library/scripts/oz-test.sh",
-    "coverage": "./node_modules/@animoca/ethereum-contracts-core_library/scripts/coverage.sh",
-    "migrate": "./node_modules/@animoca/ethereum-contracts-core_library/scripts/migrate.sh"
-  },
+  "author": "Animoca Brands",
+  "license": "MIT",
   "keywords": [
     "solidity",
     "ethereum",
@@ -21,13 +16,51 @@
     "assets",
     "inventory"
   ],
-  "author": "Animoca Brands",
-  "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
-    "@animoca/blockchain-inventory_metadata": "0.0.1",
-    "@animoca/ethereum-contracts-core_library": "=3.1.1",
-    "@openzeppelin/test-helpers": "git+https://github.com/nataouze/openzeppelin-test-helpers.git#fix_bn_array_event_args",
-    "bits.js": "^0.1.1"
+    "@animoca/blockchain-inventory_metadata": "^0.0.1",
+    "@animoca/ethereum-contracts-core_library": "=4.0.2",
+    "bits.js": "^0.1.1",
+    "hardhat": "^2.0.8"
+  },
+  "scripts": {
+    "postinstall": "node ./.setup.js",
+    "lint:js": "eslint \"**/*.{js,ts}\"",
+    "lint:sol": "solhint \"contracts/**/*.sol\"",
+    "lint": "run-s lint:js lint:sol",
+    "fix:js": "eslint --fix \"**/*.{js,ts}\"",
+    "fix:sol": "solhint --fix \"contracts/**/*.sol\"",
+    "fix": "run-s fix:js fix:sol",
+    "format:js": "prettier --write \"**/*.{ts,js}\"",
+    "format:sol": "prettier --write \"**/*.sol\"",
+    "format": "run-s format:js format:sol",
+    "compile": "hardhat compile --show-stack-traces",
+    "flatten": "hardhat flatten-all --show-stack-traces",
+    "smartcheck": "smartcheck -p contracts &> smartcheck.log",
+    "test": "hardhat test --show-stack-traces",
+    "coverage:ERC1155Inventory": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155InventoryMock.test.js && rm -rf coverage_ERC1155InventoryMock && mv coverage coverage_ERC1155InventoryMock",
+    "coverage:ERC1155InventoryBurnable": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155InventoryBurnableMock.test.js && rm -rf coverage_ERC1155InventoryBurnableMock && mv coverage coverage_ERC1155InventoryBurnableMock",
+    "coverage:ERC1155InventoryPausable": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155/ERC1155InventoryPausableMock.test.js && rm -rf coverage_ERC1155InventoryPausableMock && mv coverage coverage_ERC1155InventoryPausableMock",
+    "coverage:ERC1155721Inventory": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721InventoryMock.test.js && rm -rf coverage_ERC1155721InventoryMock && mv coverage coverage_ERC1155721InventoryMock",
+    "coverage:ERC1155721InventoryBurnable": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721InventoryBurnableMock.test.js && rm -rf coverage_ERC1155721InventoryBurnableMock && mv coverage coverage_ERC1155721InventoryBurnableMock",
+    "coverage:ERC1155721InventoryPausable": "hardhat coverage --show-stack-traces --testfiles test/contracts/token/ERC1155721/ERC1155721InventoryPausableMock.test.js && rm -rf coverage_ERC1155721InventoryPausableMock && mv coverage coverage_ERC1155721InventoryPausableMock",
+    "coverage": "run-s coverage:ERC1155Inventory coverage:ERC1155InventoryBurnable coverage:ERC1155InventoryPausable coverage:ERC1155721Inventory coverage:ERC1155721InventoryBurnable coverage:ERC1155721InventoryPausable",
+    "ganache": "ganache-cli -g 1000000000",
+    "gas-report": "wait-on tcp:8545 && cross-env REPORT_GAS=true hardhat --network localhost test --show-stack-traces",
+    "doc:slate:setup_tofix": "node documentation/setup-slate.js",
+    "doc:slate:generate_tofix": "node documentation/generate-slate.js",
+    "doc:sol": "hardhat docgen --show-stack-traces",
+    "doc": "run-s doc:sol",
+    "clean:vscode": "rm -rf .vscode/extensions.json .vscode/launch.json .vscode/settings.json",
+    "clean:compile": "rm -rf cache",
+    "clean:artifacts:soft": "rm -rf artifacts/@animoca artifacts/@openzeppelin artifacts/build-info artifacts/**/*.dbg.json artifacts/imports",
+    "clean:artifacts:hard": "rm -rf artifacts",
+    "clean:flatten": "rm -rf contracts_flattened",
+    "clean:smartcheck": "rm -rf smartcheck*",
+    "clean:coverage": "rm -rf coverage* .coverage*",
+    "clean:doc": "rm -rf docs",
+    "clean": "run-p clean:compile clean:artifacts:soft clean:flatten clean:smartcheck clean:coverage clean:doc",
+    "make:coffee": "run-s format fix clean clean:artifacts:hard compile flatten smartcheck test coverage doc",
+    "make:tiramisu": "run-s clean:artifacts:hard make:coffee gas-report",
+    "prepack": "run-s compile clean clean:vscode"
   }
 }

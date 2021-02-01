@@ -8,23 +8,11 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0x80ac58cd.
  */
 interface IERC721 {
-    event Transfer(
-        address indexed _from,
-        address indexed _to,
-        uint256 indexed _tokenId
-    );
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
-    event Approval(
-        address indexed _owner,
-        address indexed _approved,
-        uint256 indexed _tokenId
-    );
+    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
 
-    event ApprovalForAll(
-        address indexed _owner,
-        address indexed _operator,
-        bool _approved
-    );
+    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
     /**
      * Gets the balance of the specified address
@@ -72,7 +60,7 @@ interface IERC721 {
      * @param operator operator address which you want to query the approval of
      * @return bool whether the given operator is approved by the given owner
      */
-    function isApprovedForAll(address owner,address operator) external view returns (bool);
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
 
     /**
      * Transfers the ownership of a given token ID to another address
@@ -81,8 +69,12 @@ interface IERC721 {
      * @param from current owner of the token
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
-    */
-    function transferFrom(address from, address to, uint256 tokenId) external;
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * Safely transfers the ownership of a given token ID to another address
@@ -96,8 +88,12 @@ interface IERC721 {
      * @param from current owner of the token
      * @param to address to receive the ownership of the given token ID
      * @param tokenId uint256 ID of the token to be transferred
-    */
-    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * Safely transfers the ownership of a given token ID to another address
@@ -113,5 +109,10 @@ interface IERC721 {
      * @param tokenId uint256 ID of the token to be transferred
      * @param data bytes data to send along with a safe transfer check
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 }

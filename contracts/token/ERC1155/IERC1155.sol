@@ -8,48 +8,27 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0xd9b67a26.
  */
 interface IERC1155 {
+    event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value);
 
-    event TransferSingle(
-        address indexed _operator,
-        address indexed _from,
-        address indexed _to,
-        uint256 _id,
-        uint256 _value
-    );
+    event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values);
 
-    event TransferBatch(
-        address indexed _operator,
-        address indexed _from,
-        address indexed _to,
-        uint256[] _ids,
-        uint256[] _values
-    );
+    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
-    event ApprovalForAll(
-        address indexed _owner,
-        address indexed _operator,
-        bool _approved
-    );
-
-    event URI(
-        string _value,
-        uint256 indexed _id
-    );
+    event URI(string _value, uint256 indexed _id);
 
     /**
-     * @notice Transfers `value` amount of an `id` from  `from` to `to`  (with safety call).
-     * @dev Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
-     * @dev MUST revert if `to` is the zero address.
-     * @dev MUST revert if balance of holder for token `id` is lower than the `value` sent.
-     * @dev MUST revert on any other error.
-     * @dev MUST emit the `TransferSingle` event to reflect the balance change (see "Safe Transfer Rules" section of the standard).
-     * @dev After the above conditions are met, this function MUST check if `to` is a smart contract (e.g. code size > 0). If so, it MUST call `onERC1155Received` on `to` and act appropriately (see "Safe Transfer Rules" section of the standard).
-     * @param from    Source address
-     * @param to      Target address
-     * @param id      ID of the token type
-     * @param value   Transfer amount
-     * @param data    Additional data with no specified format, MUST be sent unaltered in call to `onERC1155Received` on `to`
-    */
+     * Safely transfers some token.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if the sender is not approved.
+     * @dev Reverts if `from` has an insufficient balance.
+     * @dev Reverts if `to` is a contract and the call to {IERC1155TokenReceiver-onERC1155received} fails or is refused.
+     * @dev Emits a `TransferSingle` event.
+     * @param from Current token owner.
+     * @param to Address of the new token owner.
+     * @param id Identifier of the token to transfer.
+     * @param value Amount of token to transfer.
+     * @param data Optional data to send along to a receiver contract.
+     */
     function safeTransferFrom(
         address from,
         address to,
@@ -59,21 +38,19 @@ interface IERC1155 {
     ) external;
 
     /**
-     * @notice Transfers `values` amount(s) of `ids` from the `from` address to the `to` address specified (with safety call).
-     * @dev Caller must be approved to manage the tokens being transferred out of the `from` account (see "Approval" section of the standard).
-     * @dev MUST revert if `to` is the zero address.
-     * @dev MUST revert if length of `ids` is not the same as length of `values`.
-     * @dev MUST revert if any of the balance(s) of the holder(s) for token(s) in `ids` is lower than the respective amount(s) in `values` sent to the recipient.
-     * @dev MUST revert on any other error.
-     * @dev MUST emit `TransferSingle` or `TransferBatch` event(s) such that all the balance changes are reflected (see "Safe Transfer Rules" section of the standard).
-     * @dev Balance changes and events MUST follow the ordering of the arrays (_ids[0]/_values[0] before _ids[1]/_values[1], etc).
-     * @dev After the above conditions for the transfer(s) in the batch are met, this function MUST check if `to` is a smart contract (e.g. code size > 0). If so, it MUST call the relevant `ERC1155TokenReceiver` hook(s) on `to` and act appropriately (see "Safe Transfer Rules" section of the standard).
-     * @param from    Source address
-     * @param to      Target address
-     * @param ids     IDs of each token type (order and length must match _values array)
-     * @param values  Transfer amounts per token type (order and length must match _ids array)
-     * @param data    Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `to`
-    */
+     * Safely transfers a batch of tokens.
+     * @dev Reverts if `to` is the zero address.
+     * @dev Reverts if `ids` and `values` have different lengths.
+     * @dev Reverts if the sender is not approved.
+     * @dev Reverts if `from` has an insufficient balance for any of `ids`.
+     * @dev Reverts if `to` is a contract and the call to {IERC1155TokenReceiver-onERC1155batchReceived} fails or is refused.
+     * @dev Emits a `TransferBatch` event.
+     * @param from Current token owner.
+     * @param to Address of the new token owner.
+     * @param ids Identifiers of the tokens to transfer.
+     * @param values Amounts of tokens to transfer.
+     * @param data Optional data to send along to a receiver contract.
+     */
     function safeBatchTransferFrom(
         address from,
         address to,
@@ -83,37 +60,35 @@ interface IERC1155 {
     ) external;
 
     /**
-     * @notice Get the balance of an account's tokens.
-     * @param owner  The address of the token holder
-     * @param id     ID of the token
-     * @return       The _owner's balance of the token type requested
+     * Retrieves the balance of `id` owned by account `owner`.
+     * @param owner The account to retrieve the balance of.
+     * @param id The identifier to retrieve the balance of.
+     * @return The balance of `id` owned by account `owner`.
      */
     function balanceOf(address owner, uint256 id) external view returns (uint256);
 
     /**
-     * @notice Get the balance of multiple account/token pairs
+     * Retrieves the balances of `ids` owned by accounts `owners`. For each pair:
+     * @dev Reverts if `owners` and `ids` have different lengths.
      * @param owners The addresses of the token holders
-     * @param ids    ID of the tokens
-     * @return       The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
+     * @param ids The identifiers to retrieve the balance of.
+     * @return The balances of `ids` owned by accounts `owners`.
      */
-    function balanceOfBatch(
-        address[] calldata owners,
-        uint256[] calldata ids
-    ) external view returns (uint256[] memory);
+    function balanceOfBatch(address[] calldata owners, uint256[] calldata ids) external view returns (uint256[] memory);
 
     /**
-     * @notice Enable or disable approval for a third party ("operator") to manage all of the caller's tokens.
-     * @dev MUST emit the ApprovalForAll event on success.
-     * @param operator Address to add to the set of authorized operators
-     * @param approved True if the operator is approved, false to revoke approval
-    */
+     * Enables or disables an operator's approval.
+     * @dev Emits an `ApprovalForAll` event.
+     * @param operator Address of the operator.
+     * @param approved True to approve the operator, false to revoke an approval.
+     */
     function setApprovalForAll(address operator, bool approved) external;
 
     /**
-     * @notice Queries the approval status of an operator for a given owner.
-     * @param owner     The owner of the tokens
-     * @param operator  Address of authorized operator
-     * @return          True if the operator is approved, false if not
-    */
+     * Retrieves the approval status of an operator for a given owner.
+     * @param owner Address of the authorisation giver.
+     * @param operator Address of the operator.
+     * @return True if the operator is approved, false if not.
+     */
     function isApprovedForAll(address owner, address operator) external view returns (bool);
 }

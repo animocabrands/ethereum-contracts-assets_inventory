@@ -20,7 +20,11 @@ interface IERC1155InventoryBurnable {
      * @param id Identifier of the token to burn.
      * @param value Amount of token to burn.
      */
-    function burnFrom(address from, uint256 id, uint256 value) external;
+    function burnFrom(
+        address from,
+        uint256 id,
+        uint256 value
+    ) external;
 
     /**
      * Burns multiple tokens.
@@ -36,5 +40,9 @@ interface IERC1155InventoryBurnable {
      * @param ids Identifiers of the tokens to burn.
      * @param values Amounts of tokens to burn.
      */
-    function batchBurnFrom(address from, uint256[] calldata ids, uint256[] calldata values) external;
+    function batchBurnFrom(
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values
+    ) external;
 }

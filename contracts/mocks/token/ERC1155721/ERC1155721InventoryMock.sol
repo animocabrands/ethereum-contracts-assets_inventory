@@ -3,17 +3,41 @@
 pragma solidity 0.6.8;
 
 import "../../../token/ERC1155721/ERC1155721Inventory.sol";
-import "../../../token/ERC1155721/IERC1155721BatchTransfer.sol";
 import "../../../token/ERC1155721/IERC1155721InventoryMintable.sol";
-import "../../../token/ERC1155721/IERC1155721InventoryBurnable.sol";
 import "../../../token/ERC1155/IERC1155InventoryCreator.sol";
 import "../../../metadata/BaseMetadataURI.sol";
 import "@animoca/ethereum-contracts-core_library/contracts/access/MinterRole.sol";
 
-contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfer, IERC1155721InventoryMintable, IERC1155721InventoryBurnable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMintable, IERC1155InventoryCreator, BaseMetadataURI, MinterRole {
+    // ===================================================================================================
+    //                                 User Public Functions
+    // ===================================================================================================
 
-    string public override constant name = "ERC1155721InventoryMock";
-    string public override constant symbol = "INV";
+    //================================== ERC721Metadata =======================================/
+
+    /// @dev See {IERC721Metadata-name()}.
+    function name() external view virtual override returns (string memory) {
+        return "ERC1155721InventoryMock";
+    }
+
+    /// @dev See {IERC721Metadata-symbol()}.
+    function symbol() external view virtual override returns (string memory) {
+        return "INV";
+    }
+
+    //================================== ERC1155MetadataURI =======================================/
+
+    /// @dev See {IERC1155MetadataURI-uri(uint256)}.
+    function uri(uint256 id) public view virtual override returns (string memory) {
+        return _uri(id);
+    }
+
+    //================================== ERC1155InventoryCreator =======================================/
+
+    /// @dev See {IERC1155InventoryCreator-creator(uint256)}.
+    function creator(uint256 collectionId) external view override returns (address) {
+        return _creator(collectionId);
+    }
 
     // ===================================================================================================
     //                               Admin Public Functions
@@ -30,38 +54,41 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfe
         _createCollection(collectionId);
     }
 
+    //================================== ERC1155721InventoryMintable =======================================/
+
     /**
+     * Unsafely mints a Non-Fungible Token (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-mint(address,uint256)}.
      */
-    function mint(
-        address to,
-        uint256 nftId
-    ) external override onlyMinter {
-        _mint_ERC721(to, nftId, "", false);
+    function mint(address to, uint256 nftId) external virtual override {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
+        _mint(to, nftId, "", false);
     }
 
     /**
+     * Unsafely mints a batch of Non-Fungible Tokens (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
      */
-    function batchMint(
-        address to,
-        uint256[] calldata nftIds
-    ) external override onlyMinter {
-        _batchMint_ERC721(to, nftIds);
+    function batchMint(address to, uint256[] calldata nftIds) external virtual override {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
+        _batchMint(to, nftIds);
     }
 
     /**
+     * Safely mints a Non-Fungible Token (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,bytes)}.
      */
     function safeMint(
         address to,
         uint256 nftId,
         bytes calldata data
-    ) external override onlyMinter {
-        _mint_ERC721(to, nftId, data, true);
+    ) external virtual override {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
+        _mint(to, nftId, data, true);
     }
 
     /**
+     * Safely mints somme token (ERC1155-compatible).
      * @dev See {IERC1155721InventoryMintable-safeMint(address,uint256,uint256,bytes)}.
      */
     function safeMint(
@@ -69,11 +96,13 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfe
         uint256 id,
         uint256 value,
         bytes calldata data
-    ) external override onlyMinter {
+    ) external virtual override {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeMint(to, id, value, data);
     }
 
     /**
+     * Safely mints a batch of tokens (ERC1155-compatible).
      * @dev See {IERC1155721InventoryMintable-safeBatchMint(address,uint256[],uint256[],bytes)}.
      */
     function safeBatchMint(
@@ -81,60 +110,8 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721BatchTransfe
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external override onlyMinter {
+    ) external virtual override {
+        require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeBatchMint(to, ids, values, data);
-    }
-
-    // ===================================================================================================
-    //                                 User Public Functions
-    // ===================================================================================================
-
-    /**
-     * @dev See {IERC1155InventoryCreator-creator(uint256)}.
-     */
-    function creator(uint256 collectionId) external override view returns(address) {
-        require(!isNFT(collectionId), "Inventory: not a collection");
-        return _creators[collectionId];
-    }
-
-    /**
-     * @dev See {IERC1155721BatchTransfer-batchTransferFrom(address,address,uint256[])}.
-     */
-    function batchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata nftIds
-    ) external override {
-        _batchTransferFrom_ERC721(from, to, nftIds);
-    }
-
-    /**
-     * @dev See {IERC1155721InventoryBurnable-burnFrom(address,uint256,uint256)}.
-     */
-    function burnFrom(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external override {
-        _burnFrom(from, id, value);
-    }
-
-    /**
-     * @dev See {IERC1155721InventoryBurnable-batchBurnFrom(address,uint256[],uint256[])}.
-     */
-    function batchBurnFrom(
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external override {
-        _batchBurnFrom(from, ids, values);
-    }
-
-    // ===================================================================================================
-    //                                  ERC1155 Internal Functions
-    // ===================================================================================================
-
-    function _uri(uint256 id) internal override(ERC1155InventoryBase, BaseMetadataURI) view returns (string memory) {
-        return BaseMetadataURI._uri(id);
     }
 }

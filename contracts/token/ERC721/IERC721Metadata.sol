@@ -8,7 +8,6 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0x5b5e139f.
  */
 interface IERC721Metadata {
-
     /**
      * @dev Gets the token name
      * @return string representing the token name

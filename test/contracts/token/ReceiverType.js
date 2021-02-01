@@ -1,0 +1,6 @@
+module.exports = {
+  WALLET: 0,
+  NON_RECEIVER: 1,
+  ERC721_RECEIVER: 2,
+  ERC1155_RECEIVER: 3,
+};
