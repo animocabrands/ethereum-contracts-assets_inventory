@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.0.2
+
+### Bugfixes
+ * Do not use a symlink for `.setup.js`.
+
 ## 7.0.1
 
 ### Bugfixes
