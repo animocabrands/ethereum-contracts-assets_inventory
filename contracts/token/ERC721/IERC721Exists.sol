@@ -8,7 +8,6 @@ pragma solidity 0.6.8;
  * Note: The ERC-165 identifier for this interface is 0x4f558e79.
  */
 interface IERC721Exists {
-
     /**
      * @dev Checks the existence of an Non-Fungible Token
      * @return bool true if the token belongs to a non-zero address, false otherwise

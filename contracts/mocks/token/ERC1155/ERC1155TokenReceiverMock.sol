@@ -5,24 +5,9 @@ pragma solidity 0.6.8;
 import "../../../token/ERC1155/ERC1155TokenReceiver.sol";
 
 contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
+    event ReceivedSingle(address operator, address from, uint256 id, uint256 value, bytes data, uint256 gas);
 
-    event ReceivedSingle(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes data,
-        uint256 gas
-    );
-
-    event ReceivedBatch(
-        address operator,
-        address from,
-        uint256[] ids,
-        uint256[] values,
-        bytes data,
-        uint256 gas
-    );
+    event ReceivedBatch(address operator, address from, uint256[] ids, uint256[] values, bytes data, uint256 gas);
 
     bool internal _accept1155;
 
@@ -36,8 +21,7 @@ contract ERC1155TokenReceiverMock is ERC1155TokenReceiver {
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public virtual override returns (bytes4)
-    {
+    ) public virtual override returns (bytes4) {
         if (_accept1155) {
             emit ReceivedSingle(operator, from, id, value, data, gasleft());
             return _ERC1155_RECEIVED;

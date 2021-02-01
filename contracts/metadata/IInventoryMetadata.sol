@@ -13,7 +13,6 @@ pragma solidity 0.6.8;
  * specific contract.
  */
 interface IInventoryMetadata {
-
     /**
      * @dev Get the address of the inventory contracts which delegated
      * core metadata implementation to this contract.
