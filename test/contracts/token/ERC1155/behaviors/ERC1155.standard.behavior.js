@@ -9,6 +9,7 @@ const {ZeroAddress} = constants;
 const ReceiverType = require('../../ReceiverType');
 
 const {
+  isFungible,
   isNonFungibleToken,
   makeFungibleCollectionId,
   makeNonFungibleCollectionId,
@@ -243,31 +244,169 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
     describe('transfer', function () {
       let receipt = null;
 
-      const transferWasSuccessful = function (tokenIds, values, data, options, receiverType) {
-        if (interfaces.ERC721 || interfaces.ERC1155Inventory) {
-          it('[ERC721/ERC1155inventory] transfers the ownership of the Non-Fungible Token(s)', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            for (const id of ids) {
-              if (isNonFungibleToken(id, nfMaskLength)) {
-                (await this.token.ownerOf(id)).should.be.equal(this.toWhom);
+      const transferWasSuccessful = function (tokenIds, values, data, options, receiverType, selfTransfer) {
+        const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
+        const vals = Array.isArray(values) ? values : [values];
+        const tokens = ids.map((id, i) => [id, vals[i]]);
+        const fungibleTokens = tokens.filter(([id, _value]) => isFungible(id));
+        const nonFungibleTokens = tokens.filter(([id, _value]) => isNonFungibleToken(id, nfMaskLength));
+
+        if (tokens.length != 0) {
+          if (selfTransfer) {
+            it('does not affect the sender balance(s)', async function () {
+              for (const [id, _value] of tokens) {
+                let balance;
+                if (isNonFungibleToken(id, nfMaskLength)) {
+                  balance = '1';
+                } else {
+                  if (id == fCollection1.id) {
+                    balance = fCollection1.supply;
+                  } else if (id == fCollection2.id) {
+                    balance = fCollection2.supply;
+                  } else if (id == fCollection3.id) {
+                    balance = fCollection3.supply;
+                  }
+                }
+                (await this.token.balanceOf(owner, id)).should.be.bignumber.equal(new BN(balance));
+              }
+            });
+          } else {
+            it('decreases the sender balance(s)', async function () {
+              for (const [id, value] of tokens) {
+                let balance;
+                if (isNonFungibleToken(id, nfMaskLength)) {
+                  balance = '0';
+                } else {
+                  let initialBalance;
+                  if (id == fCollection1.id) {
+                    initialBalance = fCollection1.supply;
+                  } else if (id == fCollection2.id) {
+                    initialBalance = fCollection2.supply;
+                  } else if (id == fCollection3.id) {
+                    initialBalance = fCollection3.supply;
+                  }
+                  balance = initialBalance - value;
+                }
+                (await this.token.balanceOf(owner, id)).should.be.bignumber.equal(new BN(balance));
+              }
+            });
+
+            it('increases the recipient balance(s)', async function () {
+              for (const [id, value] of tokens) {
+                (await this.token.balanceOf(this.toWhom, id)).should.be.bignumber.equal(new BN(value));
+              }
+            });
+          }
+
+          if (interfaces.ERC1155Inventory) {
+            it('[ERC1155Inventory] does not affect the token(s) total supply', async function () {
+              for (const [id, _value] of tokens) {
+                let supply;
+                if (isNonFungibleToken(id, nfMaskLength)) {
+                  supply = '1';
+                } else {
+                  if (id == fCollection1.id) {
+                    supply = fCollection1.supply;
+                  } else if (id == fCollection2.id) {
+                    supply = fCollection2.supply;
+                  } else if (id == fCollection3.id) {
+                    supply = fCollection3.supply;
+                  }
+                }
+                (await this.token.totalSupply(id)).should.be.bignumber.equal(new BN(supply));
+              }
+            });
+          }
+
+          if (nonFungibleTokens.length != 0) {
+            if (interfaces.ERC721 || interfaces.ERC1155Inventory) {
+              if (selfTransfer) {
+                it('[ERC721/ERC1155inventory] does not affect the Non-Fungible Token(s) ownership', async function () {
+                  for (const [id, _value] of nonFungibleTokens) {
+                    (await this.token.ownerOf(id)).should.be.equal(owner);
+                  }
+                });
               } else {
+                it('[ERC721/ERC1155inventory] gives the ownership of the Non-Fungible Token(s) to the recipient', async function () {
+                  for (const [id, _value] of nonFungibleTokens) {
+                    (await this.token.ownerOf(id)).should.be.equal(this.toWhom);
+                  }
+                });
+              }
+            }
+
+            if (interfaces.ERC1155Inventory) {
+              if (selfTransfer) {
+                it('[ERC1155Inventory] does not affect the sender Non-Fungible Collection balance(s)', async function () {
+                  (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.nfcBalance);
+                  (await this.token.balanceOf(owner, nfCollectionOther)).should.be.bignumber.equal(this.otherNFCBalance);
+                });
+              } else {
+                const nbCollectionNFTs = ids.filter((id) => id == nft1 || id == nft2).length;
+                const nbOtherCollectionNFTs = ids.filter((id) => id == nftOtherCollection).length;
+
+                it('[ERC1155Inventory] decreases the sender Non-Fungible Collection balance(s)', async function () {
+                  (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.nfcBalance.subn(nbCollectionNFTs));
+                  (await this.token.balanceOf(owner, nfCollectionOther)).should.be.bignumber.equal(this.otherNFCBalance.subn(nbOtherCollectionNFTs));
+                });
+
+                it('[ERC1155Inventory] increases the recipient Non-Fungible Collection balance(s)', async function () {
+                  (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
+                  (await this.token.balanceOf(this.toWhom, nfCollectionOther)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
+                });
+              }
+
+              it('[ERC1155Inventory] does not affect the Non-Fungible Collection(s) total supply', async function () {
+                (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(this.nfcSupply);
+                (await this.token.totalSupply(nfCollectionOther)).should.be.bignumber.equal(this.otherNFCSupply);
+              });
+            }
+
+            if (interfaces.ERC721) {
+              if (selfTransfer) {
+                it('[ERC721] does not affect the sender NFTs balance', async function () {
+                  (await this.token.balanceOf(owner)).should.be.bignumber.equal(this.nftBalance);
+                });
+              } else {
+                it('[ERC721] decreases sender NFTs balance', async function () {
+                  (await this.token.balanceOf(owner)).should.be.bignumber.equal(this.nftBalance.subn(nonFungibleTokens.length));
+                });
+
+                it('[ERC721] increases recipient NFTs balance', async function () {
+                  (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal(new BN(nonFungibleTokens.length));
+                });
+              }
+
+              it('[ERC721] clears the Non-Fungible Token(s) approval', async function () {
+                for (const [id, _value] of nonFungibleTokens) {
+                  (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
+                }
+              });
+
+              it('[ERC721] emits Transfer event(s) for the Non-Fungible Token(s)', function () {
+                for (const [id, _value] of nonFungibleTokens) {
+                  expectEventWithParamsOverride(
+                    receipt,
+                    'Transfer',
+                    {
+                      _from: owner,
+                      _to: this.toWhom,
+                      _tokenId: id,
+                    },
+                    eventParamsOverrides
+                  );
+                }
+              });
+            }
+          }
+
+          if (interfaces.ERC1155Inventory && fungibleTokens.length != 0) {
+            it('[ERC1155inventory] does not give the ownership for Fungible Token(s)', async function () {
+              for (const [id, _value] of fungibleTokens) {
                 await expectRevert(this.token.ownerOf(id), revertMessages.NonExistingNFT);
               }
-            }
-          });
-        }
-
-        if (interfaces.ERC721) {
-          it('[ERC721] clears the approval for the Non-Fungible Token(s)', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            for (const id of ids) {
-              if (isNonFungibleToken(id, nfMaskLength)) {
-                (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
-              } else {
-                await expectRevert(this.token.getApproved(id), revertMessages.NonExistingNFT);
-              }
-            }
-          });
+            });
+          }
         }
 
         if (Array.isArray(tokenIds)) {
@@ -302,132 +441,6 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
           });
         }
 
-        if (interfaces.ERC721) {
-          it('[ERC721] emits Transfer event(s) for Non-Fungible Tokens', function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            for (const id of ids) {
-              if (isNonFungibleToken(id, nfMaskLength)) {
-                expectEventWithParamsOverride(
-                  receipt,
-                  'Transfer',
-                  {
-                    _from: owner,
-                    _to: this.toWhom,
-                    _tokenId: id,
-                  },
-                  eventParamsOverrides
-                );
-              }
-            }
-          });
-        }
-
-        it('adjusts sender balances', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const vals = Array.isArray(values) ? values : [values];
-          for (let i = 0; i < ids.length; ++i) {
-            const id = ids[i];
-            const value = vals[i];
-            if (isNonFungibleToken(id, nfMaskLength)) {
-              const balance = this.toWhom == owner ? One : Zero;
-              (await this.token.balanceOf(owner, id)).should.be.bignumber.equal(balance);
-            } else {
-              let initialBalance;
-              if (id == fCollection1.id) {
-                initialBalance = fCollection1.supply;
-              } else if (id == fCollection2.id) {
-                initialBalance = fCollection2.supply;
-              } else if (id == fCollection3.id) {
-                initialBalance = fCollection3.supply;
-              }
-              const balance = this.toWhom == owner ? initialBalance : initialBalance - value;
-              (await this.token.balanceOf(owner, id)).should.be.bignumber.equal(new BN(`${balance}`));
-            }
-          }
-        });
-
-        it('adjusts recipient balances', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const vals = Array.isArray(values) ? values : [values];
-          for (let i = 0; i < ids.length; ++i) {
-            const id = ids[i];
-            const value = vals[i];
-            if (isNonFungibleToken(id, nfMaskLength)) {
-              (await this.token.balanceOf(this.toWhom, id)).should.be.bignumber.equal(One);
-            } else {
-              let initialBalance;
-              if (id == fCollection1.id) {
-                initialBalance = fCollection1.supply;
-              } else if (id == fCollection2.id) {
-                initialBalance = fCollection2.supply;
-              } else if (id == fCollection3.id) {
-                initialBalance = fCollection3.supply;
-              }
-              const balance = this.toWhom == owner ? initialBalance : value;
-              (await this.token.balanceOf(this.toWhom, id)).should.be.bignumber.equal(new BN(`${balance}`));
-            }
-          }
-        });
-
-        if (interfaces.ERC721) {
-          it('[ERC721] adjusts sender NFT balance', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            const quantity = ids.filter((id) => isNonFungibleToken(id, nfMaskLength)).length;
-            const balance = this.toWhom == owner ? this.nftBalance : this.nftBalance.subn(quantity);
-            (await this.token.balanceOf(owner)).should.be.bignumber.equal(balance);
-          });
-
-          it('[ERC721] adjusts recipient NFT balance', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            const quantity = ids.filter((id) => isNonFungibleToken(id, nfMaskLength)).length;
-            const balance = this.toWhom == owner ? this.nftBalance : new BN(`${quantity}`);
-            (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal(balance);
-          });
-        }
-
-        if (interfaces.ERC1155Inventory) {
-          it('[ERC1155Inventory] adjusts sender Non-Fungible Collection balances', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            const nbCollectionNFTs = ids.filter((id) => id == nft1 || id == nft2).length;
-            const nbOtherCollectionNFTs = ids.filter((id) => id == nftOtherCollection).length;
-            const collectionBalance = this.toWhom == owner ? this.nfcBalance : this.nfcBalance.subn(nbCollectionNFTs);
-            const otherCollectionBalance = this.toWhom == owner ? this.otherNFCBalance : this.otherNFCBalance.subn(nbOtherCollectionNFTs);
-            (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(collectionBalance);
-            (await this.token.balanceOf(owner, nfCollectionOther)).should.be.bignumber.equal(otherCollectionBalance);
-          });
-          it('[ERC1155Inventory] adjusts recipient Non-Fungible Collection balances', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            const nbCollectionNFTs = ids.filter((id) => id == nft1 || id == nft2).length;
-            const nbOtherCollectionNFTs = ids.filter((id) => id == nftOtherCollection).length;
-            const collectionBalance = this.toWhom == owner ? this.nfcBalance : new BN(nbCollectionNFTs);
-            const otherCollectionBalance = this.toWhom == owner ? this.otherNFCBalance : new BN(nbOtherCollectionNFTs);
-            (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(collectionBalance);
-            (await this.token.balanceOf(this.toWhom, nfCollectionOther)).should.be.bignumber.equal(otherCollectionBalance);
-          });
-          it('[ERC1155Inventory] does not affect the token(s) total supply', async function () {
-            const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-            for (const id of ids) {
-              if (isNonFungibleToken(id, nfMaskLength)) {
-                (await this.token.totalSupply(id)).should.be.bignumber.equal(One);
-              } else {
-                let supply;
-                if (id == fCollection1.id) {
-                  supply = fCollection1.supply;
-                } else if (id == fCollection2.id) {
-                  supply = fCollection2.supply;
-                } else if (id == fCollection3.id) {
-                  supply = fCollection3.supply;
-                }
-                (await this.token.totalSupply(id)).should.be.bignumber.equal(new BN(supply));
-              }
-            }
-          });
-          it('[ERC1155Inventory] does not affect the Non-Fungible Collections total supply', async function () {
-            (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(this.nfcSupply);
-            (await this.token.totalSupply(nfCollectionOther)).should.be.bignumber.equal(this.otherNFCSupply);
-          });
-        }
-
         if (receiverType == ReceiverType.ERC1155_RECEIVER) {
           if (Array.isArray(tokenIds)) {
             it('[ERC1155] should call onERC1155BatchReceived', async function () {
@@ -453,13 +466,13 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
         }
       };
 
-      const shouldTransferTokenBySender = function (transferFunction, tokenIds, values, data, receiverType) {
+      const shouldTransferTokenBySender = function (transferFunction, tokenIds, values, data, receiverType, selfTransfer = false) {
         context('when called by the owner', function () {
           const options = {from: owner};
           beforeEach(async function () {
             receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, values, data, options);
           });
-          transferWasSuccessful(tokenIds, values, data, options, receiverType);
+          transferWasSuccessful(tokenIds, values, data, options, receiverType, selfTransfer);
         });
 
         if (interfaces.Pausable) {
@@ -470,7 +483,7 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
               await this.token.unpause({from: deployer});
               receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, values, data, options);
             });
-            transferWasSuccessful(tokenIds, values, data, options, receiverType);
+            transferWasSuccessful(tokenIds, values, data, options, receiverType, selfTransfer);
           });
         }
 
@@ -479,26 +492,23 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
           beforeEach(async function () {
             receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, values, data, options);
           });
-          transferWasSuccessful(tokenIds, values, data, options, receiverType);
+          transferWasSuccessful(tokenIds, values, data, options, receiverType, selfTransfer);
         });
 
-        if (interfaces.ERC721) {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const approvedTokenIds = ids.filter((id) => id == nft1 || id == nft2);
-          // All tokens are approved NFTs
-          if (ids.length != 0 && ids.length == approvedTokenIds.length) {
-            context('[ERC721] when called by a wallet with single token approval', function () {
-              const options = {from: approved};
-              beforeEach(async function () {
-                receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, values, data, options);
-              });
-              transferWasSuccessful(tokenIds, values, data, options, receiverType);
+        const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
+        const approvedTokenIds = ids.filter((id) => id == nft1 || id == nft2);
+        if (interfaces.ERC721 && ids.length != 0 && ids.length == approvedTokenIds.length) {
+          context('[ERC721] when called by a wallet with single token approval', function () {
+            const options = {from: approved};
+            beforeEach(async function () {
+              receipt = await transferFunction.call(this, owner, this.toWhom, tokenIds, values, data, options);
             });
-          }
+            transferWasSuccessful(tokenIds, values, data, options, receiverType, selfTransfer);
+          });
         }
       };
 
-      const shouldRevertOnePreconditions = function (transferFunction) {
+      const shouldRevertOnPreconditions = function (transferFunction) {
         describe('Pre-conditions', function () {
           const data = '0x42';
           if (interfaces.Pausable) {
@@ -579,7 +589,8 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
           beforeEach(async function () {
             this.toWhom = owner;
           });
-          shouldTransferTokenBySender(transferFunction, ids, values, data, ReceiverType.WALLET);
+          const selfTransfer = true;
+          shouldTransferTokenBySender(transferFunction, ids, values, data, ReceiverType.WALLET, selfTransfer);
         });
 
         context('when sent to an ERC1155TokenReceiver contract', function () {
@@ -595,7 +606,7 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
           return this.token.methods['safeTransferFrom(address,address,uint256,uint256,bytes)'](from, to, id, value, data, options);
         };
 
-        shouldRevertOnePreconditions(transferFn);
+        shouldRevertOnPreconditions(transferFn);
         context('with a Fungible Token', function () {
           context('partial balance transfer', function () {
             shouldTransferTokenToRecipient(transferFn, fCollection1.id, 1, '0x42');
@@ -615,7 +626,7 @@ function shouldBehaveLikeERC1155Standard({nfMaskLength, revertMessages, eventPar
           const vals = Array.isArray(values) ? values : [values];
           return this.token.methods['safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)'](from, to, tokenIds, vals, data, options);
         };
-        shouldRevertOnePreconditions(transferFn);
+        shouldRevertOnPreconditions(transferFn);
 
         it('reverts with inconsistent arrays', async function () {
           await expectRevert(transferFn.call(this, owner, other, [nft1, nft2], [1], '0x42', {from: owner}), revertMessages.InconsistentArrays);

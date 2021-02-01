@@ -60,7 +60,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
      * Unsafely mints a Non-Fungible Token (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-mint(address,uint256)}.
      */
-    function mint(address to, uint256 nftId) external override virtual {
+    function mint(address to, uint256 nftId) external virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _mint(to, nftId, "", false);
     }
@@ -69,7 +69,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
      * Unsafely mints a batch of Non-Fungible Tokens (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
      */
-    function batchMint(address to, uint256[] calldata nftIds) external override virtual {
+    function batchMint(address to, uint256[] calldata nftIds) external virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _batchMint(to, nftIds);
     }
@@ -82,7 +82,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
         address to,
         uint256 nftId,
         bytes calldata data
-    ) external override virtual {
+    ) external virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _mint(to, nftId, data, true);
     }
@@ -96,7 +96,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
         uint256 id,
         uint256 value,
         bytes calldata data
-    ) external override virtual {
+    ) external virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeMint(to, id, value, data);
     }
@@ -110,7 +110,7 @@ contract ERC1155721InventoryMock is ERC1155721Inventory, IERC1155721InventoryMin
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external override virtual {
+    ) external virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeBatchMint(to, ids, values, data);
     }

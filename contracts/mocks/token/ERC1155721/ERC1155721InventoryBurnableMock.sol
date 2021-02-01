@@ -66,7 +66,7 @@ contract ERC1155721InventoryBurnableMock is
      * Unsafely mints a Non-Fungible Token (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256)}.
      */
-    function mint(address to, uint256 nftId) public override virtual {
+    function mint(address to, uint256 nftId) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _mint(to, nftId, "", false);
     }
@@ -75,7 +75,7 @@ contract ERC1155721InventoryBurnableMock is
      * Unsafely mints a batch of Non-Fungible Tokens (ERC721-compatible).
      * @dev See {IERC1155721InventoryMintable-batchMint(address,uint256[])}.
      */
-    function batchMint(address to, uint256[] memory nftIds) public override virtual {
+    function batchMint(address to, uint256[] memory nftIds) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _batchMint(to, nftIds);
     }
@@ -88,7 +88,7 @@ contract ERC1155721InventoryBurnableMock is
         address to,
         uint256 nftId,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _mint(to, nftId, data, true);
     }
@@ -102,7 +102,7 @@ contract ERC1155721InventoryBurnableMock is
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeMint(to, id, value, data);
     }
@@ -116,7 +116,7 @@ contract ERC1155721InventoryBurnableMock is
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeBatchMint(to, ids, values, data);
     }

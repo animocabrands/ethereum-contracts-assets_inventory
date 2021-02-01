@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721InventoryBurnableMock {
-
     //================================== ERC721Metadata =======================================/
 
     /// @dev See {IERC721Metadata-name()}.
@@ -38,7 +37,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address from,
         address to,
         uint256 nftId
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.transferFrom(from, to, nftId);
     }
@@ -47,7 +46,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address from,
         address to,
         uint256[] memory nftIds
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.batchTransferFrom(from, to, nftIds);
     }
@@ -56,7 +55,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address from,
         address to,
         uint256 nftId
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeTransferFrom(from, to, nftId);
     }
@@ -66,17 +65,17 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address to,
         uint256 nftId,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeTransferFrom(from, to, nftId, data);
     }
 
-    function mint(address to, uint256 nftId) public override virtual {
+    function mint(address to, uint256 nftId) public virtual override {
         require(!paused(), "Inventory: paused");
         super.mint(to, nftId);
     }
 
-    function batchMint(address to, uint256[] memory nftIds) public override virtual {
+    function batchMint(address to, uint256[] memory nftIds) public virtual override {
         require(!paused(), "Inventory: paused");
         super.batchMint(to, nftIds);
     }
@@ -85,15 +84,12 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address to,
         uint256 nftId,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeMint(to, nftId, data);
     }
 
-    function batchBurnFrom(
-        address from,
-        uint256[] memory nftIds
-    ) public override virtual {
+    function batchBurnFrom(address from, uint256[] memory nftIds) public virtual override {
         require(!paused(), "Inventory: paused");
         super.batchBurnFrom(from, nftIds);
     }
@@ -106,7 +102,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeTransferFrom(from, to, id, value, data);
     }
@@ -117,7 +113,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeBatchTransferFrom(from, to, ids, values, data);
     }
@@ -127,7 +123,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeMint(to, id, value, data);
     }
@@ -137,7 +133,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeBatchMint(to, ids, values, data);
     }
@@ -146,7 +142,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address from,
         uint256 id,
         uint256 value
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.burnFrom(from, id, value);
     }
@@ -155,7 +151,7 @@ contract ERC1155721InventoryPausableMock is Ownable, Pausable, ERC1155721Invento
         address from,
         uint256[] memory ids,
         uint256[] memory values
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.batchBurnFrom(from, ids, values);
     }

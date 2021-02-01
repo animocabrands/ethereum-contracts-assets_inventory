@@ -21,7 +21,7 @@ const implementation = {
     NotMinter: 'ERC721: not a minter',
 
     // Pausable
-    Paused: 'Pausable: paused',
+    Paused: 'ERC721: paused',
     NotPauser: 'ERC721: not the owner',
     AlreadyPaused: 'Pausable: paused',
     AlreadyUnpaused: 'Pausable: not paused',

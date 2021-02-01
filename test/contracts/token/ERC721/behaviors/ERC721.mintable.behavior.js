@@ -65,24 +65,22 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
       await fixtureLoader(fixture, this);
     });
 
-    const mintWasSuccessful = function (ids, data, options, safe, receiverType) {
+    const mintWasSuccessful = function (tokenIds, data, options, safe, receiverType) {
+      const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
       it('gives the ownership of the token(s) to the given address', async function () {
-        const nftIds = Array.isArray(ids) ? ids : [ids];
-        for (const id of nftIds) {
+        for (const id of ids) {
           (await this.token.ownerOf(id)).should.be.equal(this.toWhom);
         }
       });
 
       it('has an empty approval for the token(s)', async function () {
-        const nftIds = Array.isArray(ids) ? ids : [ids];
-        for (const id of nftIds) {
+        for (const id of ids) {
           (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
         }
       });
 
       it('emits Transfer event(s)', function () {
-        const nftIds = Array.isArray(ids) ? ids : [ids];
-        for (const id of nftIds) {
+        for (const id of ids) {
           expectEventWithParamsOverride(
             receipt,
             'Transfer',
@@ -97,7 +95,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
       });
 
       if (interfaces.ERC1155) {
-        if (Array.isArray(ids)) {
+        if (Array.isArray(tokenIds)) {
           it('[ERC1155] emits a TransferBatch event', function () {
             expectEventWithParamsOverride(
               receipt,
@@ -106,8 +104,8 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
                 _operator: options.from,
                 _from: ZeroAddress,
                 _to: this.toWhom,
-                _ids: ids,
-                _values: ids.map(() => 1),
+                _ids: tokenIds,
+                _values: tokenIds.map(() => 1),
               },
               eventParamsOverrides
             );
@@ -121,7 +119,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
                 _operator: options.from,
                 _from: ZeroAddress,
                 _to: this.toWhom,
-                _id: ids,
+                _id: tokenIds,
                 _value: 1,
               },
               eventParamsOverrides
@@ -131,23 +129,21 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
       }
 
       it('adjusts recipient balance', async function () {
-        const quantity = new BN(Array.isArray(ids) ? `${ids.length}` : '1');
+        const quantity = new BN(Array.isArray(tokenIds) ? `${tokenIds.length}` : '1');
         (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal(quantity);
       });
 
       if (interfaces.ERC1155Inventory) {
-        it('[ERC1155Inventory] adjusts recipient Non-Fungible Collections balance', async function () {
-          const nftsArray = Array.isArray(ids) ? ids : [ids];
-          const nbCollectionNFTs = nftsArray.filter((id) => id != nftOtherCollection).length;
-          const nbOtherCollectionNFTs = nftsArray.length - nbCollectionNFTs;
+        it('[ERC1155Inventory] increases the recipient Non-Fungible Collection(s) balance(s)', async function () {
+          const nbCollectionNFTs = ids.filter((id) => id != nftOtherCollection).length;
+          const nbOtherCollectionNFTs = ids.length - nbCollectionNFTs;
           (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
           (await this.token.balanceOf(this.toWhom, otherNFCollection)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
         });
 
-        it('[ERC1155Inventory] increases the Non-Fungible Collections total supply', async function () {
-          const nftsArray = Array.isArray(ids) ? ids : [ids];
-          const nbCollectionNFTs = nftsArray.filter((id) => id != nftOtherCollection).length;
-          const nbOtherCollectionNFTs = nftsArray.length - nbCollectionNFTs;
+        it('[ERC1155Inventory] increases the Non-Fungible Collection(s) total supply', async function () {
+          const nbCollectionNFTs = ids.filter((id) => id != nftOtherCollection).length;
+          const nbOtherCollectionNFTs = ids.length - nbCollectionNFTs;
           (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
           (await this.token.totalSupply(otherNFCollection)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
         });
@@ -157,19 +153,19 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
         it('should call onERC721Received', async function () {
           await expectEvent.inTransaction(receipt.tx, ERC721ReceiverMock, 'Received', {
             from: ZeroAddress,
-            tokenId: ids,
+            tokenId: tokenIds,
             data: data ? data : null,
           });
         });
       } else if (interfaces.ERC1155) {
         if (receiverType == ReceiverType.ERC1155_RECEIVER) {
-          if (Array.isArray(ids)) {
+          if (Array.isArray(tokenIds)) {
             it('[ERC1155] should call onERC1155BatchReceived', async function () {
               await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedBatch', {
                 operator: options.from,
                 from: ZeroAddress,
-                ids: ids,
-                values: ids.map(() => 1),
+                ids: tokenIds,
+                values: tokenIds.map(() => 1),
                 data: data ? data : null,
               });
             });
@@ -178,7 +174,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
               await expectEvent.inTransaction(receipt.tx, ERC1155TokenReceiverMock, 'ReceivedSingle', {
                 operator: options.from,
                 from: ZeroAddress,
-                id: ids,
+                id: tokenIds,
                 value: 1,
                 data: data ? data : null,
               });

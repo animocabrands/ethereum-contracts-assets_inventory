@@ -66,24 +66,22 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
 
     let receipt = null;
 
-    const burnWasSuccessful = function (ids, options) {
+    const burnWasSuccessful = function (tokenIds, options) {
+      const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
       it('transfers the ownership of the token(s)', async function () {
-        const nftIds = Array.isArray(ids) ? ids : [ids];
-        for (const id of nftIds) {
+        for (const id of ids) {
           await expectRevert(this.token.ownerOf(id), revertMessages.NonExistingNFT);
         }
       });
 
       it('clears the approval for the token(s)', async function () {
-        const nftIds = Array.isArray(ids) ? ids : [ids];
-        for (const id of nftIds) {
+        for (const id of ids) {
           await expectRevert(this.token.getApproved(id), revertMessages.NonExistingNFT);
         }
       });
 
       it('emits Transfer event(s)', function () {
-        const nftIds = Array.isArray(ids) ? ids : [ids];
-        for (const id of nftIds) {
+        for (const id of ids) {
           expectEventWithParamsOverride(
             receipt,
             'Transfer',
@@ -98,7 +96,7 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
       });
 
       if (interfaces.ERC1155) {
-        if (Array.isArray(ids)) {
+        if (Array.isArray(tokenIds)) {
           it('[ERC1155] emits a TransferBatch event', function () {
             expectEventWithParamsOverride(
               receipt,
@@ -107,8 +105,8 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
                 _operator: options.from,
                 _from: owner,
                 _to: ZeroAddress,
-                _ids: ids,
-                _values: ids.map(() => 1),
+                _ids: tokenIds,
+                _values: tokenIds.map(() => 1),
               },
               eventParamsOverrides
             );
@@ -122,7 +120,7 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
                 _operator: options.from,
                 _from: owner,
                 _to: ZeroAddress,
-                _id: ids,
+                _id: tokenIds,
                 _value: 1,
               },
               eventParamsOverrides
@@ -131,27 +129,20 @@ function shouldBehaveLikeERC721Burnable({nfMaskLength, contractName, revertMessa
         }
       }
 
-      it('adjusts sender balance', async function () {
-        const quantity = new BN(Array.isArray(ids) ? `${ids.length}` : '1');
-        const balance = this.toWhom == owner ? this.nftBalance : this.nftBalance.sub(quantity);
-        (await this.token.balanceOf(owner)).should.be.bignumber.equal(balance);
+      it('decreases the sender balance', async function () {
+        (await this.token.balanceOf(owner)).should.be.bignumber.equal(this.nftBalance.subn(ids.length));
       });
 
       if (interfaces.ERC1155Inventory) {
-        it('[ERC1155Inventory] adjusts sender Non-Fungible Collection balances', async function () {
-          const nftsArray = Array.isArray(ids) ? ids : [ids];
-          const nbCollectionNFTs = nftsArray.filter((id) => id != nftOtherCollection).length;
-          const nbOtherCollectionNFTs = nftsArray.length - nbCollectionNFTs;
-          const collectionBalance = this.toWhom == owner ? this.nfcBalance : this.nfcBalance.subn(nbCollectionNFTs);
-          const otherCollectionBalance = this.toWhom == owner ? this.otherNFCBalance : this.otherNFCBalance.subn(nbOtherCollectionNFTs);
-          (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(collectionBalance);
-          (await this.token.balanceOf(owner, otherNFCollection)).should.be.bignumber.equal(otherCollectionBalance);
+        const nbCollectionNFTs = ids.filter((id) => id != nftOtherCollection).length;
+        const nbOtherCollectionNFTs = ids.length - nbCollectionNFTs;
+
+        it('[ERC1155Inventory] decreases the sender Non-Fungible Collection(s) balance(s)', async function () {
+          (await this.token.balanceOf(owner, nfCollection)).should.be.bignumber.equal(this.nfcBalance.subn(nbCollectionNFTs));
+          (await this.token.balanceOf(owner, otherNFCollection)).should.be.bignumber.equal(this.otherNFCBalance.subn(nbOtherCollectionNFTs));
         });
 
         it('[ERC1155Inventory] decreases the Non-Fungible Collections total supply', async function () {
-          const nftsArray = Array.isArray(ids) ? ids : [ids];
-          const nbCollectionNFTs = nftsArray.filter((id) => id != nftOtherCollection).length;
-          const nbOtherCollectionNFTs = nftsArray.length - nbCollectionNFTs;
           (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(this.nfcSupply.subn(nbCollectionNFTs));
           (await this.token.totalSupply(otherNFCollection)).should.be.bignumber.equal(this.otherNFCSupply.subn(nbOtherCollectionNFTs));
         });

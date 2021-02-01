@@ -53,7 +53,7 @@ contract ERC1155InventoryBurnableMock is ERC1155InventoryBurnable, IERC1155Inven
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeMint(to, id, value, data);
     }
@@ -67,7 +67,7 @@ contract ERC1155InventoryBurnableMock is ERC1155InventoryBurnable, IERC1155Inven
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(isMinter(_msgSender()), "Inventory: not a minter");
         _safeBatchMint(to, ids, values, data);
     }

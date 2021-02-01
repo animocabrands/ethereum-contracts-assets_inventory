@@ -8,6 +8,7 @@
  * New contracts (TBD)
 ### Improvements
  * Usage of `evm_snapshot` fixtures.
+
 ## 6.0.0
 
 ### Breaking changes

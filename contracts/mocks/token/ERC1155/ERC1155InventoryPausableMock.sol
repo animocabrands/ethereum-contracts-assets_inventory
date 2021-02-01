@@ -27,7 +27,7 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeTransferFrom(from, to, id, value, data);
     }
@@ -38,7 +38,7 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeBatchTransferFrom(from, to, ids, values, data);
     }
@@ -48,7 +48,7 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         uint256 id,
         uint256 value,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeMint(to, id, value, data);
     }
@@ -58,7 +58,7 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.safeBatchMint(to, ids, values, data);
     }
@@ -67,7 +67,7 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         address from,
         uint256 id,
         uint256 value
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.burnFrom(from, id, value);
     }
@@ -76,7 +76,7 @@ contract ERC1155InventoryPausableMock is Ownable, Pausable, ERC1155InventoryBurn
         address from,
         uint256[] memory ids,
         uint256[] memory values
-    ) public override virtual {
+    ) public virtual override {
         require(!paused(), "Inventory: paused");
         super.batchBurnFrom(from, ids, values);
     }

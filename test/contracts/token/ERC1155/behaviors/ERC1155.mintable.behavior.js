@@ -11,6 +11,7 @@ const {
   makeNonFungibleCollectionId,
   makeNonFungibleTokenId,
   isNonFungibleToken,
+  isFungible,
 } = require('@animoca/blockchain-inventory_metadata').inventoryIds;
 
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
@@ -76,27 +77,89 @@ function shouldBehaveLikeERC1155Mintable({nfMaskLength, revertMessages, eventPar
     let receipt = null;
 
     const mintWasSuccessful = function (tokenIds, values, data, options, receiverType) {
-      if (interfaces.ERC721 || interfaces.ERC1155Inventory) {
-        it('[ERC721/ERC1155inventory] transfers the ownership of the Non-Fungible Token(s)', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          for (const id of ids) {
-            if (isNonFungibleToken(id, nfMaskLength)) {
-              (await this.token.ownerOf(id)).should.be.equal(this.toWhom);
-            } else {
+      const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
+      const vals = Array.isArray(values) ? values : [values];
+      const tokens = ids.map((id, i) => [id, vals[i]]);
+      const fungibleTokens = tokens.filter(([id, _value]) => isFungible(id));
+      const nonFungibleTokens = tokens.filter(([id, _value]) => isNonFungibleToken(id, nfMaskLength));
+
+      if (tokens.length != 0) {
+        it('increases the recipient balance(s)', async function () {
+          for (const [id, value] of tokens) {
+            (await this.token.balanceOf(this.toWhom, id)).should.be.bignumber.equal(new BN(value));
+          }
+        });
+
+        if (interfaces.ERC1155Inventory) {
+          it('[ERC1155Inventory] increases the token(s) total supply', async function () {
+            for (const [id, value] of tokens) {
+              (await this.token.totalSupply(id)).should.be.bignumber.equal(new BN(value));
+            }
+          });
+        }
+
+        if (nonFungibleTokens.length != 0) {
+          if (interfaces.ERC721 || interfaces.ERC1155Inventory) {
+            it('[ERC721/ERC1155inventory] gives the ownership of the Non-Fungible Token(s) to the recipient', async function () {
+              for (const [id, _value] of nonFungibleTokens) {
+                (await this.token.ownerOf(id)).should.be.equal(this.toWhom);
+              }
+            });
+          }
+          if (interfaces.ERC1155Inventory) {
+            const nbCollectionNFTs = nonFungibleTokens.filter(([id, _value]) => id == nft1 || id == nft2).length;
+            const nbOtherCollectionNFTs = nonFungibleTokens.filter(([id, _value]) => id == nftOtherCollection).length;
+            it('[ERC1155Inventory] increases the recipient Non-Fungible Collection(s) balance(s)', async function () {
+              (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
+              (await this.token.balanceOf(this.toWhom, nfCollectionOther)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
+            });
+
+            it('[ERC1155Inventory] increases the Non-Fungible Collection(s) total supply', async function () {
+              (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
+              (await this.token.totalSupply(nfCollectionOther)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
+            });
+
+            it('[ERC1155Inventory] sets the Non-Fungible Token(s) total supply to 1', async function () {
+              for (const [id, _value] of nonFungibleTokens) {
+                (await this.token.totalSupply(id)).should.be.bignumber.equal('1');
+              }
+            });
+          }
+          if (interfaces.ERC721) {
+            it('[ERC721] sets an empty approval for the Non-Fungible Token(s)', async function () {
+              for (const [id, _value] of nonFungibleTokens) {
+                (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
+              }
+            });
+
+            it('[ERC721] increases the recipient NFTs balance', async function () {
+              (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal(new BN(nonFungibleTokens.length));
+            });
+
+            it('[ERC721] emits Transfer event(s) for Non-Fungible Tokens', function () {
+              for (const [id, _value] of nonFungibleTokens) {
+                expectEventWithParamsOverride(
+                  receipt,
+                  'Transfer',
+                  {
+                    _from: ZeroAddress,
+                    _to: this.toWhom,
+                    _tokenId: id,
+                  },
+                  eventParamsOverrides
+                );
+              }
+            });
+          }
+        }
+
+        if (interfaces.ERC1155Inventory && fungibleTokens.length != 0) {
+          it('[ERC1155inventory] does not give the ownership for Fungible Token(s)', async function () {
+            for (const [id, _value] of fungibleTokens) {
               await expectRevert(this.token.ownerOf(id), revertMessages.NonExistingNFT);
             }
-          }
-        });
-      }
-
-      if (interfaces.ERC721) {
-        it('[ERC721] sets an empty approval for the Non-Fungible Token(s)', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const nftIds = ids.filter((id) => isNonFungibleToken(id, nfMaskLength));
-          for (const id of nftIds) {
-            (await this.token.getApproved(id)).should.be.equal(ZeroAddress);
-          }
-        });
+          });
+        }
       }
 
       if (Array.isArray(tokenIds)) {
@@ -128,82 +191,6 @@ function shouldBehaveLikeERC1155Mintable({nfMaskLength, revertMessages, eventPar
             },
             eventParamsOverrides
           );
-        });
-      }
-
-      if (interfaces.ERC721) {
-        it('[ERC721] emits Transfer event(s) for Non-Fungible Tokens', function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          for (const id of ids) {
-            if (isNonFungibleToken(id, nfMaskLength)) {
-              expectEventWithParamsOverride(
-                receipt,
-                'Transfer',
-                {
-                  _from: ZeroAddress,
-                  _to: this.toWhom,
-                  _tokenId: id,
-                },
-                eventParamsOverrides
-              );
-            }
-          }
-        });
-      }
-
-      it('adjusts recipient balances', async function () {
-        const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-        const vals = Array.isArray(values) ? values : [values];
-        for (let i = 0; i < ids.length; ++i) {
-          const id = ids[i];
-          const value = vals[i];
-          (await this.token.balanceOf(this.toWhom, id)).should.be.bignumber.equal(new BN(value));
-        }
-      });
-
-      if (interfaces.ERC721) {
-        it('[ERC721] adjusts recipient NFT balance', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const quantity = ids.filter((id) => isNonFungibleToken(id, nfMaskLength)).length;
-          (await this.token.balanceOf(this.toWhom)).should.be.bignumber.equal(new BN(quantity));
-        });
-      }
-
-      if (interfaces.ERC1155Inventory) {
-        it('[ERC1155Inventory] adjusts recipient Non-Fungible Collection balances', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const nbCollectionNFTs = ids.filter((id) => id == nft1 || id == nft2).length;
-          const nbOtherCollectionNFTs = ids.filter((id) => id == nftOtherCollection).length;
-          (await this.token.balanceOf(this.toWhom, nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
-          (await this.token.balanceOf(this.toWhom, nfCollectionOther)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
-        });
-        it('[ERC1155Inventory] increases the Non-Fungible Collections total supply', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const nbCollectionNFTs = ids.filter((id) => id == nft1 || id == nft2).length;
-          const nbOtherCollectionNFTs = ids.filter((id) => id == nftOtherCollection).length;
-          (await this.token.totalSupply(nfCollection)).should.be.bignumber.equal(new BN(nbCollectionNFTs));
-          (await this.token.totalSupply(nfCollectionOther)).should.be.bignumber.equal(new BN(nbOtherCollectionNFTs));
-        });
-
-        it('[ERC1155Inventory] increases the Fungible Tokens total supply', async function () {
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const vals = Array.isArray(values) ? values : [values];
-          for (let i = 0; i < ids.length; ++i) {
-            const id = ids[i];
-            const value = vals[i];
-            if (id == fCollection1.id || id == fCollection2.id || id == fCollection3.id) {
-              (await this.token.totalSupply(id)).should.be.bignumber.equal(new BN(value));
-            }
-          }
-        });
-
-        it('[ERC1155Inventory] sets total supply to 1 for the Non-Fungible Tokens', async function () {
-          // (await this.token.totalSupply(nft1)).should.be.bignumber.equal(this.nftSupply.addn(1));
-          const ids = Array.isArray(tokenIds) ? tokenIds : [tokenIds];
-          const nftIds = ids.filter((id) => isNonFungibleToken(id, nfMaskLength));
-          for (const id of nftIds) {
-            (await this.token.totalSupply(id)).should.be.bignumber.equal(One);
-          }
         });
       }
 
