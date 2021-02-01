@@ -17,7 +17,7 @@ const {
 const ERC1155TokenReceiverMock = artifacts.require('ERC1155TokenReceiverMock');
 const ERC721ReceiverMock = artifacts.require('ERC721ReceiverMock');
 
-function shouldBehaveLikeERC1155Mintable({nfMaskLength, revertMessages, eventParamsOverrides, interfaces, methods, deploy, mint}) {
+function shouldBehaveLikeERC1155Mintable({contractName, nfMaskLength, revertMessages, eventParamsOverrides, interfaces, methods, deploy, mint}) {
   const [deployer, minter, owner, _operator, _approved, other] = accounts;
 
   const {'safeMint(address,uint256,uint256,bytes)': safeMint, 'safeBatchMint(address,uint256[],uint256[],bytes)': safeBatchMint} = methods;

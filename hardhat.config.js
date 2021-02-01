@@ -20,18 +20,6 @@ module.exports = {
         },
       },
     ],
-    overrides: {
-      'contracts/mocks/token/ERC1155721/ERC1155721InventoryFullMock.sol': {
-        version: '0.6.8',
-        settings: {
-          optimizer: {
-            enabled: true,
-            // lower value to reduce the size of the produced code
-            runs: 200,
-          },
-        },
-      },
-    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
