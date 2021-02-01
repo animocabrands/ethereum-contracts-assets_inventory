@@ -223,12 +223,6 @@ function shouldBehaveLikeERC1155Mintable({contractName, nfMaskLength, revertMess
       const data = '0x42';
       const options = {from: minter};
       describe('Pre-conditions', function () {
-        if (interfaces.Pausable) {
-          it('[Pausable] reverts when paused', async function () {
-            await this.token.pause({from: deployer});
-            await expectRevert(mintFunction.call(this, owner, nft1, 1, data, options), revertMessages.Paused);
-          });
-        }
         it('reverts if the sender is not a Minter', async function () {
           await expectRevert(mintFunction.call(this, owner, nft1, 1, data, {from: other}), revertMessages.NotMinter);
         });

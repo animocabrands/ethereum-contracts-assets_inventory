@@ -48,18 +48,4 @@ contract ERC721PausableMock is Pausable, Ownable, ERC721Mock {
         require(!paused(), "ERC721: paused");
         super.safeTransferFrom(from, to, tokenId, data);
     }
-
-    function mint(address to, uint256 tokenId) public virtual override {
-        require(!paused(), "ERC721: paused");
-        super.mint(to, tokenId);
-    }
-
-    function safeMint(
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override {
-        require(!paused(), "ERC721: paused");
-        super.safeMint(to, tokenId, data);
-    }
 }
