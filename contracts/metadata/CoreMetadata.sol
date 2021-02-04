@@ -39,7 +39,7 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
 
     function getAttributes(uint256 integer, bytes32[] memory names) public view virtual override returns (uint256[] memory values) {
         values = new uint256[](names.length);
-        for (uint256 i = 0; i < names.length; ++i) {
+        for (uint256 i = 0; i != names.length; ++i) {
             uint256 position = uint256(_bitsLayout.get(names[i]));
             values[i] = integer.extract(uint128(position), uint128(position >> 128));
         }
@@ -49,7 +49,7 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
         uint256 length = _bitsLayout.length();
         names = new bytes32[](length);
         values = new uint256[](length);
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i != length; ++i) {
             (bytes32 name, bytes32 pos) = _bitsLayout.at(i);
             uint256 position = uint256(pos);
             names[i] = name;
@@ -83,7 +83,7 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
         names = new bytes32[](length);
         lengths = new uint256[](length);
         indices = new uint256[](length);
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i != length; ++i) {
             (bytes32 name, bytes32 positionBytes) = _bitsLayout.at(i);
             uint256 position = uint256(positionBytes);
 
@@ -101,14 +101,14 @@ abstract contract CoreMetadata is ERC165, ICoreMetadata {
         uint256 size = names.length;
         require((lengths.length == size) && (indices.length == size), "CoreMeta: inconsistent arrays");
         _clearLayout();
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i != size; ++i) {
             _setAttribute(_bitsLayout, names[i], lengths[i], indices[i]);
         }
     }
 
     function _clearLayout() internal virtual {
         uint256 length = _bitsLayout.length();
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i != length; ++i) {
             (bytes32 key, ) = _bitsLayout.at(0);
             _bitsLayout.remove(key);
         }

@@ -51,7 +51,7 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
 
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (id.isFungibleToken()) {
@@ -69,7 +69,7 @@ abstract contract ERC1155InventoryBurnable is IERC1155InventoryBurnable, ERC1155
                         nfCollectionId = nextCollectionId;
                         nfCollectionCount = 1;
                     } else {
-                        nfCollectionCount++;
+                        ++nfCollectionCount;
                     }
                 }
             } else {

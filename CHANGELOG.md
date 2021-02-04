@@ -1,5 +1,19 @@
 # Changelog
 
+## 7.1.0
+
+### Improvements
+ * Gas optimizations in loop iterations of the `CoreMetadata`, `InventoryMetadata`, `ERC1155Inventory`, and `ERC1155InventoryBurnable` contracts.
+ * Refactored `ERC1155721Inventory::approve(address,uint256)` to use `_isOperatable()` instead of an explicit implementation.
+ * More comprehensive behavior tests for ERC721 `setApprovalForAll()`.
+ * Updated to `@animoca/ethereum-contracts-core_library@4.0.3`.
+
+### New features
+ * Added behavior tests for ERC721 `getApproved()` and `isApprovedForAll()`.
+
+### Bugfixes
+ * Minor correction in the ERC721 mintable behavior precondition test for handling the minting of an ERC1155 fungible token. 
+
 ## 7.0.2
 
 ### Bugfixes

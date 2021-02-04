@@ -52,9 +52,7 @@ abstract contract ERC1155721Inventory is IERC721, IERC721Metadata, IERC721BatchT
     function approve(address to, uint256 nftId) external virtual override {
         address tokenOwner = ownerOf(nftId);
         require(to != tokenOwner, "Inventory: self-approval");
-
-        address sender = _msgSender();
-        require((sender == tokenOwner) || _operators[tokenOwner][sender], "Inventory: non-approved sender");
+        require(_isOperatable(tokenOwner, _msgSender()), "Inventory: non-approved sender");
         _owners[nftId] = uint256(tokenOwner) | _APPROVAL_BIT_TOKEN_OWNER_;
         _nftApprovals[nftId] = to;
         emit Approval(tokenOwner, to, nftId);
