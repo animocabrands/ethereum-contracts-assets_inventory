@@ -69,7 +69,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
 
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (id.isFungibleToken()) {
@@ -86,7 +86,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
                         nfCollectionId = nextCollectionId;
                         nfCollectionCount = 1;
                     } else {
-                        nfCollectionCount++;
+                        ++nfCollectionCount;
                     }
                 }
             } else {
@@ -140,7 +140,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
 
         uint256 nfCollectionId;
         uint256 nfCollectionCount;
-        for (uint256 i; i < length; i++) {
+        for (uint256 i; i != length; ++i) {
             uint256 id = ids[i];
             uint256 value = values[i];
             if (id.isFungibleToken()) {
@@ -158,7 +158,7 @@ abstract contract ERC1155Inventory is ERC1155InventoryBase {
                         nfCollectionId = nextCollectionId;
                         nfCollectionCount = 1;
                     } else {
-                        nfCollectionCount++;
+                        ++nfCollectionCount;
                     }
                 }
             } else {

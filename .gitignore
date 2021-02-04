@@ -5,8 +5,9 @@
 
 cache/
 artifacts/*
+!artifacts/build-info/
 !artifacts/contracts/
-artifacts/contracts/**/*.dbg.json
+!artifacts/imports/
 
 coverage*
 .coverage*
