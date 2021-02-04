@@ -219,7 +219,7 @@ function shouldBehaveLikeERC721Mintable({nfMaskLength, contractName, revertMessa
           }
         }
 
-        if (interfaces.ERC1155Inventory) {
+        if (interfaces.ERC1155) {
           it('[ERC1155] reverts if the id is a Fungible Token', async function () {
             await expectRevert(mintFunction.call(this, owner, fungibleToken, data, options), revertMessages.NotNFT);
           });
