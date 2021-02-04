@@ -1,0 +1,344 @@
+{
+  "id": "f733c45e3b56f8cd9d184fad2b21f8d6",
+  "_format": "hh-sol-build-info-1",
+  "solcVersion": "0.6.8",
+  "solcLongVersion": "0.6.8+commit.0bbfe453",
+  "input": {
+    "language": "Solidity",
+    "sources": {
+      "contracts/token/ERC721/IERC721Burnable.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.6.8;\n\n/**\n * @title ERC721 Non-Fungible Token Standard, optional burning interface\n * @dev See https://eips.ethereum.org/EIPS/eip-721\n * Note: The ERC-165 identifier for this interface is.\n */\ninterface IERC721Burnable {\n    /**\n     * Burns a token.\n     * @dev Reverts if the sender is not approved.\n     * @dev Reverts if `tokenId` is not owned by `from`.\n     * @dev Emits an {IERC721-Transfer} event to address zero.\n     * @param from Current token owner.\n     * @param tokenId Identifier of the token to burn.\n     */\n    function burnFrom(address from, uint256 tokenId) external;\n\n    /**\n     * Burns a batch of tokens.\n     * @dev Reverts if the sender is not approved for any of `tokenIds`.\n     * @dev Reverts if one of `tokenIds` is not owned by `from`.\n     * @dev Emits an {IERC721-Transfer} event to address zero for each of `tokenIds`.\n     * @param from Current tokens owner.\n     * @param tokenIds Identifiers of the tokens to burn.\n     */\n    function batchBurnFrom(address from, uint256[] calldata tokenIds) external;\n}\n"
+      }
+    },
+    "settings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": 2000
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers"
+          ],
+          "": [
+            "ast"
+          ]
+        }
+      }
+    }
+  },
+  "output": {
+    "contracts": {
+      "contracts/token/ERC721/IERC721Burnable.sol": {
+        "IERC721Burnable": {
+          "abi": [
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "tokenIds",
+                  "type": "uint256[]"
+                }
+              ],
+              "name": "batchBurnFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "burnFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            }
+          ],
+          "evm": {
+            "bytecode": {
+              "linkReferences": {},
+              "object": "",
+              "opcodes": "",
+              "sourceMap": ""
+            },
+            "deployedBytecode": {
+              "immutableReferences": {},
+              "linkReferences": {},
+              "object": "",
+              "opcodes": "",
+              "sourceMap": ""
+            },
+            "methodIdentifiers": {
+              "batchBurnFrom(address,uint256[])": "f2472965",
+              "burnFrom(address,uint256)": "79cc6790"
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "contracts/token/ERC721/IERC721Burnable.sol": {
+        "ast": {
+          "absolutePath": "contracts/token/ERC721/IERC721Burnable.sol",
+          "exportedSymbols": {
+            "IERC721Burnable": [
+              20
+            ]
+          },
+          "id": 21,
+          "license": "MIT",
+          "nodeType": "SourceUnit",
+          "nodes": [
+            {
+              "id": 1,
+              "literals": [
+                "solidity",
+                "0.6",
+                ".8"
+              ],
+              "nodeType": "PragmaDirective",
+              "src": "33:22:0"
+            },
+            {
+              "abstract": false,
+              "baseContracts": [],
+              "contractDependencies": [],
+              "contractKind": "interface",
+              "documentation": {
+                "id": 2,
+                "nodeType": "StructuredDocumentation",
+                "src": "57:186:0",
+                "text": "@title ERC721 Non-Fungible Token Standard, optional burning interface\n@dev See https://eips.ethereum.org/EIPS/eip-721\nNote: The ERC-165 identifier for this interface is."
+              },
+              "fullyImplemented": false,
+              "id": 20,
+              "linearizedBaseContracts": [
+                20
+              ],
+              "name": "IERC721Burnable",
+              "nodeType": "ContractDefinition",
+              "nodes": [
+                {
+                  "body": null,
+                  "documentation": {
+                    "id": 3,
+                    "nodeType": "StructuredDocumentation",
+                    "src": "276:299:0",
+                    "text": "Burns a token.\n@dev Reverts if the sender is not approved.\n@dev Reverts if `tokenId` is not owned by `from`.\n@dev Emits an {IERC721-Transfer} event to address zero.\n@param from Current token owner.\n@param tokenId Identifier of the token to burn."
+                  },
+                  "functionSelector": "79cc6790",
+                  "id": 10,
+                  "implemented": false,
+                  "kind": "function",
+                  "modifiers": [],
+                  "name": "burnFrom",
+                  "nodeType": "FunctionDefinition",
+                  "overrides": null,
+                  "parameters": {
+                    "id": 8,
+                    "nodeType": "ParameterList",
+                    "parameters": [
+                      {
+                        "constant": false,
+                        "id": 5,
+                        "mutability": "mutable",
+                        "name": "from",
+                        "nodeType": "VariableDeclaration",
+                        "overrides": null,
+                        "scope": 10,
+                        "src": "598:12:0",
+                        "stateVariable": false,
+                        "storageLocation": "default",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "typeName": {
+                          "id": 4,
+                          "name": "address",
+                          "nodeType": "ElementaryTypeName",
+                          "src": "598:7:0",
+                          "stateMutability": "nonpayable",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "value": null,
+                        "visibility": "internal"
+                      },
+                      {
+                        "constant": false,
+                        "id": 7,
+                        "mutability": "mutable",
+                        "name": "tokenId",
+                        "nodeType": "VariableDeclaration",
+                        "overrides": null,
+                        "scope": 10,
+                        "src": "612:15:0",
+                        "stateVariable": false,
+                        "storageLocation": "default",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        },
+                        "typeName": {
+                          "id": 6,
+                          "name": "uint256",
+                          "nodeType": "ElementaryTypeName",
+                          "src": "612:7:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        },
+                        "value": null,
+                        "visibility": "internal"
+                      }
+                    ],
+                    "src": "597:31:0"
+                  },
+                  "returnParameters": {
+                    "id": 9,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "637:0:0"
+                  },
+                  "scope": 20,
+                  "src": "580:58:0",
+                  "stateMutability": "nonpayable",
+                  "virtual": false,
+                  "visibility": "external"
+                },
+                {
+                  "body": null,
+                  "documentation": {
+                    "id": 11,
+                    "nodeType": "StructuredDocumentation",
+                    "src": "644:366:0",
+                    "text": "Burns a batch of tokens.\n@dev Reverts if the sender is not approved for any of `tokenIds`.\n@dev Reverts if one of `tokenIds` is not owned by `from`.\n@dev Emits an {IERC721-Transfer} event to address zero for each of `tokenIds`.\n@param from Current tokens owner.\n@param tokenIds Identifiers of the tokens to burn."
+                  },
+                  "functionSelector": "f2472965",
+                  "id": 19,
+                  "implemented": false,
+                  "kind": "function",
+                  "modifiers": [],
+                  "name": "batchBurnFrom",
+                  "nodeType": "FunctionDefinition",
+                  "overrides": null,
+                  "parameters": {
+                    "id": 17,
+                    "nodeType": "ParameterList",
+                    "parameters": [
+                      {
+                        "constant": false,
+                        "id": 13,
+                        "mutability": "mutable",
+                        "name": "from",
+                        "nodeType": "VariableDeclaration",
+                        "overrides": null,
+                        "scope": 19,
+                        "src": "1038:12:0",
+                        "stateVariable": false,
+                        "storageLocation": "default",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "typeName": {
+                          "id": 12,
+                          "name": "address",
+                          "nodeType": "ElementaryTypeName",
+                          "src": "1038:7:0",
+                          "stateMutability": "nonpayable",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "value": null,
+                        "visibility": "internal"
+                      },
+                      {
+                        "constant": false,
+                        "id": 16,
+                        "mutability": "mutable",
+                        "name": "tokenIds",
+                        "nodeType": "VariableDeclaration",
+                        "overrides": null,
+                        "scope": 19,
+                        "src": "1052:27:0",
+                        "stateVariable": false,
+                        "storageLocation": "calldata",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_uint256_$dyn_calldata_ptr",
+                          "typeString": "uint256[]"
+                        },
+                        "typeName": {
+                          "baseType": {
+                            "id": 14,
+                            "name": "uint256",
+                            "nodeType": "ElementaryTypeName",
+                            "src": "1052:7:0",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          },
+                          "id": 15,
+                          "length": null,
+                          "nodeType": "ArrayTypeName",
+                          "src": "1052:9:0",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                            "typeString": "uint256[]"
+                          }
+                        },
+                        "value": null,
+                        "visibility": "internal"
+                      }
+                    ],
+                    "src": "1037:43:0"
+                  },
+                  "returnParameters": {
+                    "id": 18,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "1089:0:0"
+                  },
+                  "scope": 20,
+                  "src": "1015:75:0",
+                  "stateMutability": "nonpayable",
+                  "virtual": false,
+                  "visibility": "external"
+                }
+              ],
+              "scope": 21,
+              "src": "244:848:0"
+            }
+          ],
+          "src": "33:1060:0"
+        },
+        "id": 0
+      }
+    }
+  }
+}
